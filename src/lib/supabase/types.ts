@@ -1313,7 +1313,10 @@ export type Database = {
           department: string | null
           due_date: string | null
           id: string
+          machine_model: string | null
+          price: number | null
           product_type: string | null
+          profit_margin: number | null
           progress: number | null
           quote_id: string | null
           status: string
@@ -1327,7 +1330,10 @@ export type Database = {
           department?: string | null
           due_date?: string | null
           id?: string
+          machine_model?: string | null
+          price?: number | null
           product_type?: string | null
+          profit_margin?: number | null
           progress?: number | null
           quote_id?: string | null
           status?: string
@@ -1341,7 +1347,10 @@ export type Database = {
           department?: string | null
           due_date?: string | null
           id?: string
+          machine_model?: string | null
+          price?: number | null
           product_type?: string | null
+          profit_margin?: number | null
           progress?: number | null
           quote_id?: string | null
           status?: string
@@ -1813,6 +1822,9 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   quote_id: uuid (nullable)
+//   machine_model: text (nullable)
+//   price: numeric (nullable)
+//   profit_margin: numeric (nullable)
 
 // --- CONSTRAINTS ---
 // Table: alert_rules
@@ -1912,7 +1924,7 @@ export const Constants = {
 //   FOREIGN KEY quotes_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 //   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
 //   UNIQUE quotes_quote_number_key: UNIQUE (quote_number)
-//   CHECK quotes_status_check: CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'approved'::text, 'rejected'::text, 'expired'::text])))
+//   CHECK quotes_status_check: CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'approved'::text, 'rejected'::text, 'expired'::text, 'converted'::text])))
 // Table: report_history
 //   PRIMARY KEY report_history_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY report_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE

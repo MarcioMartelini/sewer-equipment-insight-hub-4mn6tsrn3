@@ -17,6 +17,7 @@ import Settings from './pages/Settings'
 import Notifications from './pages/Notifications'
 import Reports from './pages/Reports'
 import Profile from './pages/Profile'
+import WorkOrderDetail from './pages/WorkOrderDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/high-management" element={<HighManagement />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/notificacoes" element={<Notifications />} />
+            <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
