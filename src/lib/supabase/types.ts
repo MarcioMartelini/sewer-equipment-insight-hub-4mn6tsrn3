@@ -1096,49 +1096,79 @@ export type Database = {
       }
       quotes: {
         Row: {
+          actual_completion_date: string | null
           approval_date: string | null
           created_at: string | null
           created_by: string | null
           customer_name: string
+          date_order: string | null
+          expected_completion_date: string | null
           expiration_date: string | null
           id: string
+          machine_model: string | null
+          product_family: string | null
           product_type: string | null
           profit_margin_percentage: number | null
           quote_number: string
           quote_value: number | null
+          salesperson: string | null
           sent_date: string | null
+          special_custom: string | null
           status: string
+          truck_information: string | null
+          truck_supplier: string | null
           updated_at: string | null
+          wo_number_ref: string | null
         }
         Insert: {
+          actual_completion_date?: string | null
           approval_date?: string | null
           created_at?: string | null
           created_by?: string | null
           customer_name: string
+          date_order?: string | null
+          expected_completion_date?: string | null
           expiration_date?: string | null
           id?: string
+          machine_model?: string | null
+          product_family?: string | null
           product_type?: string | null
           profit_margin_percentage?: number | null
           quote_number: string
           quote_value?: number | null
+          salesperson?: string | null
           sent_date?: string | null
+          special_custom?: string | null
           status?: string
+          truck_information?: string | null
+          truck_supplier?: string | null
           updated_at?: string | null
+          wo_number_ref?: string | null
         }
         Update: {
+          actual_completion_date?: string | null
           approval_date?: string | null
           created_at?: string | null
           created_by?: string | null
           customer_name?: string
+          date_order?: string | null
+          expected_completion_date?: string | null
           expiration_date?: string | null
           id?: string
+          machine_model?: string | null
+          product_family?: string | null
           product_type?: string | null
           profit_margin_percentage?: number | null
           quote_number?: string
           quote_value?: number | null
+          salesperson?: string | null
           sent_date?: string | null
+          special_custom?: string | null
           status?: string
+          truck_information?: string | null
+          truck_supplier?: string | null
           updated_at?: string | null
+          wo_number_ref?: string | null
         }
         Relationships: [
           {
@@ -1721,6 +1751,16 @@ export const Constants = {
 //   created_by: uuid (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   salesperson: text (nullable)
+//   product_family: text (nullable)
+//   machine_model: text (nullable)
+//   special_custom: text (nullable)
+//   truck_information: text (nullable)
+//   truck_supplier: text (nullable)
+//   wo_number_ref: text (nullable)
+//   expected_completion_date: date (nullable)
+//   actual_completion_date: date (nullable)
+//   date_order: timestamp with time zone (nullable)
 // Table: report_history
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)

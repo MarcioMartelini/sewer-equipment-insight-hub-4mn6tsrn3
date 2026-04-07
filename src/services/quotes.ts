@@ -12,6 +12,8 @@ export type Quote = Database['public']['Tables']['quotes']['Row'] & {
   expected_completion_date?: string
   actual_completion_date?: string
   date_order?: string
+  customer_city?: string
+  customer_state?: string
 }
 
 export async function fetchQuotes() {
@@ -30,14 +32,11 @@ export async function createQuote(quote: any) {
   } = await supabase.auth.getSession()
   const user_id = session?.user?.id
 
-  const quote_number = `Q-${Math.floor(1000 + Math.random() * 9000)}`
-
   const { data, error } = await supabase
     .from('quotes')
     .insert([
       {
         ...quote,
-        quote_number,
         status: 'draft',
         sent_date: new Date().toISOString(),
         created_by: user_id || null,

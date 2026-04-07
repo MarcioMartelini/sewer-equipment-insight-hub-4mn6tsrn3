@@ -38,7 +38,10 @@ import { Plus, Check, Loader2 } from 'lucide-react'
 import SalesDashboard from '@/components/sales/SalesDashboard'
 
 const quoteSchema = z.object({
+  quote_number: z.string().min(1, 'Obrigatório'),
   customer_name: z.string().min(1, 'Obrigatório'),
+  customer_city: z.string().min(1, 'Obrigatório'),
+  customer_state: z.string().min(1, 'Obrigatório'),
   salesperson: z.string().min(1, 'Obrigatório'),
   product_family: z.string().min(1, 'Obrigatório'),
   machine_model: z.string().min(1, 'Obrigatório'),
@@ -65,7 +68,10 @@ export default function Sales() {
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
     defaultValues: {
+      quote_number: '',
       customer_name: '',
+      customer_city: '',
+      customer_state: '',
       salesperson: '',
       product_family: '',
       machine_model: '',
@@ -187,12 +193,51 @@ export default function Sales() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
+                        name="quote_number"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quote Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Q-1234" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
                         name="customer_name"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Customer</FormLabel>
                             <FormControl>
                               <Input placeholder="Acme Corp" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Customer City</FormLabel>
+                            <FormControl>
+                              <Input placeholder="City" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Customer State</FormLabel>
+                            <FormControl>
+                              <Input placeholder="State" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
