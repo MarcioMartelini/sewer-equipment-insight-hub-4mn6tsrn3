@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { ProductionDashboard } from '@/components/production-dashboard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -120,7 +121,7 @@ function EditStatusDialog({
 
 export default function Production() {
   const { toast } = useToast()
-  const [activeTab, setActiveTab] = useState('weld_shop')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [workOrders, setWorkOrders] = useState<any[]>([])
@@ -137,6 +138,7 @@ export default function Production() {
   }, [])
 
   const fetchTab = async (tab: string, woId: string) => {
+    if (tab === 'dashboard') return
     setLoading(true)
     let query = supabase.from(`production_${tab}`).select('*, work_orders(wo_number)')
     if (woId !== 'all') query = query.eq('wo_id', woId)
@@ -176,25 +178,28 @@ export default function Production() {
             Gerencie e acompanhe o status das tarefas em cada estágio.
           </p>
         </div>
-        <div className="w-full sm:w-64">
-          <Select value={selectedWoId} onValueChange={setSelectedWoId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por Work Order" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas WOs</SelectItem>
-              {workOrders.map((wo) => (
-                <SelectItem key={wo.id} value={wo.id}>
-                  {wo.wo_number}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {activeTab !== 'dashboard' && (
+          <div className="w-full sm:w-64">
+            <Select value={selectedWoId} onValueChange={setSelectedWoId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar por Work Order" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas WOs</SelectItem>
+                {workOrders.map((wo) => (
+                  <SelectItem key={wo.id} value={wo.id}>
+                    {wo.wo_number}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-2 p-1">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="weld_shop">Soldagem (Weld Shop)</TabsTrigger>
           <TabsTrigger value="paint">Pintura (Paint)</TabsTrigger>
           <TabsTrigger value="sub_assembly">Sub-montagem (Sub Assembly)</TabsTrigger>
@@ -203,72 +208,78 @@ export default function Production() {
           <TabsTrigger value="tests">Testes (Tests)</TabsTrigger>
         </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="capitalize">{activeTab.replace('_', ' ')}</CardTitle>
-            <CardDescription>
-              Acompanhamento de tarefas e status da etapa de {activeTab.replace('_', ' ')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-sm text-slate-500">Carregando dados...</p>
-            ) : data.length === 0 ? (
-              <div className="text-center py-10 border border-dashed rounded-lg bg-slate-50">
-                <p className="text-sm text-slate-500">Nenhum registro encontrado.</p>
-              </div>
-            ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>WO Number</TableHead>
-                      <TableHead>
-                        {activeTab === 'final_assembly'
-                          ? 'Estação'
-                          : activeTab === 'tests'
-                            ? 'Teste'
-                            : 'Tarefa'}
-                      </TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Criado Em</TableHead>
-                      <TableHead>Atualizado Em</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">
-                          {item.work_orders?.wo_number || item.wo_id}
-                        </TableCell>
-                        <TableCell>{getTaskName(item, activeTab)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={getStatusBadge(item.status)}>
-                            {formatStatusText(item.status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatDate(item.created_at)}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatDate(item.updated_at)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <EditStatusDialog
-                            item={item}
-                            activeTab={activeTab}
-                            onUpdate={handleUpdateStatus}
-                          />
-                        </TableCell>
+        <TabsContent value="dashboard" className="m-0">
+          <ProductionDashboard />
+        </TabsContent>
+
+        {activeTab !== 'dashboard' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="capitalize">{activeTab.replace('_', ' ')}</CardTitle>
+              <CardDescription>
+                Acompanhamento de tarefas e status da etapa de {activeTab.replace('_', ' ')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-slate-500">Carregando dados...</p>
+              ) : data.length === 0 ? (
+                <div className="text-center py-10 border border-dashed rounded-lg bg-slate-50">
+                  <p className="text-sm text-slate-500">Nenhum registro encontrado.</p>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>WO Number</TableHead>
+                        <TableHead>
+                          {activeTab === 'final_assembly'
+                            ? 'Estação'
+                            : activeTab === 'tests'
+                              ? 'Teste'
+                              : 'Tarefa'}
+                        </TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Criado Em</TableHead>
+                        <TableHead>Atualizado Em</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {data.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">
+                            {item.work_orders?.wo_number || item.wo_id}
+                          </TableCell>
+                          <TableCell>{getTaskName(item, activeTab)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={getStatusBadge(item.status)}>
+                              {formatStatusText(item.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatDate(item.created_at)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatDate(item.updated_at)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <EditStatusDialog
+                              item={item}
+                              activeTab={activeTab}
+                              onUpdate={handleUpdateStatus}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </Tabs>
     </div>
   )
