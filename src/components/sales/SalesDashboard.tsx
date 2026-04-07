@@ -59,7 +59,7 @@ import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import 'jspdf-autotable'
 import html2canvas from 'html2canvas'
 
 const COLORS = [
@@ -464,7 +464,7 @@ export default function SalesDashboard() {
         ['Total Purchases', numberOfPurchases.toString(), '', ''],
       ]
 
-      autoTable(doc, {
+      ;(doc as any).autoTable({
         startY: 55,
         body: kpiData,
         theme: 'grid',
@@ -526,7 +526,7 @@ export default function SalesDashboard() {
         (sp.wos || 0).toString(),
       ])
 
-      autoTable(doc, {
+      ;(doc as any).autoTable({
         startY: currentY,
         head: [['Rank', 'Salesperson', 'Division', 'Area', 'Revenue', 'WOs']],
         body: spTableData,
