@@ -658,6 +658,100 @@ export type Database = {
           },
         ]
       }
+      quality_late_card_pulls: {
+        Row: {
+          component_name: string
+          created_at: string | null
+          id: string
+          pull_date: string | null
+          pull_reason: string | null
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          component_name: string
+          created_at?: string | null
+          id?: string
+          pull_date?: string | null
+          pull_reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          component_name?: string
+          created_at?: string | null
+          id?: string
+          pull_date?: string | null
+          pull_reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quality_late_card_pulls_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      quality_warranty_claims: {
+        Row: {
+          created_at: string | null
+          customer_name: string | null
+          id: string
+          issue_category: string | null
+          issue_description: string | null
+          reported_date: string | null
+          resolution_notes: string | null
+          resolved_date: string | null
+          serial_number: string | null
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_name?: string | null
+          id?: string
+          issue_category?: string | null
+          issue_description?: string | null
+          reported_date?: string | null
+          resolution_notes?: string | null
+          resolved_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_name?: string | null
+          id?: string
+          issue_category?: string | null
+          issue_description?: string | null
+          reported_date?: string | null
+          resolution_notes?: string | null
+          resolved_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quality_warranty_claims_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       quotes: {
         Row: {
           approval_date: string | null
@@ -1126,6 +1220,28 @@ export const Constants = {
 //   status: text (nullable, default: 'pending'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+// Table: quality_late_card_pulls
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   component_name: text (not null)
+//   pull_reason: text (nullable)
+//   pull_date: date (nullable)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: quality_warranty_claims
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   serial_number: text (nullable)
+//   customer_name: text (nullable)
+//   issue_description: text (nullable)
+//   issue_category: text (nullable)
+//   status: text (nullable, default: 'pending'::text)
+//   reported_date: date (nullable)
+//   resolved_date: date (nullable)
+//   resolution_notes: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: quotes
 //   id: uuid (not null, default: gen_random_uuid())
 //   quote_number: text (not null)
@@ -1229,6 +1345,12 @@ export const Constants = {
 //   CHECK purchasing_expedites_component_type_check: CHECK ((component_type = ANY (ARRAY['Engine'::text, 'Hydraulics'::text, 'Water Pump'::text, 'Water Tank'::text, 'Debris Box'::text, 'Blower'::text, 'Van Air'::text, 'Sewer Hose'::text, 'Shroud'::text])))
 //   PRIMARY KEY purchasing_expedites_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY purchasing_expedites_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: quality_late_card_pulls
+//   PRIMARY KEY quality_late_card_pulls_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY quality_late_card_pulls_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: quality_warranty_claims
+//   PRIMARY KEY quality_warranty_claims_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY quality_warranty_claims_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: quotes
 //   FOREIGN KEY quotes_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 //   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
@@ -1379,6 +1501,26 @@ export const Constants = {
 //     USING: true
 //   Policy "Auth update purchasing_expedites" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: quality_late_card_pulls
+//   Policy "Auth delete quality_late_card_pulls" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert quality_late_card_pulls" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read quality_late_card_pulls" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update quality_late_card_pulls" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: quality_warranty_claims
+//   Policy "Auth delete quality_warranty_claims" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert quality_warranty_claims" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read quality_warranty_claims" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update quality_warranty_claims" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: quotes
 //   Policy "Auth read quotes" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true

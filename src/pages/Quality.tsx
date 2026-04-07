@@ -30,7 +30,7 @@ export default function Quality() {
         .order('created_at', { ascending: false }),
       supabase
         .from('quality_late_card_pulls')
-        .select('*, work_orders(wo_number)')
+        .select('*')
         .order('created_at', { ascending: false }),
     ])
 
@@ -124,7 +124,7 @@ export default function Quality() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>WO</TableHead>
+                      <TableHead>PN (Part Number)</TableHead>
                       <TableHead>Componente</TableHead>
                       <TableHead>Motivo</TableHead>
                       <TableHead>Status</TableHead>
@@ -147,9 +147,7 @@ export default function Quality() {
                     ) : (
                       lateCardPulls.map((pull) => (
                         <TableRow key={pull.id}>
-                          <TableCell className="font-medium">
-                            {pull.work_orders?.wo_number || '-'}
-                          </TableCell>
+                          <TableCell className="font-medium">{pull.part_number || '-'}</TableCell>
                           <TableCell>{pull.component_name}</TableCell>
                           <TableCell>{pull.pull_reason || '-'}</TableCell>
                           <TableCell>
