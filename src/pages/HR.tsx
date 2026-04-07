@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ProductivityTab from '@/components/hr/ProductivityTab'
 import AbsencesTab from '@/components/hr/AbsencesTab'
 import InjuriesTab from '@/components/hr/InjuriesTab'
+import DashboardTab from '@/components/hr/DashboardTab'
 
 export default function HR() {
   return (
@@ -15,12 +16,16 @@ export default function HR() {
         </div>
       </div>
 
-      <Tabs defaultValue="productivity" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 md:w-[400px]">
+      <Tabs defaultValue="dashboard" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4 md:w-[500px]">
+          <TabsTrigger value="dashboard">Visão Geral</TabsTrigger>
           <TabsTrigger value="productivity">Produtividade</TabsTrigger>
           <TabsTrigger value="absences">Ausências</TabsTrigger>
           <TabsTrigger value="injuries">Lesões</TabsTrigger>
         </TabsList>
+        <TabsContent value="dashboard">
+          <DashboardTab />
+        </TabsContent>
         <TabsContent value="productivity">
           <ProductivityTab />
         </TabsContent>
