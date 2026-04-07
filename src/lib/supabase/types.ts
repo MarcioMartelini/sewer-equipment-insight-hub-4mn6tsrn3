@@ -9,6 +9,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_rules: {
+        Row: {
+          alert_condition: string | null
+          alert_enabled: boolean | null
+          assigned_users: string[] | null
+          created_at: string | null
+          id: string
+          metric_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alert_condition?: string | null
+          alert_enabled?: boolean | null
+          assigned_users?: string[] | null
+          created_at?: string | null
+          id?: string
+          metric_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alert_condition?: string | null
+          alert_enabled?: boolean | null
+          assigned_users?: string[] | null
+          created_at?: string | null
+          id?: string
+          metric_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'alert_rules_metric_id_fkey'
+            columns: ['metric_id']
+            isOneToOne: false
+            referencedRelation: 'metrics_definitions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       alerts: {
         Row: {
           alert_message: string | null
@@ -50,6 +88,64 @@ export type Database = {
             columns: ['metric_id']
             isOneToOne: false
             referencedRelation: 'metrics'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      alerts_log: {
+        Row: {
+          alert_message: string | null
+          alert_rule_id: string | null
+          alert_status: string | null
+          assigned_to: string | null
+          created_at: string | null
+          id: string
+          metric_value: number | null
+          resolved_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          alert_message?: string | null
+          alert_rule_id?: string | null
+          alert_status?: string | null
+          assigned_to?: string | null
+          created_at?: string | null
+          id?: string
+          metric_value?: number | null
+          resolved_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          alert_message?: string | null
+          alert_rule_id?: string | null
+          alert_status?: string | null
+          assigned_to?: string | null
+          created_at?: string | null
+          id?: string
+          metric_value?: number | null
+          resolved_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'alerts_log_alert_rule_id_fkey'
+            columns: ['alert_rule_id']
+            isOneToOne: false
+            referencedRelation: 'alert_rules'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'alerts_log_assigned_to_fkey'
+            columns: ['assigned_to']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'alerts_log_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
             referencedColumns: ['id']
           },
         ]
@@ -468,6 +564,80 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'metrics_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      metrics_definitions: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          description: string | null
+          id: string
+          metric_name: string
+          metric_type: string | null
+          threshold_max: number | null
+          threshold_min: number | null
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          metric_name: string
+          metric_type?: string | null
+          threshold_max?: number | null
+          threshold_min?: number | null
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          metric_name?: string
+          metric_type?: string | null
+          threshold_max?: number | null
+          threshold_min?: number | null
+          unit?: string | null
+        }
+        Relationships: []
+      }
+      metrics_tracking: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          id: string
+          metric_name: string
+          metric_value: number | null
+          recorded_date: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          metric_name: string
+          metric_value?: number | null
+          recorded_date?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          metric_name?: string
+          metric_value?: number | null
+          recorded_date?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'metrics_tracking_wo_id_fkey'
             columns: ['wo_id']
             isOneToOne: false
             referencedRelation: 'work_orders'
@@ -1218,6 +1388,14 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: alert_rules
+//   id: uuid (not null, default: gen_random_uuid())
+//   metric_id: uuid (nullable)
+//   alert_condition: text (nullable)
+//   assigned_users: _uuid (nullable)
+//   alert_enabled: boolean (nullable, default: true)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: alerts
 //   id: uuid (not null, default: gen_random_uuid())
 //   metric_id: uuid (nullable)
@@ -1226,6 +1404,16 @@ export const Constants = {
 //   assigned_to: uuid (nullable)
 //   status: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: alerts_log
+//   id: uuid (not null, default: gen_random_uuid())
+//   alert_rule_id: uuid (nullable)
+//   wo_id: uuid (nullable)
+//   metric_value: numeric (nullable)
+//   alert_message: text (nullable)
+//   alert_status: text (nullable, default: 'pending'::text)
+//   assigned_to: uuid (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   resolved_at: timestamp with time zone (nullable)
 // Table: audit_log
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_id: uuid (nullable)
@@ -1312,6 +1500,24 @@ export const Constants = {
 //   metric_value: numeric (nullable)
 //   threshold_min: numeric (nullable)
 //   threshold_max: numeric (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: metrics_definitions
+//   id: uuid (not null, default: gen_random_uuid())
+//   department: text (nullable)
+//   metric_name: text (not null)
+//   metric_type: text (nullable)
+//   threshold_min: numeric (nullable)
+//   threshold_max: numeric (nullable)
+//   unit: text (nullable)
+//   description: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: metrics_tracking
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   department: text (nullable)
+//   metric_name: text (not null)
+//   metric_value: numeric (nullable)
+//   recorded_date: date (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 // Table: production_final_assembly
 //   id: uuid (not null, default: gen_random_uuid())
@@ -1449,10 +1655,20 @@ export const Constants = {
 //   quote_id: uuid (nullable)
 
 // --- CONSTRAINTS ---
+// Table: alert_rules
+//   CHECK alert_rules_alert_condition_check: CHECK ((alert_condition = ANY (ARRAY['below_min'::text, 'above_max'::text, 'both'::text])))
+//   FOREIGN KEY alert_rules_metric_id_fkey: FOREIGN KEY (metric_id) REFERENCES metrics_definitions(id) ON DELETE CASCADE
+//   PRIMARY KEY alert_rules_pkey: PRIMARY KEY (id)
 // Table: alerts
 //   FOREIGN KEY alerts_assigned_to_fkey: FOREIGN KEY (assigned_to) REFERENCES users(id)
 //   FOREIGN KEY alerts_metric_id_fkey: FOREIGN KEY (metric_id) REFERENCES metrics(id) ON DELETE CASCADE
 //   PRIMARY KEY alerts_pkey: PRIMARY KEY (id)
+// Table: alerts_log
+//   FOREIGN KEY alerts_log_alert_rule_id_fkey: FOREIGN KEY (alert_rule_id) REFERENCES alert_rules(id) ON DELETE CASCADE
+//   CHECK alerts_log_alert_status_check: CHECK ((alert_status = ANY (ARRAY['pending'::text, 'acknowledged'::text, 'resolved'::text])))
+//   FOREIGN KEY alerts_log_assigned_to_fkey: FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
+//   PRIMARY KEY alerts_log_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY alerts_log_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: audit_log
 //   PRIMARY KEY audit_log_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY audit_log_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id)
@@ -1490,6 +1706,11 @@ export const Constants = {
 // Table: metrics
 //   PRIMARY KEY metrics_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY metrics_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: metrics_definitions
+//   PRIMARY KEY metrics_definitions_pkey: PRIMARY KEY (id)
+// Table: metrics_tracking
+//   PRIMARY KEY metrics_tracking_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY metrics_tracking_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: production_final_assembly
 //   PRIMARY KEY production_final_assembly_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY production_final_assembly_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
@@ -1541,8 +1762,26 @@ export const Constants = {
 //   UNIQUE work_orders_wo_number_key: UNIQUE (wo_number)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: alert_rules
+//   Policy "Auth delete alert_rules" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert alert_rules" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read alert_rules" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update alert_rules" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: alerts
 //   Policy "Auth read alerts" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: alerts_log
+//   Policy "Auth delete alerts_log" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert alerts_log" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read alerts_log" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update alerts_log" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: audit_log
 //   Policy "Auth read audit" (SELECT, PERMISSIVE) roles={authenticated}
@@ -1624,6 +1863,24 @@ export const Constants = {
 //     USING: true
 // Table: metrics
 //   Policy "Auth read metrics" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: metrics_definitions
+//   Policy "Auth delete metrics_definitions" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert metrics_definitions" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read metrics_definitions" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update metrics_definitions" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: metrics_tracking
+//   Policy "Auth delete metrics_tracking" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert metrics_tracking" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read metrics_tracking" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update metrics_tracking" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: production_final_assembly
 //   Policy "Auth delete production_final_assembly" (DELETE, PERMISSIVE) roles={authenticated}
