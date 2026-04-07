@@ -39,10 +39,17 @@ import SalesDashboard from '@/components/sales/SalesDashboard'
 
 const quoteSchema = z.object({
   customer_name: z.string().min(1, 'Obrigatório'),
-  product_type: z.string().min(1, 'Obrigatório'),
+  salesperson: z.string().min(1, 'Obrigatório'),
+  product_family: z.string().min(1, 'Obrigatório'),
+  machine_model: z.string().min(1, 'Obrigatório'),
   quote_value: z.coerce.number().min(0, 'Deve ser positivo'),
   profit_margin_percentage: z.coerce.number().min(0, 'Deve ser positivo'),
-  expiration_date: z.string().min(1, 'Obrigatório'),
+  special_custom: z.string().min(1, 'Obrigatório'),
+  truck_information: z.string().min(1, 'Obrigatório'),
+  truck_supplier: z.string().min(1, 'Obrigatório'),
+  wo_number_ref: z.string().min(1, 'Obrigatório'),
+  expected_completion_date: z.string().min(1, 'Obrigatório'),
+  actual_completion_date: z.string().min(1, 'Obrigatório'),
 })
 
 type QuoteFormValues = z.infer<typeof quoteSchema>
@@ -59,10 +66,17 @@ export default function Sales() {
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       customer_name: '',
-      product_type: '',
+      salesperson: '',
+      product_family: '',
+      machine_model: '',
       quote_value: 0,
       profit_margin_percentage: 0,
-      expiration_date: '',
+      special_custom: '',
+      truck_information: '',
+      truck_supplier: '',
+      wo_number_ref: '',
+      expected_completion_date: '',
+      actual_completion_date: '',
     },
   })
 
@@ -87,7 +101,6 @@ export default function Sales() {
     try {
       await createQuote({
         ...data,
-        expiration_date: new Date(data.expiration_date).toISOString(),
       })
       toast({ title: 'Cotação criada com sucesso' })
       setIsDialogOpen(false)
@@ -165,45 +178,71 @@ export default function Sales() {
                   <Plus className="w-4 h-4 mr-2" /> Nova Cotação
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Criar Nova Cotação</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
-                    <FormField
-                      control={form.control}
-                      name="customer_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome do Cliente</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Acme Corp" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="product_type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo de Produto</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Bomba Industrial" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="customer_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Customer</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Acme Corp" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="salesperson"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Salesperson</FormLabel>
+                            <FormControl>
+                              <Input placeholder="John Doe" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="product_family"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Product Family</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Industrial" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="machine_model"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Machine Model</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Model X" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={form.control}
                         name="quote_value"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Valor ($)</FormLabel>
+                            <FormLabel>Price ($)</FormLabel>
                             <FormControl>
                               <Input type="number" step="0.01" {...field} />
                             </FormControl>
@@ -216,7 +255,7 @@ export default function Sales() {
                         name="profit_margin_percentage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Margem (%)</FormLabel>
+                            <FormLabel>Profit Margin (%)</FormLabel>
                             <FormControl>
                               <Input type="number" step="0.1" {...field} />
                             </FormControl>
@@ -224,23 +263,88 @@ export default function Sales() {
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="special_custom"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Special Custom</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Details" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="truck_information"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Truck Information</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Info" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="truck_supplier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Truck Supplier</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Supplier" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="wo_number_ref"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>WO Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="WO-12345" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="expected_completion_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Completion (Expected)</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="actual_completion_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Completion (Actual)</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="expiration_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Data de Validade</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                     <Button
                       type="submit"
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
                     >
                       Criar Cotação
                     </Button>
@@ -278,7 +382,9 @@ export default function Sales() {
                         {quote.quote_number}
                       </TableCell>
                       <TableCell className="text-slate-700">{quote.customer_name}</TableCell>
-                      <TableCell className="text-slate-600">{quote.product_type}</TableCell>
+                      <TableCell className="text-slate-600">
+                        {quote.product_family || quote.product_type}
+                      </TableCell>
                       <TableCell className="text-right font-medium text-slate-700">
                         ${Number(quote.quote_value || 0).toLocaleString()}
                       </TableCell>

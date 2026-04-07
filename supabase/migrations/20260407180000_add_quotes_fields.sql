@@ -1,0 +1,10 @@
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS salesperson TEXT;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS product_family TEXT;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS machine_model TEXT;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS special_custom TEXT;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS truck_information TEXT;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS truck_supplier TEXT;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS wo_number_ref TEXT;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS expected_completion_date DATE;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS actual_completion_date DATE;
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS date_order TIMESTAMPTZ;

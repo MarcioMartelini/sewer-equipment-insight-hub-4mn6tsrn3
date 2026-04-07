@@ -134,7 +134,7 @@ export default function SalesDashboard() {
   const distributionData = useMemo(() => {
     const map: Record<string, number> = {}
     approvedQuotes.forEach((q) => {
-      const type = q.product_type || 'Outros'
+      const type = (q as any).product_family || q.product_type || 'Outros'
       map[type] = (map[type] || 0) + Number(q.quote_value || 0)
     })
     return Object.entries(map)
