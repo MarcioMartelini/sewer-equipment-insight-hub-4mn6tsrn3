@@ -67,3 +67,26 @@ export async function deleteSalesperson(id: string) {
 
   if (error) throw error
 }
+
+export async function fetchWorkOrdersBySalesperson(salespersonName: string, salespersonId: string) {
+  const [quotesByName, quotesById] = await Promise.all([
+    supabase.from('quotes').select('id').eq('salesperson', salespersonName),
+    supabase.from('quotes').select('id').eq('salesperson', salespersonId),
+  ])
+
+  const quoteIds = Array.from(
+    new Set([...(quotesByName.data || []), ...(quotesById.data || [])].map((q) => q.id)),
+  )
+
+  if (quoteIds.length === 0) return []
+
+  const { data: wos, error: wosError } = await supabase
+    .from('work_orders')
+    .select('*, quotes(product_family)')
+    .in('quote_id', quoteIds)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  if (wosError) throw wosError
+  return wos
+}

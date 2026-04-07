@@ -1381,6 +1381,57 @@ export type Database = {
         }
         Relationships: []
       }
+      salespersons: {
+        Row: {
+          commission_rate: number | null
+          created_at: string | null
+          deleted_at: string | null
+          department: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          region: string | null
+          salesperson_id: string
+          status: string | null
+          total_revenue: number | null
+          total_wos: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          commission_rate?: number | null
+          created_at?: string | null
+          deleted_at?: string | null
+          department?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          region?: string | null
+          salesperson_id: string
+          status?: string | null
+          total_revenue?: number | null
+          total_wos?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          commission_rate?: number | null
+          created_at?: string | null
+          deleted_at?: string | null
+          department?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          region?: string | null
+          salesperson_id?: string
+          status?: string | null
+          total_revenue?: number | null
+          total_wos?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -2065,6 +2116,21 @@ export const Constants = {
 //   date_end: date (nullable)
 //   format: text (not null)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: salespersons
+//   id: uuid (not null, default: gen_random_uuid())
+//   salesperson_id: text (not null)
+//   name: text (not null)
+//   email: text (nullable)
+//   phone: text (nullable)
+//   department: text (nullable)
+//   region: text (nullable)
+//   total_wos: integer (nullable, default: 0)
+//   total_revenue: numeric (nullable, default: 0)
+//   commission_rate: numeric (nullable, default: 0)
+//   status: text (nullable, default: 'Active'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+//   deleted_at: timestamp with time zone (nullable)
 // Table: users
 //   id: uuid (not null)
 //   email: text (not null)
@@ -2236,6 +2302,9 @@ export const Constants = {
 // Table: report_history
 //   PRIMARY KEY report_history_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY report_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: salespersons
+//   PRIMARY KEY salespersons_pkey: PRIMARY KEY (id)
+//   UNIQUE salespersons_salesperson_id_key: UNIQUE (salesperson_id)
 // Table: users
 //   FOREIGN KEY users_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY users_pkey: PRIMARY KEY (id)
@@ -2510,6 +2579,16 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = user_id)
 //   Policy "Users can read own report history" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
+// Table: salespersons
+//   Policy "Auth delete salespersons" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert salespersons" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read salespersons" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update salespersons" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: users
 //   Policy "Users can read own profile or admin reads all" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
@@ -2647,5 +2726,7 @@ export const Constants = {
 //   CREATE INDEX notifications_user_id_idx ON public.notifications USING btree (user_id)
 // Table: quotes
 //   CREATE UNIQUE INDEX quotes_quote_number_key ON public.quotes USING btree (quote_number)
+// Table: salespersons
+//   CREATE UNIQUE INDEX salespersons_salesperson_id_key ON public.salespersons USING btree (salesperson_id)
 // Table: work_orders
 //   CREATE UNIQUE INDEX work_orders_wo_number_key ON public.work_orders USING btree (wo_number)
