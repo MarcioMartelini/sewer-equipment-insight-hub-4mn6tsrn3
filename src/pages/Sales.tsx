@@ -44,9 +44,29 @@ import * as z from 'zod'
 import { format } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Check, Loader2 } from 'lucide-react'
+import {
+  Plus,
+  Check,
+  Loader2,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SalesDashboard from '@/components/sales/SalesDashboard'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useMemo } from 'react'
+import { deleteQuote } from '@/services/quotes'
 
 const US_STATES = [
   'AL',
@@ -134,6 +154,18 @@ export default function Sales() {
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false)
   const [woNumber, setWoNumber] = useState('')
   const [isConverting, setIsConverting] = useState(false)
+
+  const [deleteQuoteId, setDeleteQuoteId] = useState<string | null>(null)
+
+  // Filters & Pagination
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [salespersonFilter, setSalespersonFilter] = useState('all')
+  const [customerFilter, setCustomerFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
@@ -286,6 +318,59 @@ export default function Sales() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!deleteQuoteId) return
+    try {
+      await deleteQuote(deleteQuoteId)
+      toast({ title: 'Quote deleted successfully' })
+      loadData()
+    } catch (error) {
+      toast({ title: 'Error deleting quote', variant: 'destructive' })
+    } finally {
+      setDeleteQuoteId(null)
+    }
+  }
+
+  const uniqueSalespersons = useMemo(() => {
+    return Array.from(new Set(quotes.map((q) => q.salesperson).filter(Boolean))) as string[]
+  }, [quotes])
+
+  const uniqueCustomers = useMemo(() => {
+    return Array.from(new Set(quotes.map((q) => q.customer_name).filter(Boolean))) as string[]
+  }, [quotes])
+
+  const filteredQuotes = useMemo(() => {
+    return quotes.filter((q) => {
+      const matchesSearch =
+        q.quote_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        q.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+
+      const matchesStatus = statusFilter === 'all' || q.status === statusFilter
+      const matchesSalesperson = salespersonFilter === 'all' || q.salesperson === salespersonFilter
+      const matchesCustomer = customerFilter === 'all' || q.customer_name === customerFilter
+
+      let matchesDate = true
+      if (dateFrom || dateTo) {
+        const qDate = new Date(q.created_at || '')
+        if (dateFrom && new Date(dateFrom) > qDate) matchesDate = false
+        if (dateTo && new Date(dateTo) < qDate) matchesDate = false
+      }
+
+      return matchesSearch && matchesStatus && matchesSalesperson && matchesCustomer && matchesDate
+    })
+  }, [quotes, searchQuery, statusFilter, salespersonFilter, customerFilter, dateFrom, dateTo])
+
+  const totalPages = Math.ceil(filteredQuotes.length / itemsPerPage) || 1
+  const paginatedQuotes = filteredQuotes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  )
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, statusFilter, salespersonFilter, customerFilter, dateFrom, dateTo])
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -336,14 +421,87 @@ export default function Sales() {
         </TabsContent>
 
         <TabsContent value="quotes" className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-slate-800">Quotes Registry</h2>
-            <Button
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              onClick={() => openQuoteModal()}
-            >
-              <Plus className="w-4 h-4 mr-2" /> New Quote
-            </Button>
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-slate-800">Quotes Registry</h2>
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                onClick={() => openQuoteModal()}
+              >
+                <Plus className="w-4 h-4 mr-2" /> New Quote
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+              <div className="xl:col-span-2">
+                <Label className="text-xs text-slate-500 mb-1">Search</Label>
+                <Input
+                  placeholder="Quote ID or Customer Name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="draft">Pending (Draft)</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="converted">Converted</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Salesperson</Label>
+                <Select value={salespersonFilter} onValueChange={setSalespersonFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Salespeople" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Salespeople</SelectItem>
+                    {uniqueSalespersons.map((sp) => (
+                      <SelectItem key={sp} value={sp}>
+                        {sp}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Customer</Label>
+                <Select value={customerFilter} onValueChange={setCustomerFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Customers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Customers</SelectItem>
+                    {uniqueCustomers.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Date From</Label>
+                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Date To</Label>
+                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              </div>
+            </div>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -609,76 +767,161 @@ export default function Sales() {
             </DialogContent>
           </Dialog>
 
-          <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold text-slate-700">Quote ID</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Customer</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Product</TableHead>
-                  <TableHead className="text-right font-semibold text-slate-700">Value</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Sent Date</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Approval</TableHead>
-                  <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {quotes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-slate-500 h-24">
-                      No quotes found.
-                    </TableCell>
+          <Dialog open={!!deleteQuoteId} onOpenChange={(open) => !open && setDeleteQuoteId(null)}>
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Delete Quote</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-slate-500 my-4">
+                Are you sure you want to delete this quote? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3 mt-4">
+                <Button variant="outline" onClick={() => setDeleteQuoteId(null)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleDelete}>
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Quote ID
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Customer
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Salesperson
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Product Family
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Machine Model
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                      Price
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Status
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Date Created
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ) : (
-                  quotes.map((quote) => (
-                    <TableRow
-                      key={quote.id}
-                      className="group hover:bg-slate-50/50 cursor-pointer"
-                      onClick={() => openQuoteModal(quote)}
-                    >
-                      <TableCell className="font-medium text-slate-900">
-                        {quote.quote_number}
-                      </TableCell>
-                      <TableCell className="text-slate-700">{quote.customer_name}</TableCell>
-                      <TableCell className="text-slate-600">
-                        {quote.product_family || quote.product_type}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-slate-700">
-                        ${Number(quote.quote_value || 0).toLocaleString()}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                      <TableCell className="text-slate-500 text-sm">
-                        {quote.sent_date ? format(new Date(quote.sent_date), 'MM/dd/yyyy') : '-'}
-                      </TableCell>
-                      <TableCell className="text-slate-500 text-sm">
-                        {quote.approval_date
-                          ? format(new Date(quote.approval_date), 'MM/dd/yyyy')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        {quote.status !== 'approved' && quote.status !== 'converted' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                            onClick={() => handleApprove(quote)}
-                            disabled={approvingId === quote.id}
-                          >
-                            {approvingId === quote.id ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Check className="w-4 h-4 mr-2" />
-                            )}
-                            Approve
-                          </Button>
-                        )}
+                </TableHeader>
+                <TableBody>
+                  {paginatedQuotes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center text-slate-500 h-24">
+                        No quotes found matching your filters.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    paginatedQuotes.map((quote) => (
+                      <TableRow key={quote.id} className="group hover:bg-slate-50/50">
+                        <TableCell className="font-medium text-slate-900">
+                          {quote.quote_number}
+                        </TableCell>
+                        <TableCell className="text-slate-700">{quote.customer_name}</TableCell>
+                        <TableCell className="text-slate-600">{quote.salesperson || '-'}</TableCell>
+                        <TableCell className="text-slate-600">
+                          {quote.product_family || '-'}
+                        </TableCell>
+                        <TableCell className="text-slate-600">
+                          {quote.machine_model || '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-slate-700">
+                          ${Number(quote.quote_value || 0).toLocaleString()}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(quote.status)}</TableCell>
+                        <TableCell className="text-slate-500 text-sm">
+                          {quote.created_at
+                            ? format(new Date(quote.created_at), 'MM/dd/yyyy')
+                            : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openQuoteModal(quote)}>
+                                <Edit className="w-4 h-4 mr-2" /> Edit
+                              </DropdownMenuItem>
+                              {quote.status !== 'converted' && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setEditingQuote(quote)
+                                    setWoNumber('')
+                                    setIsConvertDialogOpen(true)
+                                  }}
+                                >
+                                  <ArrowRight className="w-4 h-4 mr-2" /> Convert to WO
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                onClick={() => setDeleteQuoteId(quote.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
+                <div className="text-sm text-slate-500">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+                  {Math.min(currentPage * itemsPerPage, filteredQuotes.length)} of{' '}
+                  {filteredQuotes.length} quotes
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  </Button>
+                  <div className="text-sm font-medium text-slate-700 px-2">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
 

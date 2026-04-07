@@ -56,6 +56,11 @@ export async function updateQuote(id: string, quote: any) {
   return data
 }
 
+export async function deleteQuote(id: string) {
+  const { error } = await supabase.from('quotes').delete().eq('id', id)
+  if (error) throw error
+}
+
 export async function convertToWorkOrder(quoteId: string, woNumber: string) {
   const {
     data: { session },
