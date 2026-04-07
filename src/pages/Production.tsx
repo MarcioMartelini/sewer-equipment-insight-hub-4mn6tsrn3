@@ -47,8 +47,15 @@ const getStatusBadge = (status: string | null) => {
     'at risk': 'border-yellow-500 text-yellow-700 bg-yellow-50',
     delayed: 'border-red-500 text-red-700 bg-red-50',
     parked: 'border-slate-500 text-slate-700 bg-slate-50',
+    'n/a': 'border-slate-400 text-slate-600 bg-slate-100',
   }
   return map[status?.toLowerCase() || ''] || 'border-slate-300 text-slate-700 bg-slate-50'
+}
+
+const formatStatusText = (status: string | null) => {
+  if (!status) return 'not started'
+  if (status.toLowerCase() === 'n/a') return 'N/A'
+  return status
 }
 
 function EditStatusDialog({
@@ -89,6 +96,7 @@ function EditStatusDialog({
               <SelectItem value="at risk">At Risk</SelectItem>
               <SelectItem value="delayed">Delayed</SelectItem>
               <SelectItem value="complete">Complete</SelectItem>
+              <SelectItem value="n/a">N/A</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -237,7 +245,7 @@ export default function Production() {
                         <TableCell>{getTaskName(item, activeTab)}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={getStatusBadge(item.status)}>
-                            {item.status || 'not started'}
+                            {formatStatusText(item.status)}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">

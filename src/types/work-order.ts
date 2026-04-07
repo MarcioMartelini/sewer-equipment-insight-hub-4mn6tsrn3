@@ -8,7 +8,14 @@ export type Department =
   | 'Warranty'
   | 'High Management'
 
-export type Status = 'Not started' | 'Parked' | 'On track' | 'At risk' | 'Delayed' | 'Complete'
+export type Status =
+  | 'Not started'
+  | 'Parked'
+  | 'On track'
+  | 'At risk'
+  | 'Delayed'
+  | 'Complete'
+  | 'N/A'
 
 export type PrazoFilter = 'Todos' | 'Atrasado' | 'Esta semana' | 'Próxima semana' | 'Futuro'
 
