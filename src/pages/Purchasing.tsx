@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import { Search, LayoutDashboard, PackageSearch, AlertCircle } from 'lucide-react'
 import ComponentsTab from '@/components/purchasing/ComponentsTab'
 import ExpeditesTab from '@/components/purchasing/ExpeditesTab'
+import PurchasingDashboard from '@/components/purchasing/PurchasingDashboard'
 
 export default function Purchasing() {
   const [woFilter, setWoFilter] = useState('')
@@ -14,12 +15,22 @@ export default function Purchasing() {
         <h2 className="text-3xl font-bold tracking-tight">Purchasing</h2>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        <Tabs defaultValue="components" className="w-full">
+      <div className="flex flex-col gap-4">
+        <Tabs defaultValue="dashboard" className="w-full">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
             <TabsList>
-              <TabsTrigger value="components">Components</TabsTrigger>
-              <TabsTrigger value="expedites">Expedites</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="components" className="flex items-center gap-2">
+                <PackageSearch className="h-4 w-4" />
+                <span className="hidden sm:inline">Components</span>
+              </TabsTrigger>
+              <TabsTrigger value="expedites" className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">Expedites</span>
+              </TabsTrigger>
             </TabsList>
 
             <div className="relative w-full sm:w-72">
@@ -33,6 +44,10 @@ export default function Purchasing() {
               />
             </div>
           </div>
+
+          <TabsContent value="dashboard" className="mt-0">
+            <PurchasingDashboard />
+          </TabsContent>
 
           <TabsContent value="components" className="mt-0">
             <ComponentsTab woFilter={woFilter} />
