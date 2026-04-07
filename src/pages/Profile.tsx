@@ -243,30 +243,30 @@ export default function Profile() {
                   />
                 </div>
 
-                <div className="space-y-4 flex-1 w-full">
+                <div className="space-y-4 flex-1 w-full min-w-0">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
                       <User className="w-4 h-4" /> Nome
                     </p>
-                    <p className="font-medium">{profile.full_name}</p>
+                    <p className="font-medium break-words">{profile.full_name}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
                       <Mail className="w-4 h-4" /> Email
                     </p>
-                    <p className="font-medium">{profile.email}</p>
+                    <p className="font-medium break-all">{profile.email}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
                       <Building className="w-4 h-4" /> Departamento
                     </p>
-                    <p className="font-medium">{profile.department || '-'}</p>
+                    <p className="font-medium break-words">{profile.department || '-'}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
                       <Shield className="w-4 h-4" /> Função (Role)
                     </p>
-                    <p className="font-medium capitalize">{profile.role || 'User'}</p>
+                    <p className="font-medium capitalize break-words">{profile.role || 'User'}</p>
                   </div>
                 </div>
               </div>

@@ -1185,6 +1185,7 @@ export type Database = {
       }
       users: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           critical_alerts: boolean | null
           daily_summary: boolean | null
@@ -1198,6 +1199,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           critical_alerts?: boolean | null
           daily_summary?: boolean | null
@@ -1211,6 +1213,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           critical_alerts?: boolean | null
           daily_summary?: boolean | null
@@ -1739,6 +1742,7 @@ export const Constants = {
 //   system_notifications: boolean (nullable, default: true)
 //   critical_alerts: boolean (nullable, default: true)
 //   daily_summary: boolean (nullable, default: false)
+//   avatar_url: text (nullable)
 // Table: warranty_claims
 //   id: uuid (not null, default: gen_random_uuid())
 //   serial_number: text (nullable)
