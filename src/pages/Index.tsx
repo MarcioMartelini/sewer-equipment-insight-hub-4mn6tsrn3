@@ -1,19 +1,32 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { WorkOrderFilters } from '@/components/WorkOrderFilters'
 import { WorkOrderTable } from '@/components/WorkOrderTable'
 import { WorkOrderKanban } from '@/components/WorkOrderKanban'
-import { mockWorkOrders } from '@/lib/mock-data'
-import { Department, Status, PrazoFilter } from '@/types/work-order'
+import { Department, Status, PrazoFilter, WorkOrder } from '@/types/work-order'
+import { fetchWorkOrders } from '@/services/work-orders'
+import { useAuth } from '@/hooks/use-auth'
+import { Button } from '@/components/ui/button'
+import { LogOut } from 'lucide-react'
 
 export default function Index() {
+  const { signOut } = useAuth()
+  const [data, setData] = useState<WorkOrder[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedDepts, setSelectedDepts] = useState<Department[]>([])
   const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([])
   const [prazo, setPrazo] = useState<PrazoFilter>('Todos')
   const [view, setView] = useState<'table' | 'kanban'>('table')
 
+  useEffect(() => {
+    fetchWorkOrders().then((wos) => {
+      setData(wos)
+      setLoading(false)
+    })
+  }, [])
+
   const filteredData = useMemo(() => {
-    return mockWorkOrders.filter((wo) => {
+    return data.filter((wo) => {
       // 1. Text Search (WO ID or Customer)
       const searchTerm = search.toLowerCase()
       const matchesSearch =
@@ -54,14 +67,25 @@ export default function Index() {
 
   return (
     <div className="flex flex-col w-full h-full max-w-[1600px] mx-auto">
-      <div className="mb-2">
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight sm:hidden mb-4">
-          Registro de Work Orders
-        </h2>
-        <p className="text-slate-500 mb-6 max-w-2xl text-sm">
-          Gerencie o ciclo de vida das ordens de produção, identifique gargalos e monitore os prazos
-          em tempo real.
-        </p>
+      <div className="mb-2 flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight sm:hidden mb-4">
+            Registro de Work Orders
+          </h2>
+          <p className="text-slate-500 mb-6 max-w-2xl text-sm">
+            Gerencie o ciclo de vida das ordens de produção, identifique gargalos e monitore os
+            prazos em tempo real.
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => signOut()}
+          className="text-slate-500 hover:text-slate-700"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sair
+        </Button>
       </div>
 
       <WorkOrderFilters
@@ -77,13 +101,19 @@ export default function Index() {
         setView={setView}
       />
 
-      <div className="flex-1 mt-2">
-        {view === 'table' ? (
-          <WorkOrderTable data={filteredData} />
-        ) : (
-          <WorkOrderKanban data={filteredData} />
-        )}
-      </div>
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center h-64 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+          <p className="text-slate-500 animate-pulse">Carregando dados do banco...</p>
+        </div>
+      ) : (
+        <div className="flex-1 mt-2">
+          {view === 'table' ? (
+            <WorkOrderTable data={filteredData} />
+          ) : (
+            <WorkOrderKanban data={filteredData} />
+          )}
+        </div>
+      )}
     </div>
   )
 }
