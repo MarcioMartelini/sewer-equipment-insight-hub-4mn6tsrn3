@@ -123,6 +123,7 @@ type QuoteFormValues = z.infer<typeof quoteSchema>
 export default function Sales() {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
@@ -263,7 +264,8 @@ export default function Sales() {
       setIsConvertDialogOpen(false)
       setIsDialogOpen(false)
 
-      navigate('/production')
+      await loadData()
+      setActiveTab('work-orders')
     } catch (error) {
       toast({ title: 'Error converting quote', variant: 'destructive' })
     } finally {
@@ -322,7 +324,7 @@ export default function Sales() {
         <p className="text-slate-500 text-sm mt-1">Manage quotes and track approved work orders.</p>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-[600px] grid-cols-3 bg-slate-100">
           <TabsTrigger value="dashboard">Executive Dashboard</TabsTrigger>
           <TabsTrigger value="quotes">Quotes</TabsTrigger>
@@ -706,7 +708,11 @@ export default function Sales() {
                   </TableRow>
                 ) : (
                   workOrders.map((wo) => (
-                    <TableRow key={wo.id} className="group hover:bg-slate-50/50">
+                    <TableRow
+                      key={wo.id}
+                      className="group hover:bg-slate-50/50 cursor-pointer"
+                      onClick={() => navigate(`/work-orders/${wo.id}`)}
+                    >
                       <TableCell className="font-medium text-slate-900">{wo.id}</TableCell>
                       <TableCell className="text-indigo-600 text-sm font-medium">
                         {wo.quoteNumber || '-'}

@@ -1305,13 +1305,63 @@ export type Database = {
           },
         ]
       }
+      wo_history: {
+        Row: {
+          changed_at: string | null
+          department: string | null
+          id: string
+          new_status: string | null
+          notes: string | null
+          old_status: string | null
+          user_id: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          department?: string | null
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+          user_id?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          department?: string | null
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+          user_id?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'wo_history_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'wo_history_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       work_orders: {
         Row: {
+          actual_completion_date: string | null
           created_at: string | null
           created_by: string | null
           customer_name: string
           department: string | null
           due_date: string | null
+          expected_completion_date: string | null
           id: string
           machine_model: string | null
           price: number | null
@@ -1324,11 +1374,13 @@ export type Database = {
           wo_number: string
         }
         Insert: {
+          actual_completion_date?: string | null
           created_at?: string | null
           created_by?: string | null
           customer_name: string
           department?: string | null
           due_date?: string | null
+          expected_completion_date?: string | null
           id?: string
           machine_model?: string | null
           price?: number | null
@@ -1341,11 +1393,13 @@ export type Database = {
           wo_number: string
         }
         Update: {
+          actual_completion_date?: string | null
           created_at?: string | null
           created_by?: string | null
           customer_name?: string
           department?: string | null
           due_date?: string | null
+          expected_completion_date?: string | null
           id?: string
           machine_model?: string | null
           price?: number | null
@@ -1809,6 +1863,15 @@ export const Constants = {
 //   status: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+// Table: wo_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   changed_at: timestamp with time zone (nullable, default: now())
+//   department: text (nullable)
+//   user_id: uuid (nullable)
+//   old_status: text (nullable)
+//   new_status: text (nullable)
+//   notes: text (nullable)
 // Table: work_orders
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_number: text (not null)
@@ -1825,6 +1888,8 @@ export const Constants = {
 //   machine_model: text (nullable)
 //   price: numeric (nullable)
 //   profit_margin: numeric (nullable)
+//   expected_completion_date: date (nullable)
+//   actual_completion_date: date (nullable)
 
 // --- CONSTRAINTS ---
 // Table: alert_rules
@@ -1934,6 +1999,10 @@ export const Constants = {
 // Table: warranty_claims
 //   PRIMARY KEY warranty_claims_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY warranty_claims_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: wo_history
+//   PRIMARY KEY wo_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY wo_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+//   FOREIGN KEY wo_history_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: work_orders
 //   FOREIGN KEY work_orders_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id)
 //   PRIMARY KEY work_orders_pkey: PRIMARY KEY (id)
@@ -2187,6 +2256,11 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = id)
 // Table: warranty_claims
 //   Policy "Auth read warranty" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: wo_history
+//   Policy "Auth insert wo_history" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read wo_history" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: work_orders
 //   Policy "Insert WO" (INSERT, PERMISSIVE) roles={authenticated}
