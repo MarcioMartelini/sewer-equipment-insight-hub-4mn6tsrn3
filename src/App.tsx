@@ -13,6 +13,7 @@ import Production from './pages/Production'
 import Quality from './pages/Quality'
 import HR from './pages/HR'
 import HighManagement from './pages/HighManagement'
+import Settings from './pages/Settings'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -39,7 +40,7 @@ const App = () => (
           >
             <Route path="/" element={<Index />} />
             <Route path="/relatorios" element={<Index />} />
-            <Route path="/configuracoes" element={<Index />} />
+            <Route path="/configuracoes" element={<Settings />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/engineering" element={<Engineering />} />
             <Route path="/purchasing" element={<Purchasing />} />

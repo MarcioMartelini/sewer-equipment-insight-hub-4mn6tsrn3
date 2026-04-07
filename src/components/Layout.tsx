@@ -29,6 +29,7 @@ import {
   Wrench,
   Briefcase,
   LineChart,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 
 import companyLogo from '@/assets/sewer-equipment-blue-fill-white-gray-globe-blue-gray-text-white-border-1024x1024-26940.webp'
@@ -41,6 +42,10 @@ const navigation = [
       { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
       { title: 'High Management', icon: LineChart, url: '/high-management' },
     ],
+  },
+  {
+    title: 'System',
+    items: [{ title: 'Settings', icon: SettingsIcon, url: '/configuracoes' }],
   },
   {
     title: 'Departments',
