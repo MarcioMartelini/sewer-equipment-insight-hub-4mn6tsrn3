@@ -1100,7 +1100,9 @@ export type Database = {
           approval_date: string | null
           created_at: string | null
           created_by: string | null
+          customer_city: string | null
           customer_name: string
+          customer_state: string | null
           date_order: string | null
           expected_completion_date: string | null
           expiration_date: string | null
@@ -1125,7 +1127,9 @@ export type Database = {
           approval_date?: string | null
           created_at?: string | null
           created_by?: string | null
+          customer_city?: string | null
           customer_name: string
+          customer_state?: string | null
           date_order?: string | null
           expected_completion_date?: string | null
           expiration_date?: string | null
@@ -1150,7 +1154,9 @@ export type Database = {
           approval_date?: string | null
           created_at?: string | null
           created_by?: string | null
+          customer_city?: string | null
           customer_name?: string
+          customer_state?: string | null
           date_order?: string | null
           expected_completion_date?: string | null
           expiration_date?: string | null
@@ -1761,6 +1767,8 @@ export const Constants = {
 //   expected_completion_date: date (nullable)
 //   actual_completion_date: date (nullable)
 //   date_order: timestamp with time zone (nullable)
+//   customer_city: text (nullable)
+//   customer_state: text (nullable)
 // Table: report_history
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)

@@ -28,6 +28,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -36,6 +43,59 @@ import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Check, Loader2 } from 'lucide-react'
 import SalesDashboard from '@/components/sales/SalesDashboard'
+
+const US_STATES = [
+  'AL',
+  'AK',
+  'AZ',
+  'AR',
+  'CA',
+  'CO',
+  'CT',
+  'DE',
+  'FL',
+  'GA',
+  'HI',
+  'ID',
+  'IL',
+  'IN',
+  'IA',
+  'KS',
+  'KY',
+  'LA',
+  'ME',
+  'MD',
+  'MA',
+  'MI',
+  'MN',
+  'MS',
+  'MO',
+  'MT',
+  'NE',
+  'NV',
+  'NH',
+  'NJ',
+  'NM',
+  'NY',
+  'NC',
+  'ND',
+  'OH',
+  'OK',
+  'OR',
+  'PA',
+  'RI',
+  'SC',
+  'SD',
+  'TN',
+  'TX',
+  'UT',
+  'VT',
+  'VA',
+  'WA',
+  'WV',
+  'WI',
+  'WY',
+]
 
 const quoteSchema = z.object({
   quote_number: z.string().min(1, 'Obrigatório'),
@@ -47,10 +107,9 @@ const quoteSchema = z.object({
   machine_model: z.string().min(1, 'Obrigatório'),
   quote_value: z.coerce.number().min(0, 'Deve ser positivo'),
   profit_margin_percentage: z.coerce.number().min(0, 'Deve ser positivo'),
-  special_custom: z.string().min(1, 'Obrigatório'),
+  special_custom: z.string().optional(),
   truck_information: z.string().min(1, 'Obrigatório'),
   truck_supplier: z.string().min(1, 'Obrigatório'),
-  wo_number_ref: z.string().min(1, 'Obrigatório'),
   expected_completion_date: z.string().min(1, 'Obrigatório'),
   actual_completion_date: z.string().min(1, 'Obrigatório'),
 })
@@ -80,7 +139,6 @@ export default function Sales() {
       special_custom: '',
       truck_information: '',
       truck_supplier: '',
-      wo_number_ref: '',
       expected_completion_date: '',
       actual_completion_date: '',
     },
@@ -236,9 +294,20 @@ export default function Sales() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Customer State</FormLabel>
-                            <FormControl>
-                              <Input placeholder="State" {...field} />
-                            </FormControl>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a state" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {US_STATES.map((state) => (
+                                  <SelectItem key={state} value={state}>
+                                    {state}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -262,9 +331,18 @@ export default function Sales() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Product Family</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Industrial" {...field} />
-                            </FormControl>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select family" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Plumbing">Plumbing</SelectItem>
+                                <SelectItem value="Municipal">Municipal</SelectItem>
+                                <SelectItem value="Industrial">Industrial</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -342,19 +420,6 @@ export default function Sales() {
                             <FormLabel>Truck Supplier</FormLabel>
                             <FormControl>
                               <Input placeholder="Supplier" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="wo_number_ref"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>WO Number</FormLabel>
-                            <FormControl>
-                              <Input placeholder="WO-12345" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
