@@ -1,0 +1,69 @@
+import { supabase } from '@/lib/supabase/client'
+
+export interface Salesperson {
+  id: string
+  salesperson_id: string
+  name: string
+  email: string | null
+  phone: string | null
+  department: string | null
+  region: string | null
+  total_wos: number
+  total_revenue: number
+  commission_rate: number
+  status: string
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export async function fetchSalespersons() {
+  const { data, error } = await supabase
+    .from('salespersons')
+    .select('*')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data as Salesperson[]
+}
+
+export async function fetchSalespersonById(id: string) {
+  const { data, error } = await supabase
+    .from('salespersons')
+    .select('*')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single()
+
+  if (error) throw error
+  return data as Salesperson
+}
+
+export async function createSalesperson(sp: Partial<Salesperson>) {
+  const { data, error } = await supabase.from('salespersons').insert([sp]).select().single()
+
+  if (error) throw error
+  return data as Salesperson
+}
+
+export async function updateSalesperson(id: string, sp: Partial<Salesperson>) {
+  const { data, error } = await supabase
+    .from('salespersons')
+    .update({ ...sp, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Salesperson
+}
+
+export async function deleteSalesperson(id: string) {
+  const { error } = await supabase
+    .from('salespersons')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) throw error
+}

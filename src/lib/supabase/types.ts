@@ -252,6 +252,7 @@ export type Database = {
           created_at: string | null
           customer_id: string
           customer_name: string
+          deleted_at: string | null
           email: string | null
           id: string
           last_wo_date: string | null
@@ -269,6 +270,7 @@ export type Database = {
           created_at?: string | null
           customer_id: string
           customer_name: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           last_wo_date?: string | null
@@ -286,6 +288,7 @@ export type Database = {
           created_at?: string | null
           customer_id?: string
           customer_name?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           last_wo_date?: string | null
@@ -1818,6 +1821,7 @@ export const Constants = {
 //   last_wo_date: date (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   deleted_at: timestamp with time zone (nullable)
 // Table: departments
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)

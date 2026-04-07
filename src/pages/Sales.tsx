@@ -59,6 +59,7 @@ import {
 import { cn } from '@/lib/utils'
 import SalesDashboard from '@/components/sales/SalesDashboard'
 import CustomersList from '@/components/sales/CustomersList'
+import SalespersonsList from '@/components/sales/SalespersonsList'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -557,8 +558,8 @@ export default function Sales() {
           <TabsTrigger value="quotes">Quotes</TabsTrigger>
           <TabsTrigger value="work-orders">Work Orders</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
+          <TabsTrigger value="salespersons">Salespersons</TabsTrigger>
         </TabsList>
-
         <TabsContent value="dashboard" className="mt-6">
           <SalesDashboard />
         </TabsContent>
@@ -1429,6 +1430,10 @@ export default function Sales() {
 
         <TabsContent value="customers" className="mt-6">
           <CustomersList />
+        </TabsContent>
+
+        <TabsContent value="salespersons" className="mt-6">
+          <SalespersonsList />
         </TabsContent>
       </Tabs>
     </div>
