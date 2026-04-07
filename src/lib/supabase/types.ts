@@ -336,6 +336,216 @@ export type Database = {
           },
         ]
       }
+      production_final_assembly: {
+        Row: {
+          created_at: string | null
+          id: string
+          station_name: string
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          station_name: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          station_name?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_final_assembly_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      production_paint: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string | null
+          task_name: string
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name?: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_paint_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      production_sub_assembly: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string | null
+          task_name: string
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name?: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_sub_assembly_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      production_tests: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string | null
+          test_name: string
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          test_name: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          test_name?: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_tests_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      production_warehouse: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string | null
+          task_name: string
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name?: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_warehouse_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      production_weld_shop: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string | null
+          task_name: string
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name?: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_weld_shop_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       products: {
         Row: {
           created_at: string | null
@@ -848,6 +1058,48 @@ export const Constants = {
 //   threshold_min: numeric (nullable)
 //   threshold_max: numeric (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: production_final_assembly
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   station_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: production_paint
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   task_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: production_sub_assembly
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   task_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: production_tests
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   test_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: production_warehouse
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   task_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: production_weld_shop
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   task_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: products
 //   id: uuid (not null, default: gen_random_uuid())
 //   product_name: text (not null)
@@ -949,6 +1201,24 @@ export const Constants = {
 // Table: metrics
 //   PRIMARY KEY metrics_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY metrics_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: production_final_assembly
+//   PRIMARY KEY production_final_assembly_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_final_assembly_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: production_paint
+//   PRIMARY KEY production_paint_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_paint_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: production_sub_assembly
+//   PRIMARY KEY production_sub_assembly_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_sub_assembly_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: production_tests
+//   PRIMARY KEY production_tests_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_tests_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: production_warehouse
+//   PRIMARY KEY production_warehouse_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_warehouse_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: production_weld_shop
+//   PRIMARY KEY production_weld_shop_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_weld_shop_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
 // Table: purchasing_components
@@ -1033,6 +1303,60 @@ export const Constants = {
 //     USING: true
 // Table: metrics
 //   Policy "Auth read metrics" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_final_assembly
+//   Policy "Auth delete production_final_assembly" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_final_assembly" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_final_assembly" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_final_assembly" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_paint
+//   Policy "Auth delete production_paint" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_paint" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_paint" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_paint" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_sub_assembly
+//   Policy "Auth delete production_sub_assembly" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_sub_assembly" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_sub_assembly" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_sub_assembly" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_tests
+//   Policy "Auth delete production_tests" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_tests" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_tests" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_tests" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_warehouse
+//   Policy "Auth delete production_warehouse" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_warehouse" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_warehouse" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_warehouse" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_weld_shop
+//   Policy "Auth delete production_weld_shop" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_weld_shop" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_weld_shop" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_weld_shop" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: products
 //   Policy "Auth read products" (SELECT, PERMISSIVE) roles={authenticated}
