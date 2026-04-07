@@ -7,7 +7,9 @@ import {
   deleteSalesperson,
   updateSalesperson,
   fetchWorkOrdersBySalesperson,
+  fetchSalespersonHistory,
   type Salesperson,
+  type SalespersonHistory,
 } from '@/services/salespersons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -63,6 +65,7 @@ export default function SalespersonDetail() {
 
   const [salesperson, setSalesperson] = useState<Salesperson | null>(null)
   const [wos, setWos] = useState<any[]>([])
+  const [history, setHistory] = useState<SalespersonHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview')
 
@@ -84,8 +87,12 @@ export default function SalespersonDetail() {
       setLoading(true)
       const data = await fetchSalespersonById(id)
       setSalesperson(data)
-      const relatedWos = await fetchWorkOrdersBySalesperson(data.name, data.salesperson_id)
+      const [relatedWos, historyData] = await Promise.all([
+        fetchWorkOrdersBySalesperson(data.name, data.salesperson_id),
+        fetchSalespersonHistory(id),
+      ])
       setWos(relatedWos)
+      setHistory(historyData)
     } catch (error) {
       console.error(error)
       toast({ title: 'Error loading details', variant: 'destructive' })
@@ -101,6 +108,18 @@ export default function SalespersonDetail() {
       setIsSaving(true)
       const updated = await updateSalesperson(salesperson.id, formData)
       setSalesperson(updated)
+
+      const historyData = await fetchSalespersonHistory(salesperson.id)
+      setHistory(historyData)
+
+      if (
+        updated.name !== salesperson.name ||
+        updated.salesperson_id !== salesperson.salesperson_id
+      ) {
+        const relatedWos = await fetchWorkOrdersBySalesperson(updated.name, updated.salesperson_id)
+        setWos(relatedWos)
+      }
+
       setIsEditModalOpen(false)
       toast({ title: 'Salesperson updated successfully' })
     } catch (error) {
@@ -390,9 +409,10 @@ export default function SalespersonDetail() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-        <TabsList className="bg-slate-100">
+        <TabsList className="bg-slate-100 flex flex-wrap h-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="wos">Work Orders History ({filteredWos.length})</TabsTrigger>
+          <TabsTrigger value="history">Audit Log</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="mt-6 text-slate-500">
           <Card>
@@ -454,6 +474,57 @@ export default function SalespersonDetail() {
                               View
                             </Link>
                           </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+        <TabsContent value="history" className="mt-6">
+          <Card className="shadow-sm border-slate-200">
+            {history.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-slate-500">
+                <Clock className="w-8 h-8 text-slate-300 mb-2" />
+                <p>No audit history found for this salesperson.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date & Time</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Field Changed</TableHead>
+                      <TableHead>Old Value</TableHead>
+                      <TableHead>New Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {history.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>
+                          {format(new Date(record.changed_at), 'MMM dd, yyyy HH:mm')}
+                        </TableCell>
+                        <TableCell>
+                          {record.users?.full_name || record.users?.email || 'System'}
+                        </TableCell>
+                        <TableCell className="font-medium text-slate-900 capitalize">
+                          {record.field_changed.replace(/_/g, ' ')}
+                        </TableCell>
+                        <TableCell
+                          className="text-red-500 max-w-[200px] truncate"
+                          title={record.old_value || ''}
+                        >
+                          {record.old_value || '-'}
+                        </TableCell>
+                        <TableCell
+                          className="text-emerald-500 max-w-[200px] truncate"
+                          title={record.new_value || ''}
+                        >
+                          {record.new_value || '-'}
                         </TableCell>
                       </TableRow>
                     ))}

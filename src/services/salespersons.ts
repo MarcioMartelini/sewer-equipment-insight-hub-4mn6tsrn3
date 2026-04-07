@@ -68,6 +68,33 @@ export async function deleteSalesperson(id: string) {
   if (error) throw error
 }
 
+export interface SalespersonHistory {
+  id: string
+  salesperson_id: string
+  user_id: string | null
+  field_changed: string
+  old_value: string | null
+  new_value: string | null
+  action: string | null
+  notes: string | null
+  changed_at: string
+  users?: {
+    full_name: string
+    email: string
+  } | null
+}
+
+export async function fetchSalespersonHistory(id: string) {
+  const { data, error } = await supabase
+    .from('salesperson_history' as any)
+    .select('*, users(full_name, email)')
+    .eq('salesperson_id', id)
+    .order('changed_at', { ascending: false })
+
+  if (error) throw error
+  return data as SalespersonHistory[]
+}
+
 export async function fetchWorkOrdersBySalesperson(salespersonName: string, salespersonId: string) {
   const [quotesByName, quotesById] = await Promise.all([
     supabase.from('quotes').select('id').eq('salesperson', salespersonName),
