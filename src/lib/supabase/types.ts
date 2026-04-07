@@ -1381,6 +1381,50 @@ export type Database = {
         }
         Relationships: []
       }
+      salesperson_history: {
+        Row: {
+          action: string | null
+          changed_at: string | null
+          field_changed: string
+          id: string
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+          salesperson_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          changed_at?: string | null
+          field_changed: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          salesperson_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          changed_at?: string | null
+          field_changed?: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          salesperson_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'salesperson_history_salesperson_id_fkey'
+            columns: ['salesperson_id']
+            isOneToOne: false
+            referencedRelation: 'salespersons'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       salespersons: {
         Row: {
           commission_rate: number | null
@@ -2116,6 +2160,16 @@ export const Constants = {
 //   date_end: date (nullable)
 //   format: text (not null)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: salesperson_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   salesperson_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   field_changed: text (not null)
+//   old_value: text (nullable)
+//   new_value: text (nullable)
+//   action: text (nullable)
+//   notes: text (nullable)
+//   changed_at: timestamp with time zone (nullable, default: now())
 // Table: salespersons
 //   id: uuid (not null, default: gen_random_uuid())
 //   salesperson_id: text (not null)
@@ -2302,6 +2356,10 @@ export const Constants = {
 // Table: report_history
 //   PRIMARY KEY report_history_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY report_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: salesperson_history
+//   PRIMARY KEY salesperson_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY salesperson_history_salesperson_id_fkey: FOREIGN KEY (salesperson_id) REFERENCES salespersons(id) ON DELETE CASCADE
+//   FOREIGN KEY salesperson_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
 // Table: salespersons
 //   PRIMARY KEY salespersons_pkey: PRIMARY KEY (id)
 //   UNIQUE salespersons_salesperson_id_key: UNIQUE (salesperson_id)
@@ -2579,6 +2637,11 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = user_id)
 //   Policy "Users can read own report history" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
+// Table: salesperson_history
+//   Policy "Auth insert salesperson_history" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read salesperson_history" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: salespersons
 //   Policy "Auth delete salespersons" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -2710,12 +2773,42 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION log_salesperson_changes()
+//   CREATE OR REPLACE FUNCTION public.log_salesperson_changes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_old_json JSONB := to_jsonb(OLD);
+//       v_new_json JSONB := to_jsonb(NEW);
+//       v_key TEXT;
+//       v_user_id UUID;
+//   BEGIN
+//       v_user_id := auth.uid();
+//
+//       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
+//       LOOP
+//           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
+//               IF v_old_json->>v_key IS DISTINCT FROM v_new_json->>v_key THEN
+//                   INSERT INTO public.salesperson_history (salesperson_id, user_id, field_changed, old_value, new_value, action)
+//                   VALUES (NEW.id, v_user_id, v_key, v_old_json->>v_key, v_new_json->>v_key, 'update');
+//               END IF;
+//           END IF;
+//       END LOOP;
+//
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: customers
 //   on_customer_update: CREATE TRIGGER on_customer_update AFTER UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION log_customer_changes()
 // Table: quotes
 //   on_quote_update: CREATE TRIGGER on_quote_update AFTER UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION log_quote_changes()
+// Table: salespersons
+//   on_salesperson_update: CREATE TRIGGER on_salesperson_update AFTER UPDATE ON public.salespersons FOR EACH ROW EXECUTE FUNCTION log_salesperson_changes()
 
 // --- INDEXES ---
 // Table: customers

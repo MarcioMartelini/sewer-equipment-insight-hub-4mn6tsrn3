@@ -87,11 +87,29 @@ export interface SalespersonHistory {
 export async function fetchSalespersonHistory(id: string) {
   const { data, error } = await supabase
     .from('salesperson_history' as any)
-    .select('*, users(full_name, email)')
+    .select('*')
     .eq('salesperson_id', id)
     .order('changed_at', { ascending: false })
 
   if (error) throw error
+
+  const userIds = Array.from(new Set(data.map((h: any) => h.user_id).filter(Boolean))) as string[]
+
+  if (userIds.length > 0) {
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, full_name, email')
+      .in('id', userIds)
+
+    if (users) {
+      const userMap = new Map(users.map((u) => [u.id, u]))
+      return data.map((h: any) => ({
+        ...h,
+        users: userMap.get(h.user_id) || null,
+      })) as SalespersonHistory[]
+    }
+  }
+
   return data as SalespersonHistory[]
 }
 
