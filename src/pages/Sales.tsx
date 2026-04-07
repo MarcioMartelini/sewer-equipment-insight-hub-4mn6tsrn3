@@ -98,20 +98,20 @@ const US_STATES = [
 ]
 
 const quoteSchema = z.object({
-  quote_number: z.string().min(1, 'Obrigatório'),
-  customer_name: z.string().min(1, 'Obrigatório'),
-  customer_city: z.string().min(1, 'Obrigatório'),
-  customer_state: z.string().min(1, 'Obrigatório'),
-  salesperson: z.string().min(1, 'Obrigatório'),
-  product_family: z.string().min(1, 'Obrigatório'),
-  machine_model: z.string().min(1, 'Obrigatório'),
-  quote_value: z.coerce.number().min(0, 'Deve ser positivo'),
-  profit_margin_percentage: z.coerce.number().min(0, 'Deve ser positivo'),
+  quote_number: z.string().min(1, 'Required'),
+  customer_name: z.string().min(1, 'Required'),
+  customer_city: z.string().min(1, 'Required'),
+  customer_state: z.string().min(1, 'Required'),
+  salesperson: z.string().min(1, 'Required'),
+  product_family: z.string().min(1, 'Required'),
+  machine_model: z.string().min(1, 'Required'),
+  quote_value: z.coerce.number().min(0, 'Must be positive'),
+  profit_margin_percentage: z.coerce.number().min(0, 'Must be positive'),
   special_custom: z.string().optional(),
-  truck_information: z.string().min(1, 'Obrigatório'),
-  truck_supplier: z.string().min(1, 'Obrigatório'),
-  expected_completion_date: z.string().min(1, 'Obrigatório'),
-  actual_completion_date: z.string().min(1, 'Obrigatório'),
+  truck_information: z.string().min(1, 'Required'),
+  truck_supplier: z.string().min(1, 'Required'),
+  expected_completion_date: z.string().min(1, 'Required'),
+  actual_completion_date: z.string().min(1, 'Required'),
 })
 
 type QuoteFormValues = z.infer<typeof quoteSchema>
@@ -151,7 +151,7 @@ export default function Sales() {
       setQuotes(fetchedQuotes)
       setWorkOrders(fetchedWOs.filter((wo) => wo.quoteId))
     } catch (error) {
-      toast({ title: 'Erro ao carregar dados', variant: 'destructive' })
+      toast({ title: 'Error loading data', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -166,12 +166,12 @@ export default function Sales() {
       await createQuote({
         ...data,
       })
-      toast({ title: 'Cotação criada com sucesso' })
+      toast({ title: 'Quote created successfully' })
       setIsDialogOpen(false)
       form.reset()
       loadData()
     } catch (error) {
-      toast({ title: 'Erro ao criar cotação', variant: 'destructive' })
+      toast({ title: 'Error creating quote', variant: 'destructive' })
     }
   }
 
@@ -179,10 +179,10 @@ export default function Sales() {
     try {
       setApprovingId(quote.id)
       await approveQuote(quote)
-      toast({ title: 'Cotação aprovada e Ordem de Trabalho criada' })
+      toast({ title: 'Quote approved and Work Order created' })
       loadData()
     } catch (error) {
-      toast({ title: 'Erro ao aprovar cotação', variant: 'destructive' })
+      toast({ title: 'Error approving quote', variant: 'destructive' })
     } finally {
       setApprovingId(null)
     }
@@ -191,17 +191,21 @@ export default function Sales() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-emerald-500 hover:bg-emerald-600">Aprovada</Badge>
+        return <Badge className="bg-emerald-500 hover:bg-emerald-600">Approved</Badge>
       case 'draft':
-        return <Badge variant="secondary">Rascunho</Badge>
+        return <Badge variant="secondary">Draft</Badge>
       case 'sent':
-        return <Badge className="bg-blue-500 hover:bg-blue-600">Enviada</Badge>
+        return <Badge className="bg-blue-500 hover:bg-blue-600">Sent</Badge>
       case 'rejected':
-        return <Badge variant="destructive">Rejeitada</Badge>
+        return <Badge variant="destructive">Rejected</Badge>
       case 'expired':
-        return <Badge variant="destructive">Expirada</Badge>
+        return <Badge variant="destructive">Expired</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return (
+          <Badge variant="outline" className="capitalize">
+            {status}
+          </Badge>
+        )
     }
   }
 
@@ -216,17 +220,15 @@ export default function Sales() {
   return (
     <div className="flex flex-col h-full gap-6 max-w-[1600px] mx-auto w-full animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Módulo de Vendas</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Gerencie cotações e acompanhe as ordens de trabalho aprovadas.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Module</h1>
+        <p className="text-slate-500 text-sm mt-1">Manage quotes and track approved work orders.</p>
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
         <TabsList className="grid w-[600px] grid-cols-3 bg-slate-100">
-          <TabsTrigger value="dashboard">Dashboard Executivo</TabsTrigger>
-          <TabsTrigger value="quotes">Cotações</TabsTrigger>
-          <TabsTrigger value="work-orders">Ordens de Trabalho</TabsTrigger>
+          <TabsTrigger value="dashboard">Executive Dashboard</TabsTrigger>
+          <TabsTrigger value="quotes">Quotes</TabsTrigger>
+          <TabsTrigger value="work-orders">Work Orders</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-6">
@@ -235,16 +237,16 @@ export default function Sales() {
 
         <TabsContent value="quotes" className="mt-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-slate-800">Registro de Cotações</h2>
+            <h2 className="text-lg font-semibold text-slate-800">Quotes Registry</h2>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                  <Plus className="w-4 h-4 mr-2" /> Nova Cotação
+                  <Plus className="w-4 h-4 mr-2" /> New Quote
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Criar Nova Cotação</DialogTitle>
+                  <DialogTitle>Create New Quote</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
@@ -456,7 +458,7 @@ export default function Sales() {
                       type="submit"
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
                     >
-                      Criar Cotação
+                      Create Quote
                     </Button>
                   </form>
                 </Form>
@@ -468,21 +470,21 @@ export default function Sales() {
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold text-slate-700">ID da Cotação</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Cliente</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Produto</TableHead>
-                  <TableHead className="text-right font-semibold text-slate-700">Valor</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Quote ID</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Customer</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Product</TableHead>
+                  <TableHead className="text-right font-semibold text-slate-700">Value</TableHead>
                   <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Data de Envio</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Aprovação</TableHead>
-                  <TableHead className="text-right font-semibold text-slate-700">Ações</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Sent Date</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Approval</TableHead>
+                  <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {quotes.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-slate-500 h-24">
-                      Nenhuma cotação encontrada.
+                      No quotes found.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -500,11 +502,11 @@ export default function Sales() {
                       </TableCell>
                       <TableCell>{getStatusBadge(quote.status)}</TableCell>
                       <TableCell className="text-slate-500 text-sm">
-                        {quote.sent_date ? format(new Date(quote.sent_date), 'dd/MM/yyyy') : '-'}
+                        {quote.sent_date ? format(new Date(quote.sent_date), 'MM/dd/yyyy') : '-'}
                       </TableCell>
                       <TableCell className="text-slate-500 text-sm">
                         {quote.approval_date
-                          ? format(new Date(quote.approval_date), 'dd/MM/yyyy')
+                          ? format(new Date(quote.approval_date), 'MM/dd/yyyy')
                           : '-'}
                       </TableCell>
                       <TableCell className="text-right">
@@ -521,7 +523,7 @@ export default function Sales() {
                             ) : (
                               <Check className="w-4 h-4 mr-2" />
                             )}
-                            Aprovar
+                            Approve
                           </Button>
                         )}
                       </TableCell>
@@ -535,26 +537,26 @@ export default function Sales() {
 
         <TabsContent value="work-orders" className="mt-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-slate-800">Ordens de Trabalho de Vendas</h2>
+            <h2 className="text-lg font-semibold text-slate-800">Sales Work Orders</h2>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold text-slate-700">ID da WO</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Ref. Cotação</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Cliente</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Produto</TableHead>
+                  <TableHead className="font-semibold text-slate-700">WO ID</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Quote Ref.</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Customer</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Product</TableHead>
                   <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Prazo</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Progresso</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Due Date</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Progress</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {workOrders.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-slate-500 h-24">
-                      Nenhuma ordem de trabalho originada de vendas.
+                      No work orders originated from sales.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -569,13 +571,13 @@ export default function Sales() {
                       <TableCell>
                         <Badge
                           variant="secondary"
-                          className="bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          className="bg-slate-100 text-slate-700 hover:bg-slate-200 capitalize"
                         >
                           {wo.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-slate-500 text-sm">
-                        {wo.dueDate ? format(new Date(wo.dueDate), 'dd/MM/yyyy') : '-'}
+                        {wo.dueDate ? format(new Date(wo.dueDate), 'MM/dd/yyyy') : '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">

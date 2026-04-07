@@ -10,10 +10,10 @@ export default function Settings() {
     <div className="space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Configurações do Sistema
+          System Settings
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Gerencie usuários, permissões, integrações e backups da plataforma.
+          Manage users, permissions, integrations and platform backups.
         </p>
       </div>
 
@@ -21,15 +21,15 @@ export default function Settings() {
         <TabsList className="mb-4 bg-slate-100 dark:bg-slate-800 p-1">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            Usuários
+            Users
           </TabsTrigger>
           <TabsTrigger value="permissions" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
-            Permissões
+            Permissions
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex items-center gap-2">
             <Plug className="w-4 h-4" />
-            Integrações
+            Integrations
           </TabsTrigger>
           <TabsTrigger value="backup" className="flex items-center gap-2">
             <HardDrive className="w-4 h-4" />

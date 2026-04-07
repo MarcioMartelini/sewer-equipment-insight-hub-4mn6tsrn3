@@ -7,25 +7,25 @@ import { toast } from 'sonner'
 const integrations = [
   {
     name: 'Gemini AI',
-    desc: 'Integração para análises preditivas',
+    desc: 'Integration for predictive analytics',
     status: 'connected',
     color: 'text-green-600 bg-green-50 border-green-200',
   },
   {
     name: 'OpenAI',
-    desc: 'Processamento de linguagem natural',
+    desc: 'Natural language processing',
     status: 'disconnected',
     color: 'text-slate-600 bg-slate-100 border-slate-200',
   },
   {
     name: 'Stripe',
-    desc: 'Gateway de pagamentos e faturamento',
+    desc: 'Payment gateway and billing',
     status: 'connected',
     color: 'text-green-600 bg-green-50 border-green-200',
   },
   {
     name: 'Resend',
-    desc: 'Envio de emails transacionais',
+    desc: 'Transactional email sending',
     status: 'connected',
     color: 'text-green-600 bg-green-50 border-green-200',
   },
@@ -35,11 +35,9 @@ export function IntegrationsTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Integrações de API
-        </h3>
-        <Button variant="outline" onClick={() => toast.info('Nova integração (simulação)')}>
-          <Plug className="w-4 h-4 mr-2" /> Nova Integração
+        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">API Integrations</h3>
+        <Button variant="outline" onClick={() => toast.info('New integration (simulation)')}>
+          <Plug className="w-4 h-4 mr-2" /> New Integration
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -52,7 +50,7 @@ export function IntegrationsTab() {
                   {api.name}
                 </CardTitle>
                 <Badge variant="outline" className={api.color}>
-                  {api.status === 'connected' ? 'Conectado' : 'Desconectado'}
+                  {api.status === 'connected' ? 'Connected' : 'Disconnected'}
                 </Badge>
               </div>
               <CardDescription className="mt-1">{api.desc}</CardDescription>
@@ -62,9 +60,9 @@ export function IntegrationsTab() {
                 variant="secondary"
                 size="sm"
                 className="w-full"
-                onClick={() => toast.info(`Configurar ${api.name}`)}
+                onClick={() => toast.info(`Configure ${api.name}`)}
               >
-                Configurar
+                Configure
               </Button>
             </CardFooter>
           </Card>

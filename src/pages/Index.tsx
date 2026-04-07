@@ -34,7 +34,7 @@ import { cn } from '@/lib/utils'
 
 const chartConfig = {
   value: {
-    label: 'Valor',
+    label: 'Value',
     color: 'hsl(var(--primary))',
   },
 }
@@ -77,7 +77,7 @@ const getStatusColorHex = (status: string) => {
 }
 
 export default function Dashboard() {
-  const [department, setDepartment] = useState<string>('Todos')
+  const [department, setDepartment] = useState<string>('All')
   const [metricsDef, setMetricsDef] = useState<MetricDefinition[]>([])
   const [metricsTrack, setMetricsTrack] = useState<MetricTracking[]>([])
   const [alerts, setAlerts] = useState<any[]>([])
@@ -85,16 +85,17 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
+      const fetchDept = department === 'All' ? 'Todos' : department
       const [defs, tracks, activeAlerts] = await Promise.all([
-        getMetricsDefinitions(department),
-        getMetricsTracking(department),
+        getMetricsDefinitions(fetchDept),
+        getMetricsTracking(fetchDept),
         getActiveAlerts(),
       ])
       setMetricsDef(defs)
       setMetricsTrack(tracks)
       setAlerts(activeAlerts)
     } catch (err: any) {
-      toast({ title: 'Erro ao carregar dados', description: err.message, variant: 'destructive' })
+      toast({ title: 'Error loading data', description: err.message, variant: 'destructive' })
     }
   }
 
@@ -105,18 +106,18 @@ export default function Dashboard() {
   const handleAcknowledge = async (id: string) => {
     try {
       await acknowledgeAlert(id)
-      toast({ title: 'Alerta reconhecido com sucesso' })
+      toast({ title: 'Alert acknowledged successfully' })
       loadData()
     } catch (err: any) {
       toast({
-        title: 'Erro ao reconhecer alerta',
+        title: 'Error acknowledging alert',
         description: err.message,
         variant: 'destructive',
       })
     }
   }
 
-  const departments = ['Todos', 'Sales', 'Engineering', 'Purchasing', 'Production', 'Quality', 'HR']
+  const departments = ['All', 'Sales', 'Engineering', 'Purchasing', 'Production', 'Quality', 'HR']
 
   const metricsData = useMemo(() => {
     return metricsDef.map((def) => {
@@ -128,7 +129,7 @@ export default function Dashboard() {
       const currentValue = latest ? latest.metric_value : 0
       const status = getStatus(currentValue, def.threshold_min, def.threshold_max)
       const chartData = trackings.map((t) => ({
-        date: format(parseISO(t.recorded_date), 'dd/MM'),
+        date: format(parseISO(t.recorded_date), 'MM/dd'),
         value: t.metric_value,
       }))
 
@@ -140,13 +141,13 @@ export default function Dashboard() {
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard de Métricas</h1>
-          <p className="text-muted-foreground">Monitore o desempenho e alertas em tempo real.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Metrics Dashboard</h1>
+          <p className="text-muted-foreground">Monitor performance and real-time alerts.</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={department} onValueChange={setDepartment}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Selecione o departamento" />
+              <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
               {departments.map((d) => (
@@ -175,7 +176,7 @@ export default function Dashboard() {
                   <span className="text-sm font-normal text-muted-foreground">{m.def.unit}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Limites: {m.def.threshold_min ?? '-'} ~ {m.def.threshold_max ?? '-'}
+                  Limits: {m.def.threshold_min ?? '-'} ~ {m.def.threshold_max ?? '-'}
                 </div>
               </div>
 
@@ -209,7 +210,7 @@ export default function Dashboard() {
                   </ChartContainer>
                 ) : (
                   <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                    Sem dados recentes
+                    No recent data
                   </div>
                 )}
               </div>
@@ -218,7 +219,7 @@ export default function Dashboard() {
         ))}
         {metricsData.length === 0 && (
           <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-lg">
-            Nenhuma métrica encontrada para este departamento.
+            No metrics found for this department.
           </div>
         )}
       </div>
@@ -226,7 +227,7 @@ export default function Dashboard() {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <BellRing className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Alertas Ativos</h2>
+          <h2 className="text-xl font-semibold">Active Alerts</h2>
           {alerts.length > 0 && (
             <Badge variant="destructive" className="ml-2">
               {alerts.length}
@@ -240,11 +241,11 @@ export default function Dashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>WO ID</TableHead>
-                  <TableHead>Métrica</TableHead>
-                  <TableHead>Mensagem</TableHead>
-                  <TableHead>Responsável</TableHead>
+                  <TableHead>Metric</TableHead>
+                  <TableHead>Message</TableHead>
+                  <TableHead>Assignee</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -252,7 +253,7 @@ export default function Dashboard() {
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500 opacity-50" />
-                      Nenhum alerta pendente.
+                      No pending alerts.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -272,7 +273,7 @@ export default function Dashboard() {
                           <span className="truncate">{alert.alert_message}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{alert.users?.full_name || 'Não atribuído'}</TableCell>
+                      <TableCell>{alert.users?.full_name || 'Unassigned'}</TableCell>
                       <TableCell>
                         <Badge
                           className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border-0"
@@ -289,7 +290,7 @@ export default function Dashboard() {
                           className="hover:bg-emerald-50 hover:text-emerald-600"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Reconhecer
+                          Acknowledge
                         </Button>
                       </TableCell>
                     </TableRow>

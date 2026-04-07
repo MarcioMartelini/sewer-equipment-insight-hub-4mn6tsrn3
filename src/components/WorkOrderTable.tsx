@@ -19,16 +19,14 @@ export function WorkOrderTable({ data }: WorkOrderTableProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white">
-        <p className="text-slate-500">
-          Nenhuma Work Order encontrada para os filtros selecionados.
-        </p>
+        <p className="text-slate-500">No Work Orders found for the selected filters.</p>
       </div>
     )
   }
 
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-')
-    return `${day}/${month}/${year}`
+    return `${month}/${day}/${year}`
   }
 
   return (
@@ -37,14 +35,14 @@ export function WorkOrderTable({ data }: WorkOrderTableProps) {
         <TableHeader className="bg-slate-50">
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-[120px] font-semibold text-slate-700">WO ID</TableHead>
-            <TableHead className="font-semibold text-slate-700">Cliente</TableHead>
+            <TableHead className="font-semibold text-slate-700">Customer</TableHead>
             <TableHead className="hidden md:table-cell font-semibold text-slate-700">
-              Tipo de Produto
+              Product Type
             </TableHead>
-            <TableHead className="font-semibold text-slate-700">Status Geral</TableHead>
-            <TableHead className="font-semibold text-slate-700">Prazo</TableHead>
+            <TableHead className="font-semibold text-slate-700">Overall Status</TableHead>
+            <TableHead className="font-semibold text-slate-700">Due Date</TableHead>
             <TableHead className="hidden sm:table-cell w-[200px] font-semibold text-slate-700">
-              Progresso %
+              Progress %
             </TableHead>
           </TableRow>
         </TableHeader>

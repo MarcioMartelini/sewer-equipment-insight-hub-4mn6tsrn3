@@ -46,7 +46,7 @@ export default function InjuriesTab() {
       .order('injury_date', { ascending: false })
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } else {
       setData(injData || [])
     }
@@ -71,8 +71,8 @@ export default function InjuriesTab() {
 
     if (!employeeId || !employee) {
       return toast({
-        title: 'Erro',
-        description: 'Selecione um colaborador.',
+        title: 'Error',
+        description: 'Select an employee.',
         variant: 'destructive',
       })
     }
@@ -87,9 +87,9 @@ export default function InjuriesTab() {
     })
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } else {
-      toast({ title: 'Sucesso', description: 'Lesão registrada.' })
+      toast({ title: 'Success', description: 'Injury recorded.' })
       setIsAddOpen(false)
       fetchData()
     }
@@ -98,32 +98,32 @@ export default function InjuriesTab() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-'
     const parts = dateStr.split('T')[0].split('-')
-    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr
+    return parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : dateStr
   }
 
   return (
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <CardTitle>Segurança do Trabalho</CardTitle>
-          <CardDescription>Registro de incidentes e acidentes (Injuries).</CardDescription>
+          <CardTitle>Workplace Safety</CardTitle>
+          <CardDescription>Record of incidents and injuries.</CardDescription>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" /> Adicionar Lesão
+              <Plus className="mr-2 h-4 w-4" /> Add Injury
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Lesão</DialogTitle>
+              <DialogTitle>Add Injury</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="employee_id">Colaborador</Label>
+                <Label htmlFor="employee_id">Employee</Label>
                 <Select name="employee_id" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Select..." />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map((u) => (
@@ -135,41 +135,41 @@ export default function InjuriesTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="injury_date">Data da Lesão</Label>
+                <Label htmlFor="injury_date">Injury Date</Label>
                 <Input id="injury_date" name="injury_date" type="date" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="injury_type">Tipo de Lesão</Label>
+                <Label htmlFor="injury_type">Injury Type</Label>
                 <Select name="injury_type" required defaultValue="non-recordable">
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Select..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="recordable">Registrável (Recordable)</SelectItem>
-                    <SelectItem value="non-recordable">Não Registrável (Non-recordable)</SelectItem>
+                    <SelectItem value="recordable">Recordable</SelectItem>
+                    <SelectItem value="non-recordable">Non-recordable</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="severity_level">Nível de Severidade</Label>
+                <Label htmlFor="severity_level">Severity Level</Label>
                 <Select name="severity_level" required defaultValue="Low">
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Select..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Low">Baixo</SelectItem>
-                    <SelectItem value="Medium">Médio</SelectItem>
-                    <SelectItem value="High">Alto</SelectItem>
-                    <SelectItem value="Critical">Crítico</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Critical">Critical</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="injury_description">Descrição</Label>
+                <Label htmlFor="injury_description">Description</Label>
                 <Textarea id="injury_description" name="injury_description" required />
               </div>
               <div className="flex justify-end pt-4">
-                <Button type="submit">Salvar</Button>
+                <Button type="submit">Save</Button>
               </div>
             </form>
           </DialogContent>
@@ -180,25 +180,25 @@ export default function InjuriesTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Colaborador</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Severidade</TableHead>
-                <TableHead className="w-[80px]">Ações</TableHead>
+                <TableHead>Employee</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead className="w-[80px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Carregando...
+                    Loading...
                   </TableCell>
                 </TableRow>
               ) : data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Nenhum registro encontrado.
+                    No records found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -211,7 +211,7 @@ export default function InjuriesTab() {
                       <Badge
                         variant={item.injury_type === 'recordable' ? 'destructive' : 'secondary'}
                       >
-                        {item.injury_type === 'recordable' ? 'Registrável' : 'Não Registrável'}
+                        {item.injury_type === 'recordable' ? 'Recordable' : 'Non-recordable'}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -149,7 +149,7 @@ export default function Layout() {
               <Link
                 to="/profile"
                 className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-                title="Meu Perfil"
+                title="My Profile"
               >
                 <User className="w-5 h-5" />
               </Link>

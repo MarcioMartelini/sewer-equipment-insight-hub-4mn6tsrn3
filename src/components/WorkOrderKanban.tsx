@@ -22,7 +22,7 @@ const DEPARTMENTS: Department[] = [
 export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-')
-    return `${day}/${month}/${year}`
+    return `${month}/${day}/${year}`
   }
 
   const getBorderColor = (status: string) => {
@@ -47,9 +47,7 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white">
-        <p className="text-slate-500">
-          Nenhuma Work Order encontrada para os filtros selecionados.
-        </p>
+        <p className="text-slate-500">No Work Orders found for the selected filters.</p>
       </div>
     )
   }
@@ -107,8 +105,8 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
                         >
                           <p>
                             {wo.status === 'Delayed'
-                              ? `Atrasado em ${wo.daysOverdue || 0} dias`
-                              : 'Atenção ao prazo'}
+                              ? `Delayed by ${wo.daysOverdue || 0} days`
+                              : 'Pay attention to deadline'}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -147,7 +145,7 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
               ))}
               {columnData.length === 0 && (
                 <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-lg">
-                  <span className="text-xs text-slate-400 font-medium">Nenhum item</span>
+                  <span className="text-xs text-slate-400 font-medium">No items</span>
                 </div>
               )}
             </div>

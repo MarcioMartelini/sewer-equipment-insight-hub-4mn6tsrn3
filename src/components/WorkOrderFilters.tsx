@@ -55,7 +55,7 @@ export function WorkOrderFilters({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             type="text"
-            placeholder="Buscar por ID ou Cliente..."
+            placeholder="Search by ID or Customer..."
             className="pl-9 bg-white border-slate-200 text-sm focus-visible:ring-indigo-500"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -68,7 +68,7 @@ export function WorkOrderFilters({
               options={DEPARTMENTS}
               selected={selectedDepts}
               onChange={(val) => setSelectedDepts(val as Department[])}
-              placeholder="Departamento"
+              placeholder="Department"
             />
           </div>
           <div className="w-full sm:w-[160px]">
@@ -82,14 +82,14 @@ export function WorkOrderFilters({
           <div className="w-full sm:w-[160px]">
             <Select value={prazo} onValueChange={(v) => setPrazo(v as PrazoFilter)}>
               <SelectTrigger className="bg-white border-slate-200 text-slate-600">
-                <SelectValue placeholder="Prazo" />
+                <SelectValue placeholder="Due Date" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Todos">Todos os prazos</SelectItem>
-                <SelectItem value="Atrasado">Atrasado</SelectItem>
-                <SelectItem value="Esta semana">Esta semana</SelectItem>
-                <SelectItem value="Próxima semana">Próxima semana</SelectItem>
-                <SelectItem value="Futuro">Futuro</SelectItem>
+                <SelectItem value="Todos">All due dates</SelectItem>
+                <SelectItem value="Atrasado">Delayed</SelectItem>
+                <SelectItem value="Esta semana">This week</SelectItem>
+                <SelectItem value="Próxima semana">Next week</SelectItem>
+                <SelectItem value="Futuro">Future</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -107,14 +107,14 @@ export function WorkOrderFilters({
             className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm"
           >
             <ListIcon className="w-4 h-4 mr-2" />
-            Lista
+            List
           </TabsTrigger>
           <TabsTrigger
             value="kanban"
             className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm"
           >
             <LayoutGrid className="w-4 h-4 mr-2" />
-            Quadro
+            Board
           </TabsTrigger>
         </TabsList>
       </Tabs>

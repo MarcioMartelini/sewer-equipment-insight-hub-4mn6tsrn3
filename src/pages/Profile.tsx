@@ -82,7 +82,7 @@ export default function Profile() {
     if (editEmail !== profile.email) {
       const { error: authError } = await supabase.auth.updateUser({ email: editEmail })
       if (authError) {
-        toast({ title: 'Erro', description: authError.message, variant: 'destructive' })
+        toast({ title: 'Error', description: authError.message, variant: 'destructive' })
         return
       }
     }
@@ -96,9 +96,9 @@ export default function Profile() {
       .eq('id', user.id)
 
     if (error) {
-      toast({ title: 'Erro', description: 'Erro ao atualizar perfil.', variant: 'destructive' })
+      toast({ title: 'Error', description: 'Error updating profile.', variant: 'destructive' })
     } else {
-      toast({ title: 'Sucesso', description: 'Perfil atualizado com sucesso.' })
+      toast({ title: 'Success', description: 'Profile updated successfully.' })
       setProfile((prev: any) => ({ ...prev, full_name: editName, email: editEmail }))
       setIsEditModalOpen(false)
     }
@@ -114,7 +114,7 @@ export default function Profile() {
     })
 
     if (signInError) {
-      toast({ title: 'Erro', description: 'Senha atual incorreta.', variant: 'destructive' })
+      toast({ title: 'Error', description: 'Current password incorrect.', variant: 'destructive' })
       return
     }
 
@@ -123,9 +123,9 @@ export default function Profile() {
     })
 
     if (updateError) {
-      toast({ title: 'Erro', description: 'Erro ao atualizar senha.', variant: 'destructive' })
+      toast({ title: 'Error', description: 'Error updating password.', variant: 'destructive' })
     } else {
-      toast({ title: 'Sucesso', description: 'Senha atualizada com sucesso.' })
+      toast({ title: 'Success', description: 'Password updated successfully.' })
       setIsPasswordModalOpen(false)
       setCurrentPassword('')
       setNewPassword('')
@@ -137,7 +137,7 @@ export default function Profile() {
       setUploading(true)
 
       if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('Você deve selecionar uma imagem para fazer upload.')
+        throw new Error('You must select an image to upload.')
       }
 
       const file = event.target.files[0]
@@ -165,9 +165,9 @@ export default function Profile() {
       }
 
       setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }))
-      toast({ title: 'Sucesso', description: 'Foto de perfil atualizada.' })
+      toast({ title: 'Success', description: 'Profile picture updated.' })
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } finally {
       setUploading(false)
     }
@@ -181,10 +181,10 @@ export default function Profile() {
       .update({ [key]: value })
       .eq('id', user.id)
     if (error) {
-      toast({ title: 'Erro', description: 'Erro ao salvar preferência.', variant: 'destructive' })
+      toast({ title: 'Error', description: 'Error saving preference.', variant: 'destructive' })
       setProfile((prev: any) => ({ ...prev, [key]: !value }))
     } else {
-      toast({ title: 'Sucesso', description: 'Preferências de notificação salvas.' })
+      toast({ title: 'Success', description: 'Notification preferences saved.' })
     }
   }
 
@@ -194,9 +194,9 @@ export default function Profile() {
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Meu Perfil</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">My Profile</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Gerencie suas informações pessoais e preferências
+            Manage your personal information and preferences
           </p>
         </div>
       </div>
@@ -208,7 +208,7 @@ export default function Profile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
-                Dados Pessoais
+                Personal Data
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -246,7 +246,7 @@ export default function Profile() {
                 <div className="space-y-4 flex-1 w-full min-w-0">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                      <User className="w-4 h-4" /> Nome
+                      <User className="w-4 h-4" /> Name
                     </p>
                     <p className="font-medium break-words">{profile.full_name}</p>
                   </div>
@@ -258,13 +258,15 @@ export default function Profile() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                      <Building className="w-4 h-4" /> Departamento
+                      <Building className="w-4 h-4" /> Department
                     </p>
-                    <p className="font-medium break-words">{profile.department || '-'}</p>
+                    <p className="font-medium break-words capitalize">
+                      {profile.department || '-'}
+                    </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                      <Shield className="w-4 h-4" /> Função (Role)
+                      <Shield className="w-4 h-4" /> Role
                     </p>
                     <p className="font-medium capitalize break-words">{profile.role || 'User'}</p>
                   </div>
@@ -274,17 +276,17 @@ export default function Profile() {
               <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-full mt-4">
-                    Editar Perfil
+                    Edit Profile
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Editar Dados Pessoais</DialogTitle>
-                    <DialogDescription>Atualize seu nome e endereço de email.</DialogDescription>
+                    <DialogTitle>Edit Personal Data</DialogTitle>
+                    <DialogDescription>Update your name and email address.</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleEditProfile} className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo</Label>
+                      <Label htmlFor="name">Full Name</Label>
                       <Input
                         id="name"
                         value={editName}
@@ -308,9 +310,9 @@ export default function Profile() {
                         variant="outline"
                         onClick={() => setIsEditModalOpen(false)}
                       >
-                        Cancelar
+                        Cancel
                       </Button>
-                      <Button type="submit">Salvar Alterações</Button>
+                      <Button type="submit">Save Changes</Button>
                     </DialogFooter>
                   </form>
                 </DialogContent>
@@ -323,26 +325,26 @@ export default function Profile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-primary" />
-                Segurança
+                Security
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
                 <DialogTrigger asChild>
                   <Button variant="destructive" className="w-full">
-                    Alterar Senha
+                    Change Password
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Alterar Senha</DialogTitle>
+                    <DialogTitle>Change Password</DialogTitle>
                     <DialogDescription>
-                      Digite sua senha atual e a nova senha para atualizar.
+                      Enter your current password and the new password to update.
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleChangePassword} className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="current-password">Senha Atual</Label>
+                      <Label htmlFor="current-password">Current Password</Label>
                       <Input
                         id="current-password"
                         type="password"
@@ -352,7 +354,7 @@ export default function Profile() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="new-password">Nova Senha</Label>
+                      <Label htmlFor="new-password">New Password</Label>
                       <Input
                         id="new-password"
                         type="password"
@@ -368,9 +370,9 @@ export default function Profile() {
                         variant="outline"
                         onClick={() => setIsPasswordModalOpen(false)}
                       >
-                        Cancelar
+                        Cancel
                       </Button>
-                      <Button type="submit">Atualizar Senha</Button>
+                      <Button type="submit">Update Password</Button>
                     </DialogFooter>
                   </form>
                 </DialogContent>
@@ -385,16 +387,16 @@ export default function Profile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="w-5 h-5 text-primary" />
-                Preferências de Notificação
+                Notification Preferences
               </CardTitle>
-              <CardDescription>Gerencie como e quando você deseja ser alertado.</CardDescription>
+              <CardDescription>Manage how and when you want to be alerted.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Notificações por Email</Label>
+                  <Label className="text-base">Email Notifications</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receba atualizações importantes na sua caixa de entrada.
+                    Receive important updates in your inbox.
                   </p>
                 </div>
                 <Switch
@@ -404,9 +406,9 @@ export default function Profile() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Notificações no Sistema</Label>
+                  <Label className="text-base">System Notifications</Label>
                   <p className="text-sm text-muted-foreground">
-                    Mostra alertas diretamente na plataforma (sininho).
+                    Shows alerts directly on the platform (bell).
                   </p>
                 </div>
                 <Switch
@@ -416,9 +418,9 @@ export default function Profile() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Alertas Críticos</Label>
+                  <Label className="text-base">Critical Alerts</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receba alertas imediatos sobre falhas e métricas fora do padrão.
+                    Receive immediate alerts about failures and non-standard metrics.
                   </p>
                 </div>
                 <Switch
@@ -428,9 +430,9 @@ export default function Profile() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Resumo Diário</Label>
+                  <Label className="text-base">Daily Summary</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receba um email com o compilado das pendências do dia.
+                    Receive an email with a compilation of pending issues of the day.
                   </p>
                 </div>
                 <Switch
@@ -446,9 +448,9 @@ export default function Profile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-primary" />
-                Atividade Recente
+                Recent Activity
               </CardTitle>
-              <CardDescription>Suas últimas 10 ações no sistema.</CardDescription>
+              <CardDescription>Your last 10 actions in the system.</CardDescription>
             </CardHeader>
             <CardContent>
               {activities.length > 0 ? (
@@ -471,16 +473,14 @@ export default function Profile() {
                       <div className="flex items-center text-xs text-slate-400 gap-1 whitespace-nowrap">
                         <Clock className="w-3 h-3" />
                         {activity.timestamp
-                          ? format(new Date(activity.timestamp), 'dd/MM/yyyy HH:mm')
+                          ? format(new Date(activity.timestamp), 'MM/dd/yyyy HH:mm')
                           : '-'}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-slate-500">
-                  Nenhuma atividade registrada recentemente.
-                </div>
+                <div className="text-center py-6 text-slate-500">No recent activity recorded.</div>
               )}
             </CardContent>
           </Card>

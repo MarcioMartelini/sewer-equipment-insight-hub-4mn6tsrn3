@@ -31,7 +31,7 @@ export default function ProductivityTab() {
       .order('recorded_date', { ascending: false })
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } else {
       setData(prodData || [])
     }
@@ -59,9 +59,9 @@ export default function ProductivityTab() {
       .eq('id', editingItem.id)
 
     if (error) {
-      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error updating', description: error.message, variant: 'destructive' })
     } else {
-      toast({ title: 'Sucesso', description: 'Dados atualizados com sucesso.' })
+      toast({ title: 'Success', description: 'Data updated successfully.' })
       setEditingItem(null)
       fetchData()
     }
@@ -70,14 +70,14 @@ export default function ProductivityTab() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-'
     const parts = dateStr.split('T')[0].split('-')
-    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr
+    return parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : dateStr
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Produtividade</CardTitle>
-        <CardDescription>Acompanhamento de horas trabalhadas e valor de produção.</CardDescription>
+        <CardTitle>Productivity</CardTitle>
+        <CardDescription>Tracking of hours worked and production value.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -85,25 +85,25 @@ export default function ProductivityTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>WO ID</TableHead>
-                <TableHead>Colaborador</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Horas</TableHead>
-                <TableHead>Valor Produzido</TableHead>
-                <TableHead>Produtividade</TableHead>
-                <TableHead className="w-[80px]">Ações</TableHead>
+                <TableHead>Employee</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Hours</TableHead>
+                <TableHead>Produced Value</TableHead>
+                <TableHead>Productivity</TableHead>
+                <TableHead className="w-[80px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Carregando...
+                    Loading...
                   </TableCell>
                 </TableRow>
               ) : data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Nenhum registro encontrado.
+                    No records found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -146,11 +146,11 @@ export default function ProductivityTab() {
       <Dialog open={!!editingItem} onOpenChange={(o) => !o && setEditingItem(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Produtividade</DialogTitle>
+            <DialogTitle>Edit Productivity</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="labour_hours">Horas Trabalhadas</Label>
+              <Label htmlFor="labour_hours">Hours Worked</Label>
               <Input
                 id="labour_hours"
                 name="labour_hours"
@@ -161,7 +161,7 @@ export default function ProductivityTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="production_value">Valor Produzido ($)</Label>
+              <Label htmlFor="production_value">Produced Value ($)</Label>
               <Input
                 id="production_value"
                 name="production_value"
@@ -172,7 +172,7 @@ export default function ProductivityTab() {
               />
             </div>
             <div className="flex justify-end pt-4">
-              <Button type="submit">Salvar</Button>
+              <Button type="submit">Save</Button>
             </div>
           </form>
         </DialogContent>

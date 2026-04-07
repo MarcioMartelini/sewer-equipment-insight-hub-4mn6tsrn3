@@ -7,9 +7,9 @@ export default function Quality() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Qualidade</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Quality</h2>
         <p className="text-slate-500">
-          Dashboard Executivo e Gestão de Garantias e Retiradas de Componentes
+          Executive Dashboard and Management of Warranties and Component Pulls
         </p>
       </div>
 

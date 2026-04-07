@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { format, subDays, startOfDay, endOfDay } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
 import { fetchQuotes, type Quote } from '@/services/quotes'
 import { fetchWorkOrders } from '@/services/work-orders'
 import { WorkOrder } from '@/types/work-order'
@@ -84,8 +84,6 @@ export default function SalesDashboard() {
 
   const totalQuotes = filteredQuotes.length
 
-  // Verify with work orders to ensure integration as requested,
-  // though quote status 'approved' reflects the sales KPIs accurately.
   const approvedQuotes = filteredQuotes.filter((q) => q.status === 'approved')
   const totalApproved = approvedQuotes.length
   const conversionRate = totalQuotes > 0 ? (totalApproved / totalQuotes) * 100 : 0
@@ -110,7 +108,7 @@ export default function SalesDashboard() {
 
     while (currentDate <= end) {
       const key = format(currentDate, 'yyyy-MM-dd')
-      daysMap[key] = { date: format(currentDate, 'dd/MM'), value: 0 }
+      daysMap[key] = { date: format(currentDate, 'MM/dd'), value: 0 }
       currentDate = new Date(currentDate.getTime() + step * 24 * 60 * 60 * 1000)
     }
 
@@ -118,7 +116,7 @@ export default function SalesDashboard() {
     let cd = startOfDay(dateRange.from)
     while (cd <= end) {
       const key = format(cd, 'yyyy-MM-dd')
-      exactDaysMap[key] = { date: format(cd, 'dd/MM'), value: 0 }
+      exactDaysMap[key] = { date: format(cd, 'MM/dd'), value: 0 }
       cd = new Date(cd.getTime() + 24 * 60 * 60 * 1000)
     }
 
@@ -134,7 +132,7 @@ export default function SalesDashboard() {
   const distributionData = useMemo(() => {
     const map: Record<string, number> = {}
     approvedQuotes.forEach((q) => {
-      const type = (q as any).product_family || q.product_type || 'Outros'
+      const type = (q as any).product_family || q.product_type || 'Others'
       map[type] = (map[type] || 0) + Number(q.quote_value || 0)
     })
     return Object.entries(map)
@@ -145,7 +143,7 @@ export default function SalesDashboard() {
   const topCustomers = useMemo(() => {
     const map: Record<string, number> = {}
     approvedQuotes.forEach((q) => {
-      const customer = q.customer_name || 'Desconhecido'
+      const customer = q.customer_name || 'Unknown'
       map[customer] = (map[customer] || 0) + Number(q.quote_value || 0)
     })
     return Object.entries(map)
@@ -156,7 +154,7 @@ export default function SalesDashboard() {
 
   const chartConfig = {
     value: {
-      label: 'Vendas ($)',
+      label: 'Sales ($)',
       color: 'hsl(var(--primary))',
     },
   }
@@ -181,19 +179,19 @@ export default function SalesDashboard() {
     <div className="flex flex-col gap-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
         <div>
-          <h2 className="text-xl font-semibold text-slate-800">Indicadores de Desempenho</h2>
-          <p className="text-sm text-slate-500">Métricas em tempo real de vendas e cotações</p>
+          <h2 className="text-xl font-semibold text-slate-800">Performance Indicators</h2>
+          <p className="text-sm text-slate-500">Real-time sales and quote metrics</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Selecione o período" />
+              <SelectValue placeholder="Select period" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">Últimos 7 dias</SelectItem>
-              <SelectItem value="30">Últimos 30 dias</SelectItem>
-              <SelectItem value="90">Últimos 90 dias</SelectItem>
-              <SelectItem value="custom">Personalizado</SelectItem>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="custom">Custom</SelectItem>
             </SelectContent>
           </Select>
 
@@ -211,14 +209,14 @@ export default function SalesDashboard() {
                   {dateRange.from ? (
                     dateRange.to ? (
                       <>
-                        {format(dateRange.from, 'dd/MM/yyyy')} -{' '}
-                        {format(dateRange.to, 'dd/MM/yyyy')}
+                        {format(dateRange.from, 'MM/dd/yyyy')} -{' '}
+                        {format(dateRange.to, 'MM/dd/yyyy')}
                       </>
                     ) : (
-                      format(dateRange.from, 'dd/MM/yyyy')
+                      format(dateRange.from, 'MM/dd/yyyy')
                     )
                   ) : (
-                    <span>Selecione a data</span>
+                    <span>Select date</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -234,7 +232,7 @@ export default function SalesDashboard() {
                     }
                   }}
                   numberOfMonths={2}
-                  locale={ptBR}
+                  locale={enUS}
                 />
               </PopoverContent>
             </Popover>
@@ -255,7 +253,7 @@ export default function SalesDashboard() {
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Quotes Aprovadas</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Approved Quotes</CardTitle>
             <CheckCircle className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
@@ -265,7 +263,7 @@ export default function SalesDashboard() {
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Taxa de Conversão</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Conversion Rate</CardTitle>
             <Percent className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -275,7 +273,7 @@ export default function SalesDashboard() {
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Valor em Vendas</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Sales Value</CardTitle>
             <DollarSign className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
@@ -291,7 +289,7 @@ export default function SalesDashboard() {
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Margem Média</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Average Margin</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -303,8 +301,8 @@ export default function SalesDashboard() {
       <div className="grid gap-4 lg:grid-cols-7">
         <Card className="col-span-4 bg-white shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-slate-800">Tendência de Vendas (Valor)</CardTitle>
-            <CardDescription>Volume de vendas aprovadas no período selecionado</CardDescription>
+            <CardTitle className="text-slate-800">Sales Trend (Value)</CardTitle>
+            <CardDescription>Volume of approved sales in the selected period</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -319,7 +317,7 @@ export default function SalesDashboard() {
                 />
                 <YAxis
                   tickFormatter={(value) =>
-                    `$${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
+                    `${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
                   }
                   axisLine={false}
                   tickLine={false}
@@ -342,8 +340,8 @@ export default function SalesDashboard() {
 
         <Card className="col-span-3 bg-white shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-slate-800">Distribuição por Produto</CardTitle>
-            <CardDescription>Valor de vendas aprovadas por tipo</CardDescription>
+            <CardTitle className="text-slate-800">Product Distribution</CardTitle>
+            <CardDescription>Value of approved sales by type</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
             {distributionData.length > 0 ? (
@@ -368,7 +366,7 @@ export default function SalesDashboard() {
               </ChartContainer>
             ) : (
               <div className="flex h-[300px] items-center justify-center text-slate-500">
-                Nenhum dado disponível
+                No data available
               </div>
             )}
           </CardContent>
@@ -377,16 +375,16 @@ export default function SalesDashboard() {
 
       <Card className="bg-white shadow-sm border-slate-200">
         <CardHeader>
-          <CardTitle className="text-slate-800">Top 5 Clientes</CardTitle>
-          <CardDescription>Maiores clientes por volume de compras no período</CardDescription>
+          <CardTitle className="text-slate-800">Top 5 Customers</CardTitle>
+          <CardDescription>Largest customers by purchase volume in the period</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead className="font-semibold text-slate-700">Cliente</TableHead>
+                <TableHead className="font-semibold text-slate-700">Customer</TableHead>
                 <TableHead className="text-right font-semibold text-slate-700">
-                  Valor em Vendas
+                  Sales Value
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -406,7 +404,7 @@ export default function SalesDashboard() {
               {topCustomers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={2} className="text-center text-slate-500 py-8">
-                    Nenhuma venda registrada no período selecionado.
+                    No sales recorded in the selected period.
                   </TableCell>
                 </TableRow>
               )}

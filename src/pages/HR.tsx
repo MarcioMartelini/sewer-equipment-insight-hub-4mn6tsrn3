@@ -9,19 +9,19 @@ export default function HR() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Recursos Humanos (HR)</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Human Resources (HR)</h1>
           <p className="text-muted-foreground mt-2">
-            Gerencie produtividade, ausências e segurança do trabalho.
+            Manage productivity, absences, and workplace safety.
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4 md:w-[500px]">
-          <TabsTrigger value="dashboard">Visão Geral</TabsTrigger>
-          <TabsTrigger value="productivity">Produtividade</TabsTrigger>
-          <TabsTrigger value="absences">Ausências</TabsTrigger>
-          <TabsTrigger value="injuries">Lesões</TabsTrigger>
+          <TabsTrigger value="dashboard">Overview</TabsTrigger>
+          <TabsTrigger value="productivity">Productivity</TabsTrigger>
+          <TabsTrigger value="absences">Absences</TabsTrigger>
+          <TabsTrigger value="injuries">Injuries</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard">
           <DashboardTab />

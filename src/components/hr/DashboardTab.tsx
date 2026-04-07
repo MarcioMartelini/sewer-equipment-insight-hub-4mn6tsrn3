@@ -68,7 +68,7 @@ export default function DashboardTab() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4 bg-card p-4 rounded-lg border shadow-sm">
-        <h2 className="text-lg font-semibold">Dashboard Executivo</h2>
+        <h2 className="text-lg font-semibold">Executive Dashboard</h2>
         <div className="flex flex-col sm:flex-row items-center gap-2">
           {dateRange === 'custom' && (
             <div className="flex items-center gap-2 mr-2">
@@ -89,13 +89,13 @@ export default function DashboardTab() {
           )}
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-[180px] h-9">
-              <SelectValue placeholder="Período" />
+              <SelectValue placeholder="Period" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">Últimos 7 dias</SelectItem>
-              <SelectItem value="30">Últimos 30 dias</SelectItem>
-              <SelectItem value="90">Últimos 90 dias</SelectItem>
-              <SelectItem value="custom">Personalizado</SelectItem>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="custom">Custom</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -103,7 +103,7 @@ export default function DashboardTab() {
 
       {loading ? (
         <div className="h-64 flex items-center justify-center text-muted-foreground">
-          Carregando indicadores...
+          Loading indicators...
         </div>
       ) : (
         <>

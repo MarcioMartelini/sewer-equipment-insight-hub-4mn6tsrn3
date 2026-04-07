@@ -28,7 +28,7 @@ export function UsersTab() {
     setLoading(true)
     const { data, error } = await supabase.from('users').select('*').order('full_name')
     if (error) {
-      toast.error('Erro ao carregar usuários')
+      toast.error('Error loading users')
     } else {
       setUsers(data || [])
     }
@@ -36,46 +36,44 @@ export function UsersTab() {
   }
 
   const handleDelete = (id: string) => {
-    toast.success('Usuário deletado com sucesso (simulação)')
+    toast.success('User deleted successfully (simulation)')
   }
 
   const handleEdit = (id: string) => {
-    toast.info('Abrir modal de edição (simulação)')
+    toast.info('Open edit modal (simulation)')
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Gerenciamento de Usuários
-        </h3>
+        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">User Management</h3>
         <Button>
-          <UserPlus className="w-4 h-4 mr-2" /> Novo Usuário
+          <UserPlus className="w-4 h-4 mr-2" /> New User
         </Button>
       </div>
       <div className="border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
+              <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Departamento</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                  Carregando usuários...
+                  Loading users...
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                  Nenhum usuário encontrado.
+                  No users found.
                 </TableCell>
               </TableRow>
             ) : (
@@ -83,14 +81,14 @@ export function UsersTab() {
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.full_name}</TableCell>
                   <TableCell>{u.email}</TableCell>
-                  <TableCell>{u.department || '-'}</TableCell>
+                  <TableCell className="capitalize">{u.department || '-'}</TableCell>
                   <TableCell className="capitalize">{u.role || 'user'}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
                       className="bg-green-50 text-green-700 border-green-200"
                     >
-                      Ativo
+                      Active
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">

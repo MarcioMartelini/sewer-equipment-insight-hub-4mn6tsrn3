@@ -20,7 +20,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [department, setDepartment] = useState('Vendas')
+  const [department, setDepartment] = useState('Sales')
   const [isLoading, setIsLoading] = useState(false)
   const { signIn, signUp } = useAuth()
   const { toast } = useToast()
@@ -39,15 +39,15 @@ export default function AuthPage() {
         const { error } = await signUp(email, password, fullName, department)
         if (error) throw error
         toast({
-          title: 'Conta criada',
-          description: 'Sua conta foi criada com sucesso. Bem-vindo!',
+          title: 'Account created',
+          description: 'Your account was created successfully. Welcome!',
         })
         navigate('/')
       }
     } catch (error: any) {
       toast({
-        title: 'Erro na autenticação',
-        description: error.message || 'Ocorreu um erro inesperado.',
+        title: 'Authentication error',
+        description: error.message || 'An unexpected error occurred.',
         variant: 'destructive',
       })
     } finally {
@@ -63,12 +63,12 @@ export default function AuthPage() {
             <Factory className="w-6 h-6" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
-            {isLogin ? 'Entrar no Sistema' : 'Criar Conta'}
+            {isLogin ? 'System Login' : 'Create Account'}
           </CardTitle>
           <CardDescription>
             {isLogin
-              ? 'Insira suas credenciais para acessar o WO Registry'
-              : 'Preencha os dados para criar sua conta'}
+              ? 'Enter your credentials to access the WO Registry'
+              : 'Fill in the details to create your account'}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -76,17 +76,17 @@ export default function AuthPage() {
             {!isLogin && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome completo</Label>
+                  <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
-                    placeholder="Seu nome"
+                    placeholder="Your name"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="department">Departamento</Label>
+                  <Label htmlFor="department">Department</Label>
                   <select
                     id="department"
                     className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -94,14 +94,15 @@ export default function AuthPage() {
                     onChange={(e) => setDepartment(e.target.value)}
                     required
                   >
-                    <option value="Vendas">Vendas</option>
-                    <option value="Engenharia">Engenharia</option>
-                    <option value="Compras">Compras</option>
-                    <option value="Produção">Produção</option>
-                    <option value="Qualidade">Qualidade</option>
-                    <option value="Entrega">Entrega</option>
-                    <option value="Garantia">Garantia</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Purchasing">Purchasing</option>
+                    <option value="Production">Production</option>
+                    <option value="Quality">Quality</option>
+                    <option value="Delivery">Delivery</option>
+                    <option value="Warranty">Warranty</option>
                     <option value="High Management">High Management</option>
+                    <option value="HR">HR</option>
                   </select>
                 </div>
               </>
@@ -111,14 +112,14 @@ export default function AuthPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="nome@empresa.com"
+                placeholder="name@company.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -134,16 +135,16 @@ export default function AuthPage() {
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
               disabled={isLoading}
             >
-              {isLoading ? 'Aguarde...' : isLogin ? 'Entrar' : 'Cadastrar'}
+              {isLoading ? 'Please wait...' : isLogin ? 'Sign In' : 'Sign Up'}
             </Button>
             <div className="text-sm text-center text-slate-500">
-              {isLogin ? 'Não tem uma conta? ' : 'Já tem uma conta? '}
+              {isLogin ? "Don't have an account? " : 'Already have an account? '}
               <button
                 type="button"
                 className="text-indigo-600 hover:underline font-medium"
                 onClick={() => setIsLogin(!isLogin)}
               >
-                {isLogin ? 'Cadastre-se' : 'Entre'}
+                {isLogin ? 'Sign Up' : 'Sign In'}
               </button>
             </div>
           </CardFooter>

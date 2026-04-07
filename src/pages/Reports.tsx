@@ -43,7 +43,7 @@ export default function Reports() {
   const [loading, setLoading] = useState(false)
 
   // Filters
-  const [reportType, setReportType] = useState('Consolidado')
+  const [reportType, setReportType] = useState('Consolidated')
   const [department, setDepartment] = useState('all')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -93,7 +93,7 @@ export default function Reports() {
         setMetrics(metricsData || [])
       }
     } catch (error: any) {
-      toast({ title: 'Erro ao buscar dados', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error fetching data', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -121,7 +121,9 @@ export default function Reports() {
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalWOs = workOrders.length
-  const completedWOs = workOrders.filter((wo) => wo.status === 'Concluído').length
+  const completedWOs = workOrders.filter(
+    (wo) => wo.status === 'Complete' || wo.status === 'Concluído',
+  ).length
   const avgProgress =
     workOrders.length > 0
       ? Math.round(workOrders.reduce((acc, wo) => acc + (wo.progress || 0), 0) / workOrders.length)
@@ -152,7 +154,7 @@ export default function Reports() {
 
   const chartConfig = {
     value: {
-      label: metrics.length > 0 ? 'Valor da Métrica' : 'WOs Criadas',
+      label: metrics.length > 0 ? 'Metric Value' : 'Created WOs',
       color: 'hsl(var(--primary))',
     },
   }
@@ -160,13 +162,13 @@ export default function Reports() {
   const downloadCSV = () => {
     if (workOrders.length === 0) {
       toast({
-        title: 'Sem dados',
-        description: 'Não há dados para exportar.',
+        title: 'No data',
+        description: 'There is no data to export.',
         variant: 'destructive',
       })
       return
     }
-    const headers = ['WO Number', 'Cliente', 'Departamento', 'Status', 'Progresso', 'Data Criação']
+    const headers = ['WO Number', 'Customer', 'Department', 'Status', 'Progress', 'Created At']
     const rows = workOrders.map((wo) => [
       wo.wo_number,
       `"${wo.customer_name}"`,
@@ -180,7 +182,7 @@ export default function Reports() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
-    link.setAttribute('download', `relatorio_${reportType}_${new Date().toISOString()}.csv`)
+    link.setAttribute('download', `report_${reportType}_${new Date().toISOString()}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -200,9 +202,8 @@ export default function Reports() {
       fetchHistory()
 
       toast({
-        title: `Relatório ${format} gerado com sucesso!`,
-        description:
-          format === 'PDF' ? 'Preparando impressão...' : 'O download foi iniciado automaticamente.',
+        title: `${format} report generated successfully!`,
+        description: format === 'PDF' ? 'Preparing to print...' : 'Download started automatically.',
       })
 
       if (format === 'CSV' || format === 'Excel') {
@@ -212,7 +213,7 @@ export default function Reports() {
       }
     } catch (error) {
       console.error(error)
-      toast({ title: 'Erro ao gerar relatório', variant: 'destructive' })
+      toast({ title: 'Error generating report', variant: 'destructive' })
     }
   }
 
@@ -220,9 +221,9 @@ export default function Reports() {
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in-up">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Relatórios e Exportação</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Reports & Export</h1>
           <p className="text-muted-foreground">
-            Gere relatórios detalhados, visualize métricas e exporte dados corporativos.
+            Generate detailed reports, view metrics and export corporate data.
           </p>
         </div>
       </div>
@@ -230,61 +231,59 @@ export default function Reports() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full md:w-auto">
           <TabsTrigger value="preview" className="flex-1 md:flex-none">
-            Pré-visualização
+            Preview
           </TabsTrigger>
           <TabsTrigger value="history" className="flex-1 md:flex-none">
-            Histórico de Relatórios
+            Report History
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="preview" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Configuração do Relatório</CardTitle>
-              <CardDescription>
-                Selecione os filtros desejados para compilar os dados.
-              </CardDescription>
+              <CardTitle>Report Configuration</CardTitle>
+              <CardDescription>Select desired filters to compile data.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-4 items-end">
                 <div className="space-y-2">
-                  <Label>Tipo de Relatório</Label>
+                  <Label>Report Type</Label>
                   <Select value={reportType} onValueChange={setReportType}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Consolidado">Consolidado Geral</SelectItem>
-                      <SelectItem value="Sales">Vendas (Sales)</SelectItem>
-                      <SelectItem value="Engineering">Engenharia</SelectItem>
-                      <SelectItem value="Purchasing">Compras</SelectItem>
-                      <SelectItem value="Production">Produção</SelectItem>
-                      <SelectItem value="Quality">Qualidade</SelectItem>
-                      <SelectItem value="HR">Recursos Humanos</SelectItem>
+                      <SelectItem value="Consolidated">Consolidated</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Purchasing">Purchasing</SelectItem>
+                      <SelectItem value="Production">Production</SelectItem>
+                      <SelectItem value="Quality">Quality</SelectItem>
+                      <SelectItem value="HR">Human Resources</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Departamento</Label>
+                  <Label>Department</Label>
                   <Select value={department} onValueChange={setDepartment}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Todos" />
+                      <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos os Departamentos</SelectItem>
-                      <SelectItem value="Sales">Vendas</SelectItem>
-                      <SelectItem value="Engineering">Engenharia</SelectItem>
-                      <SelectItem value="Purchasing">Compras</SelectItem>
-                      <SelectItem value="Production">Produção</SelectItem>
-                      <SelectItem value="Quality">Qualidade</SelectItem>
-                      <SelectItem value="HR">RH</SelectItem>
+                      <SelectItem value="all">All Departments</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Purchasing">Purchasing</SelectItem>
+                      <SelectItem value="Production">Production</SelectItem>
+                      <SelectItem value="Quality">Quality</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Data Início</Label>
+                  <Label>Start Date</Label>
                   <Input
                     type="date"
                     value={startDate}
@@ -293,7 +292,7 @@ export default function Reports() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Data Fim</Label>
+                  <Label>End Date</Label>
                   <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </div>
               </div>
@@ -301,16 +300,16 @@ export default function Reports() {
               <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t justify-end">
                 <Button variant="ghost" onClick={fetchPreviewData} disabled={loading}>
                   {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  Atualizar Dados
+                  Refresh Data
                 </Button>
                 <Button variant="outline" onClick={() => handleExport('CSV')} disabled={loading}>
-                  <FileText className="w-4 h-4 mr-2" /> Exportar CSV
+                  <FileText className="w-4 h-4 mr-2" /> Export CSV
                 </Button>
                 <Button variant="outline" onClick={() => handleExport('Excel')} disabled={loading}>
-                  <FileSpreadsheet className="w-4 h-4 mr-2" /> Exportar Excel
+                  <FileSpreadsheet className="w-4 h-4 mr-2" /> Export Excel
                 </Button>
                 <Button onClick={() => handleExport('PDF')} disabled={loading}>
-                  <Printer className="w-4 h-4 mr-2" /> Gerar PDF
+                  <Printer className="w-4 h-4 mr-2" /> Generate PDF
                 </Button>
               </div>
             </CardContent>
@@ -319,42 +318,42 @@ export default function Reports() {
           <div className="grid gap-6 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Work Orders</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Work Orders</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalWOs}</div>
-                <p className="text-xs text-muted-foreground mt-1">No período selecionado</p>
+                <p className="text-xs text-muted-foreground mt-1">In selected period</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">WOs Concluídas</CardTitle>
+                <CardTitle className="text-sm font-medium">Completed WOs</CardTitle>
                 <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{completedWOs}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {totalWOs > 0 ? Math.round((completedWOs / totalWOs) * 100) : 0}% do total
+                  {totalWOs > 0 ? Math.round((completedWOs / totalWOs) * 100) : 0}% of total
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Progresso Médio</CardTitle>
+                <CardTitle className="text-sm font-medium">Average Progress</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{avgProgress}%</div>
-                <p className="text-xs text-muted-foreground mt-1">Avanço geral estimado</p>
+                <p className="text-xs text-muted-foreground mt-1">Estimated overall progress</p>
               </CardContent>
             </Card>
           </div>
 
           <Card className="print:break-inside-avoid">
             <CardHeader>
-              <CardTitle>Evolução de Volume</CardTitle>
-              <CardDescription>Visualização temporal baseada nos filtros aplicados</CardDescription>
+              <CardTitle>Volume Evolution</CardTitle>
+              <CardDescription>Temporal view based on applied filters</CardDescription>
             </CardHeader>
             <CardContent>
               {chartData.length > 0 ? (
@@ -391,7 +390,7 @@ export default function Reports() {
                 </div>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground border border-dashed rounded-lg">
-                  Nenhum dado temporal disponível para o gráfico.
+                  No temporal data available for the chart.
                 </div>
               )}
             </CardContent>
@@ -399,8 +398,8 @@ export default function Reports() {
 
           <Card className="print:break-inside-avoid">
             <CardHeader>
-              <CardTitle>Amostra de Dados ({workOrders.length})</CardTitle>
-              <CardDescription>Resumo executivo das ordens de serviço encontradas</CardDescription>
+              <CardTitle>Data Sample ({workOrders.length})</CardTitle>
+              <CardDescription>Executive summary of found work orders</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border overflow-x-auto">
@@ -408,11 +407,11 @@ export default function Reports() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>WO Number</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Departamento</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Department</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Progresso</TableHead>
-                      <TableHead>Data Criação</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Created At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -420,7 +419,7 @@ export default function Reports() {
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                          Carregando dados...
+                          Loading data...
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -428,8 +427,8 @@ export default function Reports() {
                         <TableRow key={wo.id}>
                           <TableCell className="font-medium">{wo.wo_number}</TableCell>
                           <TableCell>{wo.customer_name}</TableCell>
-                          <TableCell>{wo.department}</TableCell>
-                          <TableCell>{wo.status}</TableCell>
+                          <TableCell className="capitalize">{wo.department}</TableCell>
+                          <TableCell className="capitalize">{wo.status}</TableCell>
                           <TableCell>{wo.progress}%</TableCell>
                           <TableCell>
                             {wo.created_at ? new Date(wo.created_at).toLocaleDateString() : ''}
@@ -440,7 +439,7 @@ export default function Reports() {
                     {!loading && workOrders.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          Nenhum dado encontrado para os filtros selecionados.
+                          No data found for selected filters.
                         </TableCell>
                       </TableRow>
                     )}
@@ -450,8 +449,7 @@ export default function Reports() {
                           colSpan={6}
                           className="text-center text-sm text-muted-foreground bg-muted/30"
                         >
-                          Mostrando 10 de {workOrders.length} registros. Exporte o relatório para
-                          ver todos.
+                          Showing 10 of {workOrders.length} records. Export the report to see all.
                         </TableCell>
                       </TableRow>
                     )}
@@ -465,22 +463,20 @@ export default function Reports() {
         <TabsContent value="history" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Exportações</CardTitle>
-              <CardDescription>
-                Acesse e baixe novamente relatórios gerados anteriormente.
-              </CardDescription>
+              <CardTitle>Export History</CardTitle>
+              <CardDescription>Access and redownload previously generated reports.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data de Geração</TableHead>
-                      <TableHead>Tipo de Relatório</TableHead>
-                      <TableHead>Departamento</TableHead>
-                      <TableHead>Período Filtrado</TableHead>
-                      <TableHead>Formato</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead>Generated Date</TableHead>
+                      <TableHead>Report Type</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Filtered Period</TableHead>
+                      <TableHead>Format</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -488,16 +484,16 @@ export default function Reports() {
                       <TableRow key={item.id}>
                         <TableCell>{new Date(item.created_at).toLocaleString()}</TableCell>
                         <TableCell className="font-medium">{item.report_type}</TableCell>
-                        <TableCell>{item.department || 'Todos'}</TableCell>
+                        <TableCell className="capitalize">{item.department || 'All'}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {item.date_start
-                            ? `${new Date(item.date_start).toLocaleDateString()} até ${item.date_end ? new Date(item.date_end).toLocaleDateString() : 'Hoje'}`
-                            : 'Todo o período'}
+                            ? `${new Date(item.date_start).toLocaleDateString()} to ${item.date_end ? new Date(item.date_end).toLocaleDateString() : 'Today'}`
+                            : 'All time'}
                         </TableCell>
                         <TableCell>{item.format}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm" onClick={() => downloadCSV()}>
-                            <Download className="w-4 h-4 mr-2" /> Baixar
+                            <Download className="w-4 h-4 mr-2" /> Download
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -505,7 +501,7 @@ export default function Reports() {
                     {history.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          Nenhum relatório foi gerado ainda.
+                          No reports generated yet.
                         </TableCell>
                       </TableRow>
                     )}

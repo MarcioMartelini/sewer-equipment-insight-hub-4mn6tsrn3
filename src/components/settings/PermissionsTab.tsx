@@ -12,10 +12,10 @@ import { ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
 const roles = [
-  { name: 'Admin', depts: ['Todos os Departamentos'], access: 'Acesso Total' },
-  { name: 'Manager', depts: ['Sales', 'Engineering', 'Production'], access: 'Leitura/Escrita' },
-  { name: 'Supervisor', depts: ['Production', 'Quality'], access: 'Leitura/Escrita (Específico)' },
-  { name: 'Operator', depts: ['Production'], access: 'Somente Leitura / Status' },
+  { name: 'Admin', depts: ['All Departments'], access: 'Full Access' },
+  { name: 'Manager', depts: ['Sales', 'Engineering', 'Production'], access: 'Read/Write' },
+  { name: 'Supervisor', depts: ['Production', 'Quality'], access: 'Read/Write (Specific)' },
+  { name: 'Operator', depts: ['Production'], access: 'Read Only / Status' },
 ]
 
 export function PermissionsTab() {
@@ -23,10 +23,10 @@ export function PermissionsTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Controle de Permissões (RBAC)
+          Permissions Control (RBAC)
         </h3>
-        <Button variant="outline" onClick={() => toast.info('Editar políticas (simulação)')}>
-          <ShieldAlert className="w-4 h-4 mr-2" /> Editar Políticas Gerais
+        <Button variant="outline" onClick={() => toast.info('Edit policies (simulation)')}>
+          <ShieldAlert className="w-4 h-4 mr-2" /> Edit Global Policies
         </Button>
       </div>
       <div className="border rounded-md">
@@ -34,9 +34,9 @@ export function PermissionsTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Role</TableHead>
-              <TableHead>Departamentos Permitidos</TableHead>
-              <TableHead>Nível de Acesso</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>Allowed Departments</TableHead>
+              <TableHead>Access Level</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -57,9 +57,9 @@ export function PermissionsTab() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => toast.info(`Editar permissões de ${r.name}`)}
+                    onClick={() => toast.info(`Edit permissions for ${r.name}`)}
                   >
-                    Editar Permissões
+                    Edit Permissions
                   </Button>
                 </TableCell>
               </TableRow>

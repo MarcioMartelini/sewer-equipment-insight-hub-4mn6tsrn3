@@ -45,7 +45,7 @@ export default function AbsencesTab() {
       .order('absence_date', { ascending: false })
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } else {
       setData(absData || [])
     }
@@ -70,8 +70,8 @@ export default function AbsencesTab() {
 
     if (!employeeId || !employee) {
       return toast({
-        title: 'Erro',
-        description: 'Selecione um colaborador.',
+        title: 'Error',
+        description: 'Select an employee.',
         variant: 'destructive',
       })
     }
@@ -85,9 +85,9 @@ export default function AbsencesTab() {
     })
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } else {
-      toast({ title: 'Sucesso', description: 'Ausência registrada.' })
+      toast({ title: 'Success', description: 'Absence recorded.' })
       setIsAddOpen(false)
       fetchData()
     }
@@ -96,32 +96,32 @@ export default function AbsencesTab() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-'
     const parts = dateStr.split('T')[0].split('-')
-    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr
+    return parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : dateStr
   }
 
   return (
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <CardTitle>Controle de Ausências</CardTitle>
-          <CardDescription>Registro de faltas justificadas e não justificadas.</CardDescription>
+          <CardTitle>Absence Control</CardTitle>
+          <CardDescription>Record of excused and unexcused absences.</CardDescription>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" /> Adicionar Ausência
+              <Plus className="mr-2 h-4 w-4" /> Add Absence
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Ausência</DialogTitle>
+              <DialogTitle>Add Absence</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="employee_id">Colaborador</Label>
+                <Label htmlFor="employee_id">Employee</Label>
                 <Select name="employee_id" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Select..." />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map((u) => (
@@ -133,27 +133,27 @@ export default function AbsencesTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="absence_date">Data da Ausência</Label>
+                <Label htmlFor="absence_date">Absence Date</Label>
                 <Input id="absence_date" name="absence_date" type="date" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="absence_type">Tipo</Label>
+                <Label htmlFor="absence_type">Type</Label>
                 <Select name="absence_type" required defaultValue="excused">
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Select..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="excused">Justificada (Excused)</SelectItem>
-                    <SelectItem value="unexcused">Não Justificada (Unexcused)</SelectItem>
+                    <SelectItem value="excused">Excused</SelectItem>
+                    <SelectItem value="unexcused">Unexcused</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reason">Motivo</Label>
+                <Label htmlFor="reason">Reason</Label>
                 <Input id="reason" name="reason" required />
               </div>
               <div className="flex justify-end pt-4">
-                <Button type="submit">Salvar</Button>
+                <Button type="submit">Save</Button>
               </div>
             </form>
           </DialogContent>
@@ -164,24 +164,24 @@ export default function AbsencesTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Colaborador</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Motivo</TableHead>
-                <TableHead className="w-[80px]">Ações</TableHead>
+                <TableHead>Employee</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead className="w-[80px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Carregando...
+                    Loading...
                   </TableCell>
                 </TableRow>
               ) : data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Nenhum registro encontrado.
+                    No records found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -191,7 +191,7 @@ export default function AbsencesTab() {
                     <TableCell>{formatDate(item.absence_date)}</TableCell>
                     <TableCell>
                       <Badge variant={item.absence_type === 'excused' ? 'default' : 'destructive'}>
-                        {item.absence_type === 'excused' ? 'Justificada' : 'Não Justificada'}
+                        {item.absence_type === 'excused' ? 'Excused' : 'Unexcused'}
                       </Badge>
                     </TableCell>
                     <TableCell>{item.reason}</TableCell>

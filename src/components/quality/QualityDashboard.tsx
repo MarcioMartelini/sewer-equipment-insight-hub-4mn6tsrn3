@@ -81,7 +81,7 @@ export function QualityDashboard() {
     }, {})
 
     const custMap = claims.reduce((acc, c) => {
-      const cust = c.customer_name || 'Desconhecido'
+      const cust = c.customer_name || 'Unknown'
       acc[cust] = (acc[cust] || 0) + 1
       return acc
     }, {})
@@ -89,10 +89,10 @@ export function QualityDashboard() {
     return {
       kpis: [
         { title: 'Total Claims', value: claims.length, icon: ShieldAlert },
-        { title: 'Claims Resolvidos', value: resolved, icon: CheckCircle2 },
-        { title: 'Taxa Resolução', value: `${rate}%`, icon: Activity },
+        { title: 'Resolved Claims', value: resolved, icon: CheckCircle2 },
+        { title: 'Resolution Rate', value: `${rate}%`, icon: Activity },
         { title: 'Late Card Pulls', value: pulls.length, icon: FileWarning },
-        { title: 'Maior Pull (Comp.)', value: topComp, icon: Cpu },
+        { title: 'Top Pull (Comp.)', value: topComp, icon: Cpu },
       ],
       trendData: Object.entries(trendMap)
         .sort((a, b) => a[0].localeCompare(b[0]))
@@ -107,20 +107,20 @@ export function QualityDashboard() {
     }
   }, [claims, pulls])
 
-  const chartConfig = { count: { label: 'Quantidade', color: 'hsl(var(--primary))' } }
+  const chartConfig = { count: { label: 'Quantity', color: 'hsl(var(--primary))' } }
 
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Período" />
+            <SelectValue placeholder="Period" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7">Últimos 7 dias</SelectItem>
-            <SelectItem value="30">Últimos 30 dias</SelectItem>
-            <SelectItem value="90">Últimos 90 dias</SelectItem>
-            <SelectItem value="custom">Personalizado</SelectItem>
+            <SelectItem value="7">Last 7 days</SelectItem>
+            <SelectItem value="30">Last 30 days</SelectItem>
+            <SelectItem value="90">Last 90 days</SelectItem>
+            <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>
         {period === 'custom' && (
@@ -131,7 +131,7 @@ export function QualityDashboard() {
               onChange={(e) => setCustomStart(e.target.value)}
               className="w-auto"
             />
-            <span className="text-muted-foreground">até</span>
+            <span className="text-muted-foreground">to</span>
             <Input
               type="date"
               value={customEnd}
@@ -159,7 +159,7 @@ export function QualityDashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Tendência de Claims</CardTitle>
+            <CardTitle>Claims Trend</CardTitle>
           </CardHeader>
           <CardContent className="pl-0">
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -182,7 +182,7 @@ export function QualityDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Claims por Categoria</CardTitle>
+            <CardTitle>Claims by Category</CardTitle>
           </CardHeader>
           <CardContent className="pl-0">
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
