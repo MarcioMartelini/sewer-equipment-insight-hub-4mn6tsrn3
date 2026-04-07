@@ -14,6 +14,7 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { useNotifications } from '@/hooks/use-notifications'
 import {
   LayoutDashboard,
   Factory,
@@ -30,7 +31,19 @@ import {
   Briefcase,
   LineChart,
   Settings as SettingsIcon,
+  Bell,
 } from 'lucide-react'
+
+function NotificationsBadge() {
+  const { unreadCount } = useNotifications()
+  if (unreadCount === 0) return null
+  return (
+    <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+    </span>
+  )
+}
 
 import companyLogo from '@/assets/sewer-equipment-blue-fill-white-gray-globe-blue-gray-text-white-border-1024x1024-26940.webp'
 import appLogo from '@/assets/image-ea73b.png'
@@ -128,6 +141,15 @@ export default function Layout() {
               {location.pathname === '/' || location.pathname === ''
                 ? 'Dashboard'
                 : location.pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ')}
+            </div>
+            <div className="ml-auto flex items-center space-x-4">
+              <Link
+                to="/notifications"
+                className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <Bell className="w-5 h-5" />
+                <NotificationsBadge />
+              </Link>
             </div>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">

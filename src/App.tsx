@@ -14,6 +14,7 @@ import Quality from './pages/Quality'
 import HR from './pages/HR'
 import HighManagement from './pages/HighManagement'
 import Settings from './pages/Settings'
+import Notifications from './pages/Notifications'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -49,6 +50,8 @@ const App = () => (
             <Route path="/quality" element={<Quality />} />
             <Route path="/hr" element={<HR />} />
             <Route path="/high-management" element={<HighManagement />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/notificacoes" element={<Notifications />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
