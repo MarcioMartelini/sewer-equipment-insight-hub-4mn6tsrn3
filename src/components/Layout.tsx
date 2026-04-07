@@ -33,6 +33,7 @@ import {
   Settings as SettingsIcon,
   Bell,
   FileText,
+  User,
 } from 'lucide-react'
 
 function NotificationsBadge() {
@@ -145,6 +146,13 @@ export default function Layout() {
                 : location.pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ')}
             </div>
             <div className="ml-auto flex items-center space-x-4">
+              <Link
+                to="/profile"
+                className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                title="Meu Perfil"
+              >
+                <User className="w-5 h-5" />
+              </Link>
               <Link
                 to="/notifications"
                 className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"

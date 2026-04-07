@@ -16,6 +16,7 @@ import HighManagement from './pages/HighManagement'
 import Settings from './pages/Settings'
 import Notifications from './pages/Notifications'
 import Reports from './pages/Reports'
+import Profile from './pages/Profile'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/relatorios" element={<Reports />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/configuracoes" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/engineering" element={<Engineering />} />
             <Route path="/purchasing" element={<Purchasing />} />
