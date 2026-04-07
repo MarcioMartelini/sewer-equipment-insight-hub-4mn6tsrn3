@@ -21,4 +21,6 @@ export interface WorkOrder {
   dueDate: string // ISO string YYYY-MM-DD
   progress: number // 0 to 100
   daysOverdue?: number
+  quoteId?: string
+  quoteNumber?: string
 }

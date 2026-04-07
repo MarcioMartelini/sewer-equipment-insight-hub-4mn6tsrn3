@@ -4,7 +4,7 @@ import { WorkOrder, Department, Status } from '@/types/work-order'
 export async function fetchWorkOrders(): Promise<WorkOrder[]> {
   const { data, error } = await supabase
     .from('work_orders')
-    .select('*')
+    .select('*, quotes(quote_number)')
     .order('due_date', { ascending: true })
 
   if (error) {
@@ -12,7 +12,7 @@ export async function fetchWorkOrders(): Promise<WorkOrder[]> {
     return []
   }
 
-  return (data || []).map((wo) => {
+  return (data || []).map((wo: any) => {
     let daysOverdue = 0
     if (wo.due_date) {
       const due = new Date(wo.due_date)
@@ -32,6 +32,8 @@ export async function fetchWorkOrders(): Promise<WorkOrder[]> {
       dueDate: wo.due_date || new Date().toISOString().split('T')[0],
       progress: wo.progress || 0,
       daysOverdue: daysOverdue > 0 ? daysOverdue : undefined,
+      quoteId: wo.quote_id || undefined,
+      quoteNumber: wo.quotes?.quote_number || undefined,
     }
   })
 }

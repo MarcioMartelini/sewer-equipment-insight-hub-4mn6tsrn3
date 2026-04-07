@@ -182,6 +182,62 @@ export type Database = {
         }
         Relationships: []
       }
+      quotes: {
+        Row: {
+          approval_date: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_name: string
+          expiration_date: string | null
+          id: string
+          product_type: string | null
+          profit_margin_percentage: number | null
+          quote_number: string
+          quote_value: number | null
+          sent_date: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          approval_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_name: string
+          expiration_date?: string | null
+          id?: string
+          product_type?: string | null
+          profit_margin_percentage?: number | null
+          quote_number: string
+          quote_value?: number | null
+          sent_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          approval_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_name?: string
+          expiration_date?: string | null
+          id?: string
+          product_type?: string | null
+          profit_margin_percentage?: number | null
+          quote_number?: string
+          quote_value?: number | null
+          sent_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quotes_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string | null
@@ -263,6 +319,7 @@ export type Database = {
           id: string
           product_type: string | null
           progress: number | null
+          quote_id: string | null
           status: string
           updated_at: string | null
           wo_number: string
@@ -276,6 +333,7 @@ export type Database = {
           id?: string
           product_type?: string | null
           progress?: number | null
+          quote_id?: string | null
           status?: string
           updated_at?: string | null
           wo_number: string
@@ -289,6 +347,7 @@ export type Database = {
           id?: string
           product_type?: string | null
           progress?: number | null
+          quote_id?: string | null
           status?: string
           updated_at?: string | null
           wo_number?: string
@@ -299,6 +358,13 @@ export type Database = {
             columns: ['created_by']
             isOneToOne: false
             referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'work_orders_quote_id_fkey'
+            columns: ['quote_id']
+            isOneToOne: false
+            referencedRelation: 'quotes'
             referencedColumns: ['id']
           },
         ]
@@ -486,6 +552,20 @@ export const Constants = {
 //   product_type: text (nullable)
 //   description: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: quotes
+//   id: uuid (not null, default: gen_random_uuid())
+//   quote_number: text (not null)
+//   customer_name: text (not null)
+//   product_type: text (nullable)
+//   quote_value: numeric (nullable)
+//   profit_margin_percentage: numeric (nullable)
+//   status: text (not null, default: 'draft'::text)
+//   sent_date: timestamp with time zone (nullable)
+//   approval_date: timestamp with time zone (nullable)
+//   expiration_date: timestamp with time zone (nullable)
+//   created_by: uuid (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: users
 //   id: uuid (not null)
 //   email: text (not null)
@@ -515,6 +595,7 @@ export const Constants = {
 //   created_by: uuid (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   quote_id: uuid (nullable)
 
 // --- CONSTRAINTS ---
 // Table: alerts
@@ -533,6 +614,11 @@ export const Constants = {
 //   FOREIGN KEY metrics_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
+// Table: quotes
+//   FOREIGN KEY quotes_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+//   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
+//   UNIQUE quotes_quote_number_key: UNIQUE (quote_number)
+//   CHECK quotes_status_check: CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'approved'::text, 'rejected'::text, 'expired'::text])))
 // Table: users
 //   FOREIGN KEY users_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY users_pkey: PRIMARY KEY (id)
@@ -542,6 +628,7 @@ export const Constants = {
 // Table: work_orders
 //   FOREIGN KEY work_orders_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id)
 //   PRIMARY KEY work_orders_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY work_orders_quote_id_fkey: FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE SET NULL
 //   UNIQUE work_orders_wo_number_key: UNIQUE (wo_number)
 
 // --- ROW LEVEL SECURITY POLICIES ---
@@ -560,6 +647,16 @@ export const Constants = {
 // Table: products
 //   Policy "Auth read products" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: quotes
+//   Policy "Auth read quotes" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Delete quotes" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Insert quotes" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Update quotes" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: users
 //   Policy "Users can read own profile or admin reads all" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
@@ -617,5 +714,7 @@ export const Constants = {
 // --- INDEXES ---
 // Table: departments
 //   CREATE UNIQUE INDEX departments_name_key ON public.departments USING btree (name)
+// Table: quotes
+//   CREATE UNIQUE INDEX quotes_quote_number_key ON public.quotes USING btree (quote_number)
 // Table: work_orders
 //   CREATE UNIQUE INDEX work_orders_wo_number_key ON public.work_orders USING btree (wo_number)
