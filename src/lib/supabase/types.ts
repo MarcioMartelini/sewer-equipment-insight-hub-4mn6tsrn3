@@ -295,6 +295,145 @@ export type Database = {
           },
         ]
       }
+      hr_absences: {
+        Row: {
+          absence_date: string | null
+          absence_type: string | null
+          created_at: string | null
+          employee_id: string
+          employee_name: string
+          id: string
+          reason: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          absence_date?: string | null
+          absence_type?: string | null
+          created_at?: string | null
+          employee_id: string
+          employee_name: string
+          id?: string
+          reason?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          absence_date?: string | null
+          absence_type?: string | null
+          created_at?: string | null
+          employee_id?: string
+          employee_name?: string
+          id?: string
+          reason?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'hr_absences_employee_id_fkey'
+            columns: ['employee_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      hr_injuries: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          employee_name: string
+          id: string
+          injury_date: string | null
+          injury_description: string | null
+          injury_type: string | null
+          severity_level: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          employee_name: string
+          id?: string
+          injury_date?: string | null
+          injury_description?: string | null
+          injury_type?: string | null
+          severity_level?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          employee_name?: string
+          id?: string
+          injury_date?: string | null
+          injury_description?: string | null
+          injury_type?: string | null
+          severity_level?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'hr_injuries_employee_id_fkey'
+            columns: ['employee_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      hr_productivity: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          employee_name: string
+          id: string
+          labour_hours: number | null
+          production_value: number | null
+          productivity_ratio: number | null
+          recorded_date: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          employee_name: string
+          id?: string
+          labour_hours?: number | null
+          production_value?: number | null
+          productivity_ratio?: number | null
+          recorded_date?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          employee_name?: string
+          id?: string
+          labour_hours?: number | null
+          production_value?: number | null
+          productivity_ratio?: number | null
+          recorded_date?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'hr_productivity_employee_id_fkey'
+            columns: ['employee_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'hr_productivity_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       metrics: {
         Row: {
           created_at: string | null
@@ -1135,6 +1274,36 @@ export const Constants = {
 //   status: text (nullable, default: 'pending'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+// Table: hr_absences
+//   id: uuid (not null, default: gen_random_uuid())
+//   employee_id: uuid (not null)
+//   employee_name: text (not null)
+//   absence_date: date (nullable)
+//   absence_type: text (nullable)
+//   reason: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: hr_injuries
+//   id: uuid (not null, default: gen_random_uuid())
+//   employee_id: uuid (not null)
+//   employee_name: text (not null)
+//   injury_date: date (nullable)
+//   injury_description: text (nullable)
+//   injury_type: text (nullable)
+//   severity_level: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: hr_productivity
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   employee_id: uuid (not null)
+//   employee_name: text (not null)
+//   labour_hours: numeric (nullable)
+//   production_value: numeric (nullable)
+//   productivity_ratio: numeric (nullable)
+//   recorded_date: date (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: metrics
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_id: uuid (nullable)
@@ -1306,6 +1475,18 @@ export const Constants = {
 // Table: engineering_travelers
 //   PRIMARY KEY engineering_travelers_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY engineering_travelers_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: hr_absences
+//   CHECK hr_absences_absence_type_check: CHECK ((absence_type = ANY (ARRAY['excused'::text, 'unexcused'::text])))
+//   FOREIGN KEY hr_absences_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+//   PRIMARY KEY hr_absences_pkey: PRIMARY KEY (id)
+// Table: hr_injuries
+//   FOREIGN KEY hr_injuries_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+//   CHECK hr_injuries_injury_type_check: CHECK ((injury_type = ANY (ARRAY['recordable'::text, 'non-recordable'::text])))
+//   PRIMARY KEY hr_injuries_pkey: PRIMARY KEY (id)
+// Table: hr_productivity
+//   FOREIGN KEY hr_productivity_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+//   PRIMARY KEY hr_productivity_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY hr_productivity_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: metrics
 //   PRIMARY KEY metrics_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY metrics_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
@@ -1413,6 +1594,33 @@ export const Constants = {
 //   Policy "Auth read engineering_travelers" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "Auth update engineering_travelers" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: hr_absences
+//   Policy "Auth delete hr_absences" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert hr_absences" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read hr_absences" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update hr_absences" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: hr_injuries
+//   Policy "Auth delete hr_injuries" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert hr_injuries" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read hr_injuries" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update hr_injuries" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: hr_productivity
+//   Policy "Auth delete hr_productivity" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert hr_productivity" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read hr_productivity" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update hr_productivity" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: metrics
 //   Policy "Auth read metrics" (SELECT, PERMISSIVE) roles={authenticated}
