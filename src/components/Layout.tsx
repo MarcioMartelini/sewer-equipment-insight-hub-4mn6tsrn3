@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { Bell, LayoutDashboard, Settings, FileBarChart } from 'lucide-react'
+import { Bell, LayoutDashboard, Settings, FileBarChart, HandCoins } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
+  { title: 'Vendas', url: '/sales', icon: HandCoins },
   { title: 'Relatórios', url: '/relatorios', icon: FileBarChart },
   { title: 'Configurações', url: '/configuracoes', icon: Settings },
 ]

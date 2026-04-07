@@ -20,6 +20,11 @@ export async function createQuote(quote: {
   profit_margin_percentage: number
   expiration_date: string
 }) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user_id = session?.user?.id
+
   const quote_number = `Q-${Math.floor(1000 + Math.random() * 9000)}`
 
   const { data, error } = await supabase
@@ -30,6 +35,7 @@ export async function createQuote(quote: {
         quote_number,
         status: 'draft',
         sent_date: new Date().toISOString(),
+        created_by: user_id || null,
       },
     ])
     .select()
@@ -40,6 +46,11 @@ export async function createQuote(quote: {
 }
 
 export async function approveQuote(quote: Quote) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user_id = session?.user?.id
+
   const { error: quoteError } = await supabase
     .from('quotes')
     .update({
@@ -66,6 +77,7 @@ export async function approveQuote(quote: Quote) {
       quote_id: quote.id,
       progress: 0,
       due_date: dueDate,
+      created_by: user_id || null,
     },
   ])
 
