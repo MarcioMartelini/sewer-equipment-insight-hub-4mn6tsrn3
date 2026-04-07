@@ -663,41 +663,33 @@ export type Database = {
           component_name: string
           created_at: string | null
           id: string
+          part_number: string | null
           pull_date: string | null
           pull_reason: string | null
           status: string | null
           updated_at: string | null
-          wo_id: string | null
         }
         Insert: {
           component_name: string
           created_at?: string | null
           id?: string
+          part_number?: string | null
           pull_date?: string | null
           pull_reason?: string | null
           status?: string | null
           updated_at?: string | null
-          wo_id?: string | null
         }
         Update: {
           component_name?: string
           created_at?: string | null
           id?: string
+          part_number?: string | null
           pull_date?: string | null
           pull_reason?: string | null
           status?: string | null
           updated_at?: string | null
-          wo_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: 'quality_late_card_pulls_wo_id_fkey'
-            columns: ['wo_id']
-            isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
       quality_warranty_claims: {
         Row: {
@@ -1222,13 +1214,13 @@ export const Constants = {
 //   updated_at: timestamp with time zone (nullable, default: now())
 // Table: quality_late_card_pulls
 //   id: uuid (not null, default: gen_random_uuid())
-//   wo_id: uuid (nullable)
 //   component_name: text (not null)
 //   pull_reason: text (nullable)
 //   pull_date: date (nullable)
 //   status: text (nullable, default: 'pending'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   part_number: text (nullable)
 // Table: quality_warranty_claims
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_id: uuid (nullable)
@@ -1347,7 +1339,6 @@ export const Constants = {
 //   FOREIGN KEY purchasing_expedites_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: quality_late_card_pulls
 //   PRIMARY KEY quality_late_card_pulls_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY quality_late_card_pulls_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: quality_warranty_claims
 //   PRIMARY KEY quality_warranty_claims_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY quality_warranty_claims_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
