@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   ArrowLeft,
   Building2,
@@ -32,6 +33,17 @@ import CustomerFormDialog from '@/components/sales/CustomerFormDialog'
 import CustomerDeleteDialog from '@/components/sales/CustomerDeleteDialog'
 import { Skeleton } from '@/components/ui/skeleton'
 
+interface CustomerHistory {
+  id: string
+  field_changed: string
+  old_value: string | null
+  new_value: string | null
+  changed_at: string
+  user: {
+    full_name: string
+  } | null
+}
+
 interface CustomerWO {
   id: string
   wo_number: string
@@ -49,6 +61,7 @@ export default function CustomerDetail() {
   const navigate = useNavigate()
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [wos, setWos] = useState<CustomerWO[]>([])
+  const [history, setHistory] = useState<CustomerHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -71,6 +84,16 @@ export default function CustomerDetail() {
 
       if (woData) {
         setWos(woData)
+      }
+
+      const { data: historyData } = await supabase
+        .from('customer_history')
+        .select('id, field_changed, old_value, new_value, changed_at, user:users(full_name)')
+        .eq('customer_id', id)
+        .order('changed_at', { ascending: false })
+
+      if (historyData) {
+        setHistory(historyData as any)
       }
     } catch (error) {
       console.error('Error loading customer:', error)
@@ -246,81 +269,134 @@ export default function CustomerDetail() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Work Orders History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {wos.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              No Work Orders found for this customer.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>WO Number</TableHead>
-                    <TableHead>Product Family</TableHead>
-                    <TableHead>Machine Model</TableHead>
-                    <TableHead>Date Created</TableHead>
-                    <TableHead>Expected Completion</TableHead>
-                    <TableHead>Actual Completion</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Price</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {wos.map((wo) => (
-                    <TableRow key={wo.id}>
-                      <TableCell>
-                        <Link
-                          to={`/work-orders/${wo.id}`}
-                          className="font-medium text-indigo-600 hover:underline"
-                        >
-                          {wo.wo_number}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{wo.product_type || '-'}</TableCell>
-                      <TableCell>{wo.machine_model || '-'}</TableCell>
-                      <TableCell>
-                        {wo.created_at ? format(new Date(wo.created_at), 'MMM dd, yyyy') : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {wo.expected_completion_date
-                          ? format(new Date(wo.expected_completion_date), 'MMM dd, yyyy')
-                          : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {wo.actual_completion_date
-                          ? format(new Date(wo.actual_completion_date), 'MMM dd, yyyy')
-                          : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            wo.status === 'Completed' || wo.status === 'Concluído'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                        >
-                          {wo.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {new Intl.NumberFormat('en-US', {
-                          style: 'currency',
-                          currency: 'USD',
-                        }).format(Number(wo.price) || 0)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="wos" className="w-full">
+        <TabsList>
+          <TabsTrigger value="wos">Work Orders</TabsTrigger>
+          <TabsTrigger value="history">Update History</TabsTrigger>
+        </TabsList>
+        <TabsContent value="wos" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Work Orders History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {wos.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  No Work Orders found for this customer.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>WO Number</TableHead>
+                        <TableHead>Product Family</TableHead>
+                        <TableHead>Machine Model</TableHead>
+                        <TableHead>Date Created</TableHead>
+                        <TableHead>Expected Completion</TableHead>
+                        <TableHead>Actual Completion</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {wos.map((wo) => (
+                        <TableRow key={wo.id}>
+                          <TableCell>
+                            <Link
+                              to={`/work-orders/${wo.id}`}
+                              className="font-medium text-indigo-600 hover:underline"
+                            >
+                              {wo.wo_number}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{wo.product_type || '-'}</TableCell>
+                          <TableCell>{wo.machine_model || '-'}</TableCell>
+                          <TableCell>
+                            {wo.created_at ? format(new Date(wo.created_at), 'MMM dd, yyyy') : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {wo.expected_completion_date
+                              ? format(new Date(wo.expected_completion_date), 'MMM dd, yyyy')
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {wo.actual_completion_date
+                              ? format(new Date(wo.actual_completion_date), 'MMM dd, yyyy')
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                wo.status === 'Completed' || wo.status === 'Concluído'
+                                  ? 'default'
+                                  : 'secondary'
+                              }
+                            >
+                              {wo.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {new Intl.NumberFormat('en-US', {
+                              style: 'currency',
+                              currency: 'USD',
+                            }).format(Number(wo.price) || 0)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="history" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Customer Update History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {history.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">No updates recorded yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date &amp; Time</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Field Changed</TableHead>
+                        <TableHead>Old Value</TableHead>
+                        <TableHead>New Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {history.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            {format(new Date(record.changed_at), 'MMM dd, yyyy HH:mm')}
+                          </TableCell>
+                          <TableCell>{record.user?.full_name || 'System'}</TableCell>
+                          <TableCell className="font-medium capitalize">
+                            {record.field_changed.replace(/_/g, ' ')}
+                          </TableCell>
+                          <TableCell className="text-red-500 line-through">
+                            {record.old_value || '-'}
+                          </TableCell>
+                          <TableCell className="text-green-600 font-medium">
+                            {record.new_value || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <CustomerFormDialog
         open={editOpen}
