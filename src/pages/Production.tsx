@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ProductionDashboard } from '@/components/production-dashboard'
@@ -12,9 +13,38 @@ import {
 } from '@/components/ui/select'
 
 export default function Production() {
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const { subDepartment } = useParams()
+  const navigate = useNavigate()
   const [workOrders, setWorkOrders] = useState<any[]>([])
   const [selectedWoId, setSelectedWoId] = useState<string>('all')
+
+  const tabMapping: Record<string, string> = {
+    'weld-shop': 'weld_shop',
+    paint: 'paint',
+    'sub-assembly': 'sub_assembly',
+    warehouse: 'warehouse',
+    'final-assembly': 'final_assembly',
+    tests: 'tests',
+  }
+
+  const reverseMapping: Record<string, string> = {
+    weld_shop: 'weld-shop',
+    paint: 'paint',
+    sub_assembly: 'sub-assembly',
+    warehouse: 'warehouse',
+    final_assembly: 'final-assembly',
+    tests: 'tests',
+  }
+
+  const activeTab = subDepartment ? tabMapping[subDepartment] || 'dashboard' : 'dashboard'
+
+  const handleTabChange = (value: string) => {
+    if (value === 'dashboard') {
+      navigate('/production')
+    } else {
+      navigate(`/production/${reverseMapping[value]}`)
+    }
+  }
 
   useEffect(() => {
     supabase
@@ -54,7 +84,7 @@ export default function Production() {
         )}
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-2 p-1">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="weld_shop">Soldagem (Weld Shop)</TabsTrigger>

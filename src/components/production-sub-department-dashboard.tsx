@@ -317,70 +317,97 @@ export function ProductionSubDepartmentDashboard({
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Top Atrasos</CardTitle>
           </CardHeader>
           <CardContent>
             {topDelayed.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Nenhuma.</p>
+              <p className="text-muted-foreground text-sm">Nenhuma tarefa atrasada.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>WO</TableHead>
-                    <TableHead>Tarefa</TableHead>
-                    <TableHead>Criado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {topDelayed.map((i) => (
-                    <TableRow key={i.id}>
-                      <TableCell>{i.work_orders?.wo_number || i.wo_id}</TableCell>
-                      <TableCell>{getTaskName(i, tableName)}</TableCell>
-                      <TableCell>{formatDate(i.created_at)}</TableCell>
+              <div className="h-[400px] overflow-y-auto pr-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>WO</TableHead>
+                      <TableHead>Tarefa</TableHead>
+                      <TableHead>Criado</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {topDelayed.map((i) => (
+                      <TableRow key={i.id}>
+                        <TableCell className="font-medium">
+                          {i.work_orders?.wo_number || i.wo_id}
+                        </TableCell>
+                        <TableCell>{getTaskName(i, tableName)}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatDate(i.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Todas as Tarefas</CardTitle>
+            <CardDescription>
+              Lista completa de tarefas e WOs associadas ao setor de {title}.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] overflow-y-auto pr-2">
+            <div className="h-[400px] overflow-y-auto pr-2">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>WO</TableHead>
                     <TableHead>Tarefa</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Ação</TableHead>
+                    <TableHead>Criado em</TableHead>
+                    <TableHead>Atualizado em</TableHead>
+                    <TableHead className="text-right">Ação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredData.map((i) => (
-                    <TableRow key={i.id}>
-                      <TableCell>{i.work_orders?.wo_number || i.wo_id}</TableCell>
-                      <TableCell>{getTaskName(i, tableName)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={getStatusBadge(i.status)}>
-                          {formatStatusText(i.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <EditStatusDialog
-                          item={i}
-                          tableName={tableName}
-                          onUpdate={handleUpdateStatus}
-                        />
+                  {filteredData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Nenhuma tarefa encontrada no período selecionado.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredData.map((i) => (
+                      <TableRow key={i.id}>
+                        <TableCell className="font-medium">
+                          {i.work_orders?.wo_number || i.wo_id}
+                        </TableCell>
+                        <TableCell>{getTaskName(i, tableName)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={getStatusBadge(i.status)}>
+                            {formatStatusText(i.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap">
+                          {formatDate(i.created_at)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap">
+                          {i.updated_at ? formatDate(i.updated_at) : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <EditStatusDialog
+                            item={i}
+                            tableName={tableName}
+                            onUpdate={handleUpdateStatus}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
