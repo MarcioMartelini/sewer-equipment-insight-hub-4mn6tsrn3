@@ -61,6 +61,24 @@ export async function deleteQuote(id: string) {
   if (error) throw error
 }
 
+export async function fetchQuoteById(id: string) {
+  const { data, error } = await supabase.from('quotes').select('*').eq('id', id).single()
+
+  if (error) throw error
+  return data as Quote
+}
+
+export async function fetchQuoteHistory(quoteId: string) {
+  const { data, error } = await supabase
+    .from('quote_history' as any)
+    .select('*, user:users(full_name)')
+    .eq('quote_id', quoteId)
+    .order('changed_at', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+
 export async function convertToWorkOrder(quoteId: string, woNumber: string) {
   const {
     data: { session },

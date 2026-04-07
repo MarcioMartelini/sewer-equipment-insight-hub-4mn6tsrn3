@@ -18,6 +18,7 @@ import Notifications from './pages/Notifications'
 import Reports from './pages/Reports'
 import Profile from './pages/Profile'
 import WorkOrderDetail from './pages/WorkOrderDetail'
+import QuoteDetail from './pages/QuoteDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/notificacoes" element={<Notifications />} />
             <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
+            <Route path="/sales/quotes/:id" element={<QuoteDetail />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
