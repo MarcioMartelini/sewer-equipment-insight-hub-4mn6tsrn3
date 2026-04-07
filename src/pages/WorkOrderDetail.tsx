@@ -34,6 +34,7 @@ import {
   Users,
   ArrowLeft,
   Activity,
+  Trash2,
 } from 'lucide-react'
 import {
   Select,
@@ -88,6 +89,7 @@ export default function WorkOrderDetail() {
   const [history, setHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [formData, setFormData] = useState<any>({})
   const [statusOpen, setStatusOpen] = useState(false)
   const [statusForm, setStatusForm] = useState({ status: '', notes: '' })
@@ -194,6 +196,32 @@ export default function WorkOrderDetail() {
     fetchWorkOrder()
   }
 
+  const handleDelete = async () => {
+    if (!user) return
+    const updates = { deleted_at: new Date().toISOString() } as any
+    const { error } = await supabase.from('work_orders').update(updates).eq('id', id)
+
+    if (error) return toast.error('Failed to delete Work Order')
+
+    const { data: uData } = await supabase
+      .from('users')
+      .select('department')
+      .eq('id', user.id)
+      .single()
+
+    await supabase.from('wo_history').insert({
+      wo_id: id,
+      user_id: user.id,
+      department: uData?.department || 'System',
+      action: 'Deleted',
+      notes: 'Work Order deletado',
+    } as any)
+
+    toast.success('Work Order deletado com sucesso')
+    setDeleteOpen(false)
+    navigate('/sales')
+  }
+
   const handleSave = async () => {
     if (!user) return
     const updates = {
@@ -256,6 +284,9 @@ export default function WorkOrderDetail() {
           </Button>
           <Button onClick={openEdit}>
             <FileEdit className="mr-2 h-4 w-4" /> Edit WO
+          </Button>
+          <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+            <Trash2 className="mr-2 h-4 w-4" /> Delete WO
           </Button>
         </div>
       </div>
@@ -329,13 +360,13 @@ export default function WorkOrderDetail() {
                 <TableHead>Date / Time</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>User</TableHead>
-                <TableHead>Status Change</TableHead>
+                <TableHead>Action / Status Change</TableHead>
                 <TableHead>Notes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {history.length ? (
-                history.map((h) => (
+                history.map((h: any) => (
                   <TableRow key={h.id}>
                     <TableCell className="whitespace-nowrap">
                       {format(new Date(h.changed_at), 'MMM dd, yyyy HH:mm')}
@@ -343,7 +374,11 @@ export default function WorkOrderDetail() {
                     <TableCell>{h.department}</TableCell>
                     <TableCell>{h.users?.full_name || 'System'}</TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {h.old_status} → {h.new_status}
+                      {h.action ? (
+                        <Badge variant="outline">{h.action}</Badge>
+                      ) : (
+                        `${h.old_status || ''} → ${h.new_status || ''}`
+                      )}
                     </TableCell>
                     <TableCell>{h.notes}</TableCell>
                   </TableRow>
@@ -398,6 +433,27 @@ export default function WorkOrderDetail() {
               Cancel
             </Button>
             <Button onClick={handleStatusSave}>Save Status</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deletar Work Order</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Tem certeza que deseja deletar este Work Order? Esta ação não pode ser desfeita.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Confirmar Deletar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,0 +1,2 @@
+ALTER TABLE public.work_orders ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE public.wo_history ADD COLUMN IF NOT EXISTS action TEXT;

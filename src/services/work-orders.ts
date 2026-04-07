@@ -5,6 +5,7 @@ export async function fetchWorkOrders(): Promise<WorkOrder[]> {
   const { data, error } = await supabase
     .from('work_orders')
     .select('*, quotes(quote_number)')
+    .is('deleted_at', null)
     .order('due_date', { ascending: true })
 
   if (error) {
@@ -61,7 +62,10 @@ export async function updateWorkOrder(id: string, data: Partial<WorkOrder>) {
 }
 
 export async function deleteWorkOrder(id: string) {
-  const { error } = await supabase.from('work_orders').delete().eq('id', id)
+  const { error } = await supabase
+    .from('work_orders')
+    .update({ deleted_at: new Date().toISOString() } as any)
+    .eq('id', id)
 
   if (error) throw error
 }
