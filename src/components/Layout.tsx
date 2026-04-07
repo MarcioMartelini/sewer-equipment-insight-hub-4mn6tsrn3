@@ -25,7 +25,6 @@ import {
   Package,
   CheckSquare,
   FlaskConical,
-  ClipboardList,
   Users,
   Wrench,
   Briefcase,
@@ -41,7 +40,6 @@ const navigation = [
     items: [
       { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
       { title: 'High Management', icon: LineChart, url: '/high-management' },
-      { title: 'WO Registry', icon: ClipboardList, url: '/wo-registry-page' },
     ],
   },
   {
