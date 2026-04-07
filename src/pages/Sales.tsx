@@ -8,7 +8,8 @@ import {
   approveQuote,
   type Quote,
 } from '@/services/quotes'
-import { fetchWorkOrders } from '@/services/work-orders'
+import { fetchWorkOrders, updateWorkOrder, deleteWorkOrder } from '@/services/work-orders'
+import { Eye } from 'lucide-react'
 import { WorkOrder } from '@/types/work-order'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -67,6 +68,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useMemo } from 'react'
 import { deleteQuote } from '@/services/quotes'
+
+const WO_STATUSES = [
+  'Pending',
+  'In Progress',
+  'Engineering',
+  'Purchasing',
+  'Production',
+  'Quality',
+  'Completed',
+  'On Hold',
+]
 
 const US_STATES = [
   'AL',
@@ -167,6 +179,31 @@ export default function Sales() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
+  // WO States
+  const [searchWoQuery, setSearchWoQuery] = useState('')
+  const [statusWoFilter, setStatusWoFilter] = useState('all')
+  const [customerWoFilter, setCustomerWoFilter] = useState('all')
+  const [productFamilyWoFilter, setProductFamilyWoFilter] = useState('all')
+  const [dateFromWo, setDateFromWo] = useState('')
+  const [dateToWo, setDateToWo] = useState('')
+  const [currentWoPage, setCurrentWoPage] = useState(1)
+
+  const [editingWo, setEditingWo] = useState<WorkOrder | null>(null)
+  const [isWoDialogOpen, setIsWoDialogOpen] = useState(false)
+  const [deleteWoId, setDeleteWoId] = useState<string | null>(null)
+
+  const woForm = useForm({
+    defaultValues: {
+      woNumber: '',
+      customer: '',
+      productType: '',
+      machineModel: '',
+      price: 0,
+      status: '',
+      expectedCompletionDate: '',
+    },
+  })
+
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
     defaultValues: {
@@ -192,7 +229,7 @@ export default function Sales() {
     try {
       const [fetchedQuotes, fetchedWOs] = await Promise.all([fetchQuotes(), fetchWorkOrders()])
       setQuotes(fetchedQuotes)
-      setWorkOrders(fetchedWOs.filter((wo) => wo.quoteId))
+      setWorkOrders(fetchedWOs)
     } catch (error) {
       toast({ title: 'Error loading data', variant: 'destructive' })
     } finally {
@@ -318,6 +355,45 @@ export default function Sales() {
     }
   }
 
+  const handleWoDelete = async () => {
+    if (!deleteWoId) return
+    try {
+      await deleteWorkOrder(deleteWoId)
+      toast({ title: 'Work Order deleted successfully' })
+      loadData()
+    } catch (error) {
+      toast({ title: 'Error deleting Work Order', variant: 'destructive' })
+    } finally {
+      setDeleteWoId(null)
+    }
+  }
+
+  const onWoSubmit = async (data: any) => {
+    if (!editingWo) return
+    try {
+      await updateWorkOrder(editingWo.id, data)
+      toast({ title: 'Work Order updated successfully' })
+      setIsWoDialogOpen(false)
+      loadData()
+    } catch (error) {
+      toast({ title: 'Error saving Work Order', variant: 'destructive' })
+    }
+  }
+
+  const openWoModal = (wo: WorkOrder) => {
+    setEditingWo(wo)
+    woForm.reset({
+      woNumber: wo.woNumber || '',
+      customer: wo.customer || '',
+      productType: wo.productType || '',
+      machineModel: wo.machineModel || '',
+      price: wo.price || 0,
+      status: wo.status || '',
+      expectedCompletionDate: wo.expectedCompletionDate || '',
+    })
+    setIsWoDialogOpen(true)
+  }
+
   const handleDelete = async () => {
     if (!deleteQuoteId) return
     try {
@@ -366,6 +442,54 @@ export default function Sales() {
     currentPage * itemsPerPage,
   )
 
+  const uniqueWoCustomers = useMemo(() => {
+    return Array.from(new Set(workOrders.map((w) => w.customer).filter(Boolean))) as string[]
+  }, [workOrders])
+
+  const uniqueWoProductFamilies = useMemo(() => {
+    return Array.from(new Set(workOrders.map((w) => w.productType).filter(Boolean))) as string[]
+  }, [workOrders])
+
+  const filteredWorkOrders = useMemo(() => {
+    return workOrders.filter((wo) => {
+      const matchesSearch =
+        (wo.woNumber || '').toLowerCase().includes(searchWoQuery.toLowerCase()) ||
+        wo.customer.toLowerCase().includes(searchWoQuery.toLowerCase())
+
+      const matchesStatus = statusWoFilter === 'all' || wo.status === statusWoFilter
+      const matchesCustomer = customerWoFilter === 'all' || wo.customer === customerWoFilter
+      const matchesProduct =
+        productFamilyWoFilter === 'all' || wo.productType === productFamilyWoFilter
+
+      let matchesDate = true
+      if (dateFromWo || dateToWo) {
+        const woDate = new Date(wo.createdAt || '')
+        if (dateFromWo && new Date(dateFromWo) > woDate) matchesDate = false
+        if (dateToWo && new Date(dateToWo) < woDate) matchesDate = false
+      }
+
+      return matchesSearch && matchesStatus && matchesCustomer && matchesProduct && matchesDate
+    })
+  }, [
+    workOrders,
+    searchWoQuery,
+    statusWoFilter,
+    customerWoFilter,
+    productFamilyWoFilter,
+    dateFromWo,
+    dateToWo,
+  ])
+
+  const totalWoPages = Math.ceil(filteredWorkOrders.length / itemsPerPage) || 1
+  const paginatedWorkOrders = filteredWorkOrders.slice(
+    (currentWoPage - 1) * itemsPerPage,
+    currentWoPage * itemsPerPage,
+  )
+
+  useEffect(() => {
+    setCurrentWoPage(1)
+  }, [searchWoQuery, statusWoFilter, customerWoFilter, productFamilyWoFilter, dateFromWo, dateToWo])
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
@@ -392,6 +516,23 @@ export default function Sales() {
           </Badge>
         )
     }
+  }
+
+  const getWoStatusBadge = (status: string) => {
+    const lower = status.toLowerCase()
+    if (lower.includes('pending')) return <Badge className="bg-slate-500">Pending</Badge>
+    if (lower.includes('in progress')) return <Badge className="bg-blue-500">In Progress</Badge>
+    if (lower.includes('engineering')) return <Badge className="bg-purple-500">Engineering</Badge>
+    if (lower.includes('purchasing')) return <Badge className="bg-orange-500">Purchasing</Badge>
+    if (lower.includes('production')) return <Badge className="bg-emerald-500">Production</Badge>
+    if (lower.includes('quality')) return <Badge className="bg-yellow-500">Quality</Badge>
+    if (lower.includes('completed')) return <Badge className="bg-green-700">Completed</Badge>
+    if (lower.includes('on hold')) return <Badge className="bg-red-500">On Hold</Badge>
+    return (
+      <Badge variant="outline" className="capitalize">
+        {status}
+      </Badge>
+    )
   }
 
   if (loading) {
@@ -926,73 +1067,363 @@ export default function Sales() {
         </TabsContent>
 
         <TabsContent value="work-orders" className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-slate-800">Sales Work Orders</h2>
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-slate-800">Work Orders List</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+              <div className="xl:col-span-2">
+                <Label className="text-xs text-slate-500 mb-1">Search</Label>
+                <Input
+                  placeholder="WO Number or Customer Name..."
+                  value={searchWoQuery}
+                  onChange={(e) => setSearchWoQuery(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Status</Label>
+                <Select value={statusWoFilter} onValueChange={setStatusWoFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {WO_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Customer</Label>
+                <Select value={customerWoFilter} onValueChange={setCustomerWoFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Customers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Customers</SelectItem>
+                    {uniqueWoCustomers.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Product Family</Label>
+                <Select value={productFamilyWoFilter} onValueChange={setProductFamilyWoFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Families" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Families</SelectItem>
+                    {uniqueWoProductFamilies.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Date From (Created)</Label>
+                <Input
+                  type="date"
+                  value={dateFromWo}
+                  onChange={(e) => setDateFromWo(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 mb-1">Date To (Created)</Label>
+                <Input type="date" value={dateToWo} onChange={(e) => setDateToWo(e.target.value)} />
+              </div>
+            </div>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold text-slate-700">WO ID</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Quote Ref.</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Customer</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Product</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Due Date</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Progress</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workOrders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-slate-500 h-24">
-                      No work orders originated from sales.
-                    </TableCell>
+
+          <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      WO Number
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Customer
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Product Family
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Machine Model
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                      Price
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Status
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Date Created
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                      Exp. Completion
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ) : (
-                  workOrders.map((wo) => (
-                    <TableRow
-                      key={wo.id}
-                      className="group hover:bg-slate-50/50 cursor-pointer"
-                      onClick={() => navigate(`/work-orders/${wo.id}`)}
-                    >
-                      <TableCell className="font-medium text-slate-900">{wo.id}</TableCell>
-                      <TableCell className="text-indigo-600 text-sm font-medium">
-                        {wo.quoteNumber || '-'}
-                      </TableCell>
-                      <TableCell className="text-slate-700">{wo.customer}</TableCell>
-                      <TableCell className="text-slate-600">{wo.productType}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className="bg-slate-100 text-slate-700 hover:bg-slate-200 capitalize"
-                        >
-                          {wo.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-slate-500 text-sm">
-                        {wo.dueDate ? format(new Date(wo.dueDate), 'MM/dd/yyyy') : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="h-2 w-24 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-indigo-500 transition-all duration-500"
-                              style={{ width: `${wo.progress}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-medium text-slate-500 w-8">
-                            {wo.progress}%
-                          </span>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedWorkOrders.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center text-slate-500 h-24">
+                        No work orders found matching your filters.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    paginatedWorkOrders.map((wo) => (
+                      <TableRow key={wo.id} className="group hover:bg-slate-50/50">
+                        <TableCell className="font-medium text-slate-900">
+                          {wo.woNumber || wo.id}
+                        </TableCell>
+                        <TableCell className="text-slate-700">{wo.customer}</TableCell>
+                        <TableCell className="text-slate-600">{wo.productType || '-'}</TableCell>
+                        <TableCell className="text-slate-600">{wo.machineModel || '-'}</TableCell>
+                        <TableCell className="text-right font-medium text-slate-700">
+                          ${Number(wo.price || 0).toLocaleString()}
+                        </TableCell>
+                        <TableCell>{getWoStatusBadge(wo.status)}</TableCell>
+                        <TableCell className="text-slate-500 text-sm">
+                          {wo.createdAt ? format(new Date(wo.createdAt), 'MM/dd/yyyy') : '-'}
+                        </TableCell>
+                        <TableCell className="text-slate-500 text-sm">
+                          {wo.expectedCompletionDate
+                            ? format(new Date(wo.expectedCompletionDate), 'MM/dd/yyyy')
+                            : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => navigate(`/work-orders/${wo.id}`)}>
+                                <Eye className="w-4 h-4 mr-2" /> View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openWoModal(wo)}>
+                                <Edit className="w-4 h-4 mr-2" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                onClick={() => setDeleteWoId(wo.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {totalWoPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
+                <div className="text-sm text-slate-500">
+                  Showing {(currentWoPage - 1) * itemsPerPage + 1} to{' '}
+                  {Math.min(currentWoPage * itemsPerPage, filteredWorkOrders.length)} of{' '}
+                  {filteredWorkOrders.length} work orders
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentWoPage((p) => Math.max(1, p - 1))}
+                    disabled={currentWoPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  </Button>
+                  <div className="text-sm font-medium text-slate-700 px-2">
+                    Page {currentWoPage} of {totalWoPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentWoPage((p) => Math.min(totalWoPages, p + 1))}
+                    disabled={currentWoPage === totalWoPages}
+                  >
+                    Next <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
+
+        <Dialog open={isWoDialogOpen} onOpenChange={setIsWoDialogOpen}>
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Work Order</DialogTitle>
+            </DialogHeader>
+            <Form {...woForm}>
+              <form onSubmit={woForm.handleSubmit(onWoSubmit)} className="space-y-4 mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={woForm.control}
+                    name="woNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>WO Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="WO-XXXX" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={woForm.control}
+                    name="customer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Customer</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Customer Name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={woForm.control}
+                    name="productType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Family</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Product Family" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={woForm.control}
+                    name="machineModel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Machine Model</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Model" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={woForm.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={woForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {WO_STATUSES.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={woForm.control}
+                    name="expectedCompletionDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Expected Completion Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <Button
+                    type="submit"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!deleteWoId} onOpenChange={(open) => !open && setDeleteWoId(null)}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Delete Work Order</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-slate-500 my-4">
+              Are you sure you want to delete this Work Order? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={() => setDeleteWoId(null)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleWoDelete}>
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </Tabs>
     </div>
   )

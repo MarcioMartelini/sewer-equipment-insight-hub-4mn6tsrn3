@@ -21,11 +21,16 @@ export type PrazoFilter = 'Todos' | 'Atrasado' | 'Esta semana' | 'Próxima seman
 
 export interface WorkOrder {
   id: string
+  woNumber?: string
   customer: string
   productType: string
+  machineModel?: string
+  price?: number
   department: Department
-  status: Status
+  status: Status | string
   dueDate: string // ISO string YYYY-MM-DD
+  expectedCompletionDate?: string
+  createdAt?: string
   progress: number // 0 to 100
   daysOverdue?: number
   quoteId?: string

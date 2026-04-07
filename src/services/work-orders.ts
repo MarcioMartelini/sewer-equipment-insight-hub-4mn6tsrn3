@@ -24,16 +24,44 @@ export async function fetchWorkOrders(): Promise<WorkOrder[]> {
     }
 
     return {
-      id: wo.wo_number,
+      id: wo.id,
+      woNumber: wo.wo_number,
       customer: wo.customer_name,
       productType: wo.product_type || 'N/A',
+      machineModel: wo.machine_model || '',
+      price: Number(wo.price || 0),
       department: (wo.department as Department) || 'Sales',
       status: (wo.status as Status) || 'Not started',
       dueDate: wo.due_date || new Date().toISOString().split('T')[0],
+      expectedCompletionDate: wo.expected_completion_date || '',
+      createdAt: wo.created_at || '',
       progress: wo.progress || 0,
       daysOverdue: daysOverdue > 0 ? daysOverdue : undefined,
       quoteId: wo.quote_id || undefined,
       quoteNumber: wo.quotes?.quote_number || undefined,
     }
   })
+}
+
+export async function updateWorkOrder(id: string, data: Partial<WorkOrder>) {
+  const { error } = await supabase
+    .from('work_orders')
+    .update({
+      wo_number: data.woNumber,
+      customer_name: data.customer,
+      product_type: data.productType,
+      machine_model: data.machineModel,
+      price: data.price,
+      status: data.status,
+      expected_completion_date: data.expectedCompletionDate,
+    })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+export async function deleteWorkOrder(id: string) {
+  const { error } = await supabase.from('work_orders').delete().eq('id', id)
+
+  if (error) throw error
 }

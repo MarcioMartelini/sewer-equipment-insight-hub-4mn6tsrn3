@@ -49,7 +49,7 @@ export function WorkOrderTable({ data }: WorkOrderTableProps) {
         <TableBody>
           {data.map((wo) => (
             <TableRow key={wo.id} className="group hover:bg-slate-50/50 transition-colors">
-              <TableCell className="font-semibold text-slate-900">{wo.id}</TableCell>
+              <TableCell className="font-semibold text-slate-900">{wo.woNumber || wo.id}</TableCell>
               <TableCell className="font-medium text-slate-700">{wo.customer}</TableCell>
               <TableCell className="hidden md:table-cell text-slate-500">
                 {wo.productType}
