@@ -7,6 +7,7 @@ import {
   HandCoins,
   Wrench,
   ShoppingCart,
+  Factory,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { title: 'Vendas', url: '/sales', icon: HandCoins },
   { title: 'Engenharia', url: '/engineering', icon: Wrench },
   { title: 'Compras', url: '/purchasing', icon: ShoppingCart },
+  { title: 'Produção', url: '/production', icon: Factory },
   { title: 'Relatórios', url: '/relatorios', icon: FileBarChart },
   { title: 'Configurações', url: '/configuracoes', icon: Settings },
 ]
