@@ -1094,6 +1094,51 @@ export type Database = {
           },
         ]
       }
+      quote_history: {
+        Row: {
+          changed_at: string | null
+          field_changed: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          quote_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          field_changed: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          quote_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          field_changed?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          quote_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quote_history_quote_id_fkey'
+            columns: ['quote_id']
+            isOneToOne: false
+            referencedRelation: 'quotes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'quote_history_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       quotes: {
         Row: {
           actual_completion_date: string | null
@@ -1806,6 +1851,14 @@ export const Constants = {
 //   resolution_notes: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+// Table: quote_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   quote_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   changed_at: timestamp with time zone (nullable, default: now())
+//   field_changed: text (not null)
+//   old_value: text (nullable)
+//   new_value: text (nullable)
 // Table: quotes
 //   id: uuid (not null, default: gen_random_uuid())
 //   quote_number: text (not null)
@@ -1985,6 +2038,10 @@ export const Constants = {
 // Table: quality_warranty_claims
 //   PRIMARY KEY quality_warranty_claims_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY quality_warranty_claims_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: quote_history
+//   PRIMARY KEY quote_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY quote_history_quote_id_fkey: FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE
+//   FOREIGN KEY quote_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 // Table: quotes
 //   FOREIGN KEY quotes_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 //   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
@@ -2233,6 +2290,11 @@ export const Constants = {
 //   Policy "Auth update quality_warranty_claims" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: quote_history
+//   Policy "Auth insert quote_history" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read quote_history" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: quotes
 //   Policy "Auth read quotes" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -2313,6 +2375,38 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION log_quote_changes()
+//   CREATE OR REPLACE FUNCTION public.log_quote_changes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_old_json jsonb := to_jsonb(OLD);
+//       v_new_json jsonb := to_jsonb(NEW);
+//       v_key text;
+//       v_user_id uuid;
+//   BEGIN
+//       v_user_id := auth.uid();
+//
+//       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
+//       LOOP
+//           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
+//               IF v_old_json->>v_key IS DISTINCT FROM v_new_json->>v_key THEN
+//                   INSERT INTO public.quote_history (quote_id, user_id, field_changed, old_value, new_value)
+//                   VALUES (NEW.id, v_user_id, v_key, v_old_json->>v_key, v_new_json->>v_key);
+//               END IF;
+//           END IF;
+//       END LOOP;
+//
+//       RETURN NEW;
+//   END;
+//   $function$
+//
+
+// --- TRIGGERS ---
+// Table: quotes
+//   on_quote_update: CREATE TRIGGER on_quote_update AFTER UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION log_quote_changes()
 
 // --- INDEXES ---
 // Table: departments

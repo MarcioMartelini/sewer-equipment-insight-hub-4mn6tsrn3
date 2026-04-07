@@ -12,6 +12,7 @@ import {
   DollarSign,
   Truck,
   ClipboardList,
+  Trash2,
 } from 'lucide-react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -62,6 +63,7 @@ import {
   fetchQuoteHistory,
   updateQuote,
   convertToWorkOrder,
+  softDeleteQuote,
   Quote,
 } from '@/services/quotes'
 
@@ -93,6 +95,7 @@ export default function QuoteDetail() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false)
   const [convertWoNumber, setConvertWoNumber] = useState('')
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
@@ -156,6 +159,18 @@ export default function QuoteDetail() {
       loadData()
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
+    }
+  }
+
+  const onDeleteConfirm = async () => {
+    if (!id) return
+    try {
+      await softDeleteQuote(id)
+      toast({ title: 'Success', description: 'Quote deleted successfully' })
+      setIsDeleteModalOpen(false)
+      navigate('/sales')
+    } catch (error: any) {
+      toast({ title: 'Error deleting quote', description: error.message, variant: 'destructive' })
     }
   }
 
@@ -247,6 +262,10 @@ export default function QuoteDetail() {
           >
             <Factory className="mr-2 h-4 w-4" />
             Convert to WO
+          </Button>
+          <Button variant="destructive" onClick={() => setIsDeleteModalOpen(true)}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Quote
           </Button>
         </div>
       </div>
@@ -405,9 +424,11 @@ export default function QuoteDetail() {
                     <TableRow>
                       <TableHead>Date / Time</TableHead>
                       <TableHead>User</TableHead>
+                      <TableHead>Action</TableHead>
                       <TableHead>Field Changed</TableHead>
                       <TableHead>Old Value</TableHead>
                       <TableHead>New Value</TableHead>
+                      <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -417,13 +438,22 @@ export default function QuoteDetail() {
                           {record.changed_at ? format(new Date(record.changed_at), 'PPP p') : '-'}
                         </TableCell>
                         <TableCell>{record.user?.full_name || 'System'}</TableCell>
+                        <TableCell>
+                          {record.action ? <Badge variant="outline">{record.action}</Badge> : '-'}
+                        </TableCell>
                         <TableCell className="font-medium capitalize">
-                          {record.field_changed.replace(/_/g, ' ')}
+                          {record.field_changed ? record.field_changed.replace(/_/g, ' ') : '-'}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {record.old_value || '-'}
                         </TableCell>
                         <TableCell>{record.new_value || '-'}</TableCell>
+                        <TableCell
+                          className="text-muted-foreground max-w-[200px] truncate"
+                          title={record.notes}
+                        >
+                          {record.notes || '-'}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -654,6 +684,25 @@ export default function QuoteDetail() {
               Cancel
             </Button>
             <Button onClick={onConvert}>Convert</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Deletar Cotação</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja deletar esta cotação? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={onDeleteConfirm}>
+              Confirmar Deletar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -14,12 +14,14 @@ export type Quote = Database['public']['Tables']['quotes']['Row'] & {
   date_order?: string
   customer_city?: string
   customer_state?: string
+  deleted_at?: string | null
 }
 
 export async function fetchQuotes() {
   const { data, error } = await supabase
     .from('quotes')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -59,6 +61,32 @@ export async function updateQuote(id: string, quote: any) {
 export async function deleteQuote(id: string) {
   const { error } = await supabase.from('quotes').delete().eq('id', id)
   if (error) throw error
+}
+
+export async function softDeleteQuote(id: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user_id = session?.user?.id
+
+  const { error: updateError } = await supabase
+    .from('quotes')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (updateError) throw updateError
+
+  const { error: historyError } = await supabase.from('quote_history' as any).insert([
+    {
+      quote_id: id,
+      user_id,
+      field_changed: 'status',
+      action: 'Deleted',
+      notes: 'Quote soft deleted by user',
+    },
+  ])
+
+  if (historyError) throw historyError
 }
 
 export async function fetchQuoteById(id: string) {

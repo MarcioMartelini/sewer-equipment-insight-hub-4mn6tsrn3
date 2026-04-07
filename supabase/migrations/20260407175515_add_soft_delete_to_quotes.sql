@@ -1,0 +1,4 @@
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE public.quote_history ADD COLUMN IF NOT EXISTS action TEXT;
+ALTER TABLE public.quote_history ADD COLUMN IF NOT EXISTS notes TEXT;
