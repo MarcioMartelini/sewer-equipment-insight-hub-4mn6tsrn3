@@ -11,6 +11,8 @@ import {
 import { fetchWorkOrders, updateWorkOrder, deleteWorkOrder } from '@/services/work-orders'
 import { Eye } from 'lucide-react'
 import { WorkOrder } from '@/types/work-order'
+import { fetchCustomers, type Customer } from '@/services/customers'
+import { fetchSalespersons, type Salesperson } from '@/services/salespersons'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -55,6 +57,7 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Search,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SalesDashboard from '@/components/sales/SalesDashboard'
@@ -160,6 +163,10 @@ export default function Sales() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
+  const [customersList, setCustomersList] = useState<Customer[]>([])
+  const [salespersonsList, setSalespersonsList] = useState<Salesperson[]>([])
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false)
+  const [isSalespersonModalOpen, setIsSalespersonModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [approvingId, setApprovingId] = useState<string | null>(null)
@@ -229,9 +236,16 @@ export default function Sales() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [fetchedQuotes, fetchedWOs] = await Promise.all([fetchQuotes(), fetchWorkOrders()])
+      const [fetchedQuotes, fetchedWOs, fetchedCustomers, fetchedSalespersons] = await Promise.all([
+        fetchQuotes(),
+        fetchWorkOrders(),
+        fetchCustomers(),
+        fetchSalespersons(),
+      ])
       setQuotes(fetchedQuotes)
       setWorkOrders(fetchedWOs)
+      setCustomersList(fetchedCustomers)
+      setSalespersonsList(fetchedSalespersons)
     } catch (error) {
       toast({ title: 'Error loading data', variant: 'destructive' })
     } finally {
@@ -520,6 +534,18 @@ export default function Sales() {
     }
   }
 
+  const handleSelectCustomer = (customer: Customer) => {
+    form.setValue('customer_name', customer.customer_name)
+    form.setValue('customer_city', customer.city || '')
+    form.setValue('customer_state', customer.state || '')
+    setIsCustomerModalOpen(false)
+  }
+
+  const handleSelectSalesperson = (sp: Salesperson) => {
+    form.setValue('salesperson', sp.name)
+    setIsSalespersonModalOpen(false)
+  }
+
   const getWoStatusBadge = (status: string) => {
     const lower = status.toLowerCase()
     if (lower.includes('pending')) return <Badge className="bg-slate-500">Pending</Badge>
@@ -675,9 +701,18 @@ export default function Sales() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Customer</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Acme Corp" {...field} />
-                          </FormControl>
+                          <div className="flex gap-2">
+                            <FormControl>
+                              <Input placeholder="Acme Corp" {...field} />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setIsCustomerModalOpen(true)}
+                            >
+                              <Search className="w-4 h-4" />
+                            </Button>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -725,9 +760,18 @@ export default function Sales() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Salesperson</FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Doe" {...field} />
-                          </FormControl>
+                          <div className="flex gap-2">
+                            <FormControl>
+                              <Input placeholder="John Doe" {...field} />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setIsSalespersonModalOpen(true)}
+                            >
+                              <Search className="w-4 h-4" />
+                            </Button>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -882,6 +926,94 @@ export default function Sales() {
                   </div>
                 </form>
               </Form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isCustomerModalOpen} onOpenChange={setIsCustomerModalOpen}>
+            <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Select Customer</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto mt-4 border rounded-md">
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>City</TableHead>
+                      <TableHead>State</TableHead>
+                      <TableHead className="w-[100px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customersList.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">{c.customer_name}</TableCell>
+                        <TableCell>{c.city || '-'}</TableCell>
+                        <TableCell>{c.state || '-'}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleSelectCustomer(c)}
+                          >
+                            Select
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {customersList.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-slate-500 py-8">
+                          No customers found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isSalespersonModalOpen} onOpenChange={setIsSalespersonModalOpen}>
+            <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Select Salesperson</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto mt-4 border rounded-md">
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead className="w-[100px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salespersonsList.map((sp) => (
+                      <TableRow key={sp.id}>
+                        <TableCell className="font-medium">{sp.name}</TableCell>
+                        <TableCell>{sp.department || '-'}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleSelectSalesperson(sp)}
+                          >
+                            Select
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {salespersonsList.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-slate-500 py-8">
+                          No salespersons found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </DialogContent>
           </Dialog>
 
