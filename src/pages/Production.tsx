@@ -2,17 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ProductionDashboard } from '@/components/production-dashboard'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import { ProductionSubDepartmentDashboard } from '@/components/production-sub-department-dashboard'
 import {
   Select,
   SelectContent,
@@ -20,110 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { useToast } from '@/hooks/use-toast'
-import { format } from 'date-fns'
-
-const getTaskName = (item: any, tab: string) => {
-  if (tab === 'final_assembly') return item.station_name
-  if (tab === 'tests') return item.test_name
-  return item.task_name
-}
-
-const formatDate = (date: string | null) =>
-  date ? format(new Date(date), 'dd/MM/yyyy HH:mm') : '-'
-
-const getStatusBadge = (status: string | null) => {
-  const map: Record<string, string> = {
-    complete: 'border-green-500 text-green-700 bg-green-50',
-    'on track': 'border-blue-500 text-blue-700 bg-blue-50',
-    'at risk': 'border-yellow-500 text-yellow-700 bg-yellow-50',
-    delayed: 'border-red-500 text-red-700 bg-red-50',
-    parked: 'border-slate-500 text-slate-700 bg-slate-50',
-    'n/a': 'border-slate-400 text-slate-600 bg-slate-100',
-  }
-  return map[status?.toLowerCase() || ''] || 'border-slate-300 text-slate-700 bg-slate-50'
-}
-
-const formatStatusText = (status: string | null) => {
-  if (!status) return 'not started'
-  if (status.toLowerCase() === 'n/a') return 'N/A'
-  return status
-}
-
-function EditStatusDialog({
-  item,
-  activeTab,
-  onUpdate,
-}: {
-  item: any
-  activeTab: string
-  onUpdate: (i: any, s: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const [status, setStatus] = useState(item.status || 'not started')
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          Editar Status
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Atualizar Status</DialogTitle>
-          <DialogDescription>
-            Alterar o status da tarefa {getTaskName(item, activeTab)}.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="not started">Not Started</SelectItem>
-              <SelectItem value="parked">Parked</SelectItem>
-              <SelectItem value="on track">On Track</SelectItem>
-              <SelectItem value="at risk">At Risk</SelectItem>
-              <SelectItem value="delayed">Delayed</SelectItem>
-              <SelectItem value="complete">Complete</SelectItem>
-              <SelectItem value="n/a">N/A</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={() => {
-              onUpdate(item, status)
-              setOpen(false)
-            }}
-          >
-            Salvar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 export default function Production() {
-  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [data, setData] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [workOrders, setWorkOrders] = useState<any[]>([])
   const [selectedWoId, setSelectedWoId] = useState<string>('all')
 
@@ -136,38 +25,6 @@ export default function Production() {
         if (data) setWorkOrders(data)
       })
   }, [])
-
-  const fetchTab = async (tab: string, woId: string) => {
-    if (tab === 'dashboard') return
-    setLoading(true)
-    let query = supabase.from(`production_${tab}`).select('*, work_orders(wo_number)')
-    if (woId !== 'all') query = query.eq('wo_id', woId)
-
-    const { data: res } = await query
-    if (res) setData(res)
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    fetchTab(activeTab, selectedWoId)
-  }, [activeTab, selectedWoId])
-
-  const handleUpdateStatus = async (item: any, newStatus: string) => {
-    const { error } = await supabase
-      .from(`production_${activeTab}`)
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq('id', item.id)
-    if (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível atualizar o status.',
-        variant: 'destructive',
-      })
-    } else {
-      toast({ title: 'Sucesso', description: 'Status atualizado com sucesso.' })
-      fetchTab(activeTab, selectedWoId)
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -212,74 +69,59 @@ export default function Production() {
           <ProductionDashboard />
         </TabsContent>
 
-        {activeTab !== 'dashboard' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="capitalize">{activeTab.replace('_', ' ')}</CardTitle>
-              <CardDescription>
-                Acompanhamento de tarefas e status da etapa de {activeTab.replace('_', ' ')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p className="text-sm text-slate-500">Carregando dados...</p>
-              ) : data.length === 0 ? (
-                <div className="text-center py-10 border border-dashed rounded-lg bg-slate-50">
-                  <p className="text-sm text-slate-500">Nenhum registro encontrado.</p>
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>WO Number</TableHead>
-                        <TableHead>
-                          {activeTab === 'final_assembly'
-                            ? 'Estação'
-                            : activeTab === 'tests'
-                              ? 'Teste'
-                              : 'Tarefa'}
-                        </TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Criado Em</TableHead>
-                        <TableHead>Atualizado Em</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {data.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">
-                            {item.work_orders?.wo_number || item.wo_id}
-                          </TableCell>
-                          <TableCell>{getTaskName(item, activeTab)}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={getStatusBadge(item.status)}>
-                              {formatStatusText(item.status)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatDate(item.created_at)}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatDate(item.updated_at)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <EditStatusDialog
-                              item={item}
-                              activeTab={activeTab}
-                              onUpdate={handleUpdateStatus}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <TabsContent value="weld_shop" className="m-0">
+          <ProductionSubDepartmentDashboard
+            department="weld_shop"
+            tableName="production_weld_shop"
+            title="Soldagem (Weld Shop)"
+            selectedWoId={selectedWoId}
+          />
+        </TabsContent>
+
+        <TabsContent value="paint" className="m-0">
+          <ProductionSubDepartmentDashboard
+            department="paint"
+            tableName="production_paint"
+            title="Pintura (Paint)"
+            selectedWoId={selectedWoId}
+          />
+        </TabsContent>
+
+        <TabsContent value="sub_assembly" className="m-0">
+          <ProductionSubDepartmentDashboard
+            department="sub_assembly"
+            tableName="production_sub_assembly"
+            title="Sub-montagem (Sub Assembly)"
+            selectedWoId={selectedWoId}
+          />
+        </TabsContent>
+
+        <TabsContent value="warehouse" className="m-0">
+          <ProductionSubDepartmentDashboard
+            department="warehouse"
+            tableName="production_warehouse"
+            title="Acessórios (Warehouse)"
+            selectedWoId={selectedWoId}
+          />
+        </TabsContent>
+
+        <TabsContent value="final_assembly" className="m-0">
+          <ProductionSubDepartmentDashboard
+            department="final_assembly"
+            tableName="production_final_assembly"
+            title="Montagem Final (Final Assembly)"
+            selectedWoId={selectedWoId}
+          />
+        </TabsContent>
+
+        <TabsContent value="tests" className="m-0">
+          <ProductionSubDepartmentDashboard
+            department="tests"
+            tableName="production_tests"
+            title="Testes (Tests)"
+            selectedWoId={selectedWoId}
+          />
+        </TabsContent>
       </Tabs>
     </div>
   )
