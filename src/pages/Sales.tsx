@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchQuotes, createQuote, approveQuote, type Quote } from '@/services/quotes'
+import { useNavigate } from 'react-router-dom'
+import {
+  fetchQuotes,
+  createQuote,
+  updateQuote,
+  convertToWorkOrder,
+  approveQuote,
+  type Quote,
+} from '@/services/quotes'
 import { fetchWorkOrders } from '@/services/work-orders'
 import { WorkOrder } from '@/types/work-order'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -12,13 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -35,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -42,6 +45,7 @@ import { format } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Check, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import SalesDashboard from '@/components/sales/SalesDashboard'
 
 const US_STATES = [
@@ -111,18 +115,24 @@ const quoteSchema = z.object({
   truck_information: z.string().min(1, 'Required'),
   truck_supplier: z.string().min(1, 'Required'),
   expected_completion_date: z.string().min(1, 'Required'),
-  actual_completion_date: z.string().min(1, 'Required'),
+  actual_completion_date: z.string().optional(),
 })
 
 type QuoteFormValues = z.infer<typeof quoteSchema>
 
 export default function Sales() {
+  const navigate = useNavigate()
   const { toast } = useToast()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [approvingId, setApprovingId] = useState<string | null>(null)
+
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null)
+  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false)
+  const [woNumber, setWoNumber] = useState('')
+  const [isConverting, setIsConverting] = useState(false)
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
@@ -161,17 +171,103 @@ export default function Sales() {
     loadData()
   }, [loadData])
 
+  const openQuoteModal = (quote?: Quote) => {
+    if (quote) {
+      setEditingQuote(quote)
+      form.reset({
+        quote_number: quote.quote_number || '',
+        customer_name: quote.customer_name || '',
+        customer_city: quote.customer_city || '',
+        customer_state: quote.customer_state || '',
+        salesperson: quote.salesperson || '',
+        product_family: quote.product_family || '',
+        machine_model: quote.machine_model || '',
+        quote_value: Number(quote.quote_value || 0),
+        profit_margin_percentage: Number(quote.profit_margin_percentage || 0),
+        special_custom: quote.special_custom || '',
+        truck_information: quote.truck_information || '',
+        truck_supplier: quote.truck_supplier || '',
+        expected_completion_date: quote.expected_completion_date || '',
+        actual_completion_date: quote.actual_completion_date || '',
+      })
+    } else {
+      setEditingQuote(null)
+      form.reset({
+        quote_number: '',
+        customer_name: '',
+        customer_city: '',
+        customer_state: '',
+        salesperson: '',
+        product_family: '',
+        machine_model: '',
+        quote_value: 0,
+        profit_margin_percentage: 0,
+        special_custom: '',
+        truck_information: '',
+        truck_supplier: '',
+        expected_completion_date: '',
+        actual_completion_date: '',
+      })
+    }
+    setIsDialogOpen(true)
+  }
+
   const onSubmit = async (data: QuoteFormValues) => {
     try {
-      await createQuote({
-        ...data,
-      })
-      toast({ title: 'Quote created successfully' })
+      if (editingQuote) {
+        await updateQuote(editingQuote.id, data)
+        toast({ title: 'Quote updated successfully' })
+      } else {
+        await createQuote(data)
+        toast({ title: 'Quote created successfully' })
+      }
       setIsDialogOpen(false)
-      form.reset()
       loadData()
     } catch (error) {
-      toast({ title: 'Error creating quote', variant: 'destructive' })
+      toast({ title: 'Error saving quote', variant: 'destructive' })
+    }
+  }
+
+  const handleConvertClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    const isValid = await form.trigger()
+    if (isValid) {
+      setWoNumber('')
+      setIsConvertDialogOpen(true)
+    } else {
+      toast({ title: 'Please fill all required fields', variant: 'destructive' })
+    }
+  }
+
+  const executeConversion = async () => {
+    if (!woNumber.trim()) {
+      toast({ title: 'WO Number is required', variant: 'destructive' })
+      return
+    }
+
+    setIsConverting(true)
+    try {
+      const data = form.getValues()
+      let quoteId = editingQuote?.id
+
+      if (quoteId) {
+        await updateQuote(quoteId, data)
+      } else {
+        const newQuote = await createQuote(data)
+        quoteId = newQuote.id
+      }
+
+      await convertToWorkOrder(quoteId, woNumber)
+
+      toast({ title: 'Quote converted to Work Order successfully!' })
+      setIsConvertDialogOpen(false)
+      setIsDialogOpen(false)
+
+      navigate('/production')
+    } catch (error) {
+      toast({ title: 'Error converting quote', variant: 'destructive' })
+    } finally {
+      setIsConverting(false)
     }
   }
 
@@ -192,6 +288,8 @@ export default function Sales() {
     switch (status) {
       case 'approved':
         return <Badge className="bg-emerald-500 hover:bg-emerald-600">Approved</Badge>
+      case 'converted':
+        return <Badge className="bg-indigo-500 hover:bg-indigo-600">Converted</Badge>
       case 'draft':
         return <Badge variant="secondary">Draft</Badge>
       case 'sent':
@@ -238,233 +336,276 @@ export default function Sales() {
         <TabsContent value="quotes" className="mt-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-slate-800">Quotes Registry</h2>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                  <Plus className="w-4 h-4 mr-2" /> New Quote
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create New Quote</DialogTitle>
-                </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="quote_number"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Quote Number</FormLabel>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              onClick={() => openQuoteModal()}
+            >
+              <Plus className="w-4 h-4 mr-2" /> New Quote
+            </Button>
+          </div>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingQuote ? 'Edit Quote' : 'Create New Quote'}</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="quote_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quote Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Q-1234" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="customer_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Acme Corp" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="customer_city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer City</FormLabel>
+                          <FormControl>
+                            <Input placeholder="City" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="customer_state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer State</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <Input placeholder="Q-1234" {...field} />
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a state" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="customer_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Customer</FormLabel>
+                            <SelectContent>
+                              {US_STATES.map((state) => (
+                                <SelectItem key={state} value={state}>
+                                  {state}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="salesperson"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Salesperson</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="product_family"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Product Family</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <Input placeholder="Acme Corp" {...field} />
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select family" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="customer_city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Customer City</FormLabel>
-                            <FormControl>
-                              <Input placeholder="City" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="customer_state"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Customer State</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a state" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {US_STATES.map((state) => (
-                                  <SelectItem key={state} value={state}>
-                                    {state}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="salesperson"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Salesperson</FormLabel>
-                            <FormControl>
-                              <Input placeholder="John Doe" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="product_family"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Product Family</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select family" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Plumbing">Plumbing</SelectItem>
-                                <SelectItem value="Municipal">Municipal</SelectItem>
-                                <SelectItem value="Industrial">Industrial</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="machine_model"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Machine Model</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Model X" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="quote_value"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Price ($)</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.01" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="profit_margin_percentage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Profit Margin (%)</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.1" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="special_custom"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Special Custom</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Details" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="truck_information"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Truck Information</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Info" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="truck_supplier"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Truck Supplier</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Supplier" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="expected_completion_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date of Completion (Expected)</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="actual_completion_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date of Completion (Actual)</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                            <SelectContent>
+                              <SelectItem value="Plumbing">Plumbing</SelectItem>
+                              <SelectItem value="Municipal">Municipal</SelectItem>
+                              <SelectItem value="Industrial">Industrial</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="machine_model"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Machine Model</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Model X" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="quote_value"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Price ($)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="profit_margin_percentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Profit Margin (%)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.1" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="special_custom"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Special Custom</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Details (Optional)" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="truck_information"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Truck Information</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Info" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="truck_supplier"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Truck Supplier</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Supplier" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="expected_completion_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date of Completion (Expected)</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="actual_completion_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date of Completion (Actual)</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                    {editingQuote?.status !== 'converted' && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full sm:w-1/2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                        onClick={handleConvertClick}
+                      >
+                        Convert to WO
+                      </Button>
+                    )}
                     <Button
                       type="submit"
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white mt-4"
+                      className={cn(
+                        'w-full bg-indigo-600 hover:bg-indigo-700 text-white',
+                        editingQuote?.status !== 'converted' ? 'sm:w-1/2' : '',
+                      )}
                     >
-                      Create Quote
+                      {editingQuote ? 'Save Changes' : 'Create Quote'}
                     </Button>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </div>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isConvertDialogOpen} onOpenChange={setIsConvertDialogOpen}>
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Enter Work Order Number</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>WO Number</Label>
+                  <Input
+                    value={woNumber}
+                    onChange={(e) => setWoNumber(e.target.value)}
+                    placeholder="e.g. WO-2026"
+                  />
+                </div>
+                <Button
+                  onClick={executeConversion}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                  disabled={isConverting}
+                >
+                  {isConverting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Confirm Conversion
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
             <Table>
@@ -489,7 +630,11 @@ export default function Sales() {
                   </TableRow>
                 ) : (
                   quotes.map((quote) => (
-                    <TableRow key={quote.id} className="group hover:bg-slate-50/50">
+                    <TableRow
+                      key={quote.id}
+                      className="group hover:bg-slate-50/50 cursor-pointer"
+                      onClick={() => openQuoteModal(quote)}
+                    >
                       <TableCell className="font-medium text-slate-900">
                         {quote.quote_number}
                       </TableCell>
@@ -509,8 +654,8 @@ export default function Sales() {
                           ? format(new Date(quote.approval_date), 'MM/dd/yyyy')
                           : '-'}
                       </TableCell>
-                      <TableCell className="text-right">
-                        {quote.status !== 'approved' && (
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        {quote.status !== 'approved' && quote.status !== 'converted' && (
                           <Button
                             variant="outline"
                             size="sm"

@@ -49,6 +49,58 @@ export async function createQuote(quote: any) {
   return data
 }
 
+export async function updateQuote(id: string, quote: any) {
+  const { data, error } = await supabase.from('quotes').update(quote).eq('id', id).select().single()
+
+  if (error) throw error
+  return data
+}
+
+export async function convertToWorkOrder(quoteId: string, woNumber: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user_id = session?.user?.id
+
+  const { data: quote, error: fetchError } = await supabase
+    .from('quotes')
+    .select('*')
+    .eq('id', quoteId)
+    .single()
+
+  if (fetchError) throw fetchError
+
+  const { error: woError } = await supabase.from('work_orders').insert([
+    {
+      wo_number: woNumber,
+      customer_name: quote.customer_name,
+      product_type: quote.product_family || quote.product_type,
+      machine_model: quote.machine_model,
+      price: quote.quote_value,
+      profit_margin: quote.profit_margin_percentage,
+      due_date: quote.expected_completion_date,
+      quote_id: quote.id,
+      status: 'Not started',
+      department: 'Production',
+      progress: 0,
+      created_by: user_id || null,
+    },
+  ] as any)
+
+  if (woError) throw woError
+
+  const { error: updateError } = await supabase
+    .from('quotes')
+    .update({
+      status: 'converted',
+      date_order: new Date().toISOString(),
+      wo_number_ref: woNumber,
+    })
+    .eq('id', quoteId)
+
+  if (updateError) throw updateError
+}
+
 export async function approveQuote(quote: Quote) {
   const {
     data: { session },
