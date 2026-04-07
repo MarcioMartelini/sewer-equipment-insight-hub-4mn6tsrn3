@@ -192,6 +192,60 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          address: string | null
+          city: string | null
+          contact_person: string | null
+          country: string | null
+          created_at: string | null
+          customer_id: string
+          customer_name: string
+          email: string | null
+          id: string
+          last_wo_date: string | null
+          phone: string | null
+          state: string | null
+          status: string | null
+          total_wos: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string | null
+          customer_id: string
+          customer_name: string
+          email?: string | null
+          id?: string
+          last_wo_date?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string | null
+          total_wos?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string | null
+          customer_id?: string
+          customer_name?: string
+          email?: string | null
+          id?: string
+          last_wo_date?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string | null
+          total_wos?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           created_at: string | null
@@ -1687,6 +1741,22 @@ export const Constants = {
 //   action: text (nullable)
 //   description: text (nullable)
 //   timestamp: timestamp with time zone (nullable, default: now())
+// Table: customers
+//   id: uuid (not null, default: gen_random_uuid())
+//   customer_id: text (not null)
+//   customer_name: text (not null)
+//   contact_person: text (nullable)
+//   email: text (nullable)
+//   phone: text (nullable)
+//   address: text (nullable)
+//   city: text (nullable)
+//   state: text (nullable)
+//   country: text (nullable)
+//   status: text (nullable, default: 'Active'::text)
+//   total_wos: integer (nullable, default: 0)
+//   last_wo_date: date (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: departments
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -2007,6 +2077,9 @@ export const Constants = {
 //   PRIMARY KEY audit_log_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY audit_log_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id)
 //   FOREIGN KEY audit_log_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: customers
+//   UNIQUE customers_customer_id_key: UNIQUE (customer_id)
+//   PRIMARY KEY customers_pkey: PRIMARY KEY (id)
 // Table: departments
 //   UNIQUE departments_name_key: UNIQUE (name)
 //   PRIMARY KEY departments_pkey: PRIMARY KEY (id)
@@ -2134,6 +2207,15 @@ export const Constants = {
 //     USING: true
 // Table: audit_log
 //   Policy "Auth read audit" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: customers
+//   Policy "Auth delete customers" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert customers" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read customers" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update customers" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: departments
 //   Policy "Read all departments" (SELECT, PERMISSIVE) roles={authenticated}
@@ -2453,6 +2535,8 @@ export const Constants = {
 //   on_quote_update: CREATE TRIGGER on_quote_update AFTER UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION log_quote_changes()
 
 // --- INDEXES ---
+// Table: customers
+//   CREATE UNIQUE INDEX customers_customer_id_key ON public.customers USING btree (customer_id)
 // Table: departments
 //   CREATE UNIQUE INDEX departments_name_key ON public.departments USING btree (name)
 // Table: notifications

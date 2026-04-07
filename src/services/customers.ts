@@ -18,6 +18,13 @@ export interface Customer {
   updated_at: string
 }
 
+export const fetchCustomerById = async (id: string): Promise<Customer> => {
+  const { data, error } = await supabase.from('customers').select('*').eq('id', id).single()
+
+  if (error) throw error
+  return data as Customer
+}
+
 export const fetchCustomers = async (): Promise<Customer[]> => {
   const { data, error } = await supabase
     .from('customers')
