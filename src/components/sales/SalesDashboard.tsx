@@ -1,9 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { format, subDays, startOfDay, endOfDay } from 'date-fns'
+import { format, subDays, startOfDay, endOfDay, differenceInDays, startOfYear } from 'date-fns'
 import { enUS } from 'date-fns/locale'
-import { fetchQuotes, type Quote } from '@/services/quotes'
-import { fetchWorkOrders } from '@/services/work-orders'
-import { WorkOrder } from '@/types/work-order'
+import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Select,
@@ -13,7 +11,20 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts'
 import {
   Table,
   TableBody,
@@ -25,32 +36,71 @@ import {
 import {
   DollarSign,
   FileText,
-  CheckCircle,
+  ClipboardList,
   Percent,
   TrendingUp,
+  Clock,
+  Users,
+  ShoppingCart,
+  ShoppingBag,
   CalendarIcon,
   Loader2,
+  Filter,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 
-const COLORS = ['#4f46e5', '#06b6d4', '#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899']
+const COLORS = [
+  '#4f46e5',
+  '#06b6d4',
+  '#10b981',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#3b82f6',
+  '#14b8a6',
+  '#f43f5e',
+  '#84cc16',
+]
 
 export default function SalesDashboard() {
   const [period, setPeriod] = useState<string>('30')
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subDays(new Date(), 30),
     to: new Date(),
   })
 
-  const [quotes, setQuotes] = useState<Quote[]>([])
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [filters, setFilters] = useState({
+    salesperson: 'all',
+    division: 'all',
+    area: 'all',
+    customer: 'all',
+    machineFamily: 'all',
+    machineModel: 'all',
+    quoteNumber: '',
+    woNumber: '',
+  })
+
+  const [quotes, setQuotes] = useState<any[]>([])
+  const [workOrders, setWorkOrders] = useState<any[]>([])
+  const [salespersons, setSalespersons] = useState<any[]>([])
+  const [customers, setCustomers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (period !== 'custom') {
+    if (period === 'all') {
+      setDateRange({ from: undefined, to: undefined })
+    } else if (period === 'ytd') {
+      setDateRange({ from: startOfYear(new Date()), to: new Date() })
+    } else if (period !== 'custom') {
       const days = parseInt(period)
       setDateRange({
         from: subDays(new Date(), days),
@@ -63,9 +113,25 @@ export default function SalesDashboard() {
     const loadData = async () => {
       setLoading(true)
       try {
-        const [fetchedQuotes, fetchedWOs] = await Promise.all([fetchQuotes(), fetchWorkOrders()])
-        setQuotes(fetchedQuotes)
-        setWorkOrders(fetchedWOs)
+        const [{ data: qData }, { data: woData }, { data: spData }, { data: cData }] =
+          await Promise.all([
+            supabase
+              .from('quotes')
+              .select(
+                'id, quote_number, customer_name, salesperson, product_family, machine_model, quote_value, profit_margin_percentage, status, created_at, approval_date, wo_number_ref',
+              ),
+            supabase
+              .from('work_orders')
+              .select(
+                'id, wo_number, customer_name, product_type, machine_model, price, profit_margin, status, created_at, quote_id',
+              ),
+            supabase.from('salespersons').select('id, name, department, region'),
+            supabase.from('customers').select('id, customer_name, state, city'),
+          ])
+        setQuotes(qData || [])
+        setWorkOrders(woData || [])
+        setSalespersons(spData || [])
+        setCustomers(cData || [])
       } catch (error) {
         console.error(error)
       } finally {
@@ -75,91 +141,267 @@ export default function SalesDashboard() {
     loadData()
   }, [])
 
-  const filteredQuotes = useMemo(() => {
-    return quotes.filter((q) => {
-      const date = q.created_at ? new Date(q.created_at) : new Date()
-      return date >= startOfDay(dateRange.from) && date <= endOfDay(dateRange.to)
+  const resetFilters = () => {
+    setFilters({
+      salesperson: 'all',
+      division: 'all',
+      area: 'all',
+      customer: 'all',
+      machineFamily: 'all',
+      machineModel: 'all',
+      quoteNumber: '',
+      woNumber: '',
     })
-  }, [quotes, dateRange])
-
-  const totalQuotes = filteredQuotes.length
-
-  const approvedQuotes = filteredQuotes.filter((q) => q.status === 'approved')
-  const totalApproved = approvedQuotes.length
-  const conversionRate = totalQuotes > 0 ? (totalApproved / totalQuotes) * 100 : 0
-
-  const totalSalesValue = approvedQuotes.reduce((sum, q) => sum + Number(q.quote_value || 0), 0)
-
-  const avgProfitMargin =
-    totalApproved > 0
-      ? approvedQuotes.reduce((sum, q) => sum + Number(q.profit_margin_percentage || 0), 0) /
-        totalApproved
-      : 0
-
-  const trendData = useMemo(() => {
-    const daysMap: Record<string, { date: string; value: number }> = {}
-
-    let currentDate = startOfDay(dateRange.from)
-    const end = endOfDay(dateRange.to)
-
-    // Safety break to prevent too many points if period is large
-    const diffDays = Math.ceil((end.getTime() - currentDate.getTime()) / (1000 * 3600 * 24))
-    const step = diffDays > 60 ? Math.ceil(diffDays / 60) : 1
-
-    while (currentDate <= end) {
-      const key = format(currentDate, 'yyyy-MM-dd')
-      daysMap[key] = { date: format(currentDate, 'MM/dd'), value: 0 }
-      currentDate = new Date(currentDate.getTime() + step * 24 * 60 * 60 * 1000)
-    }
-
-    const exactDaysMap: Record<string, { date: string; value: number }> = {}
-    let cd = startOfDay(dateRange.from)
-    while (cd <= end) {
-      const key = format(cd, 'yyyy-MM-dd')
-      exactDaysMap[key] = { date: format(cd, 'MM/dd'), value: 0 }
-      cd = new Date(cd.getTime() + 24 * 60 * 60 * 1000)
-    }
-
-    approvedQuotes.forEach((q) => {
-      const date = q.approval_date ? new Date(q.approval_date) : new Date(q.created_at!)
-      const key = format(date, 'yyyy-MM-dd')
-      if (exactDaysMap[key]) exactDaysMap[key].value += Number(q.quote_value || 0)
-    })
-
-    return Object.values(exactDaysMap)
-  }, [approvedQuotes, dateRange])
-
-  const distributionData = useMemo(() => {
-    const map: Record<string, number> = {}
-    approvedQuotes.forEach((q) => {
-      const type = (q as any).product_family || q.product_type || 'Others'
-      map[type] = (map[type] || 0) + Number(q.quote_value || 0)
-    })
-    return Object.entries(map)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-  }, [approvedQuotes])
-
-  const topCustomers = useMemo(() => {
-    const map: Record<string, number> = {}
-    approvedQuotes.forEach((q) => {
-      const customer = q.customer_name || 'Unknown'
-      map[customer] = (map[customer] || 0) + Number(q.quote_value || 0)
-    })
-    return Object.entries(map)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5)
-  }, [approvedQuotes])
-
-  const chartConfig = {
-    value: {
-      label: 'Sales ($)',
-      color: 'hsl(var(--primary))',
-    },
   }
 
-  const pieConfig = distributionData.reduce(
+  const uniqueSalespersons = useMemo(
+    () => Array.from(new Set(salespersons.map((s) => s.name).filter(Boolean))),
+    [salespersons],
+  )
+  const uniqueDivisions = useMemo(
+    () => Array.from(new Set(salespersons.map((s) => s.department).filter(Boolean))),
+    [salespersons],
+  )
+  const uniqueAreas = useMemo(
+    () => Array.from(new Set(salespersons.map((s) => s.region).filter(Boolean))),
+    [salespersons],
+  )
+  const uniqueCustomers = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [...quotes.map((q) => q.customer_name), ...workOrders.map((w) => w.customer_name)].filter(
+            Boolean,
+          ),
+        ),
+      ),
+    [quotes, workOrders],
+  )
+  const uniqueFamilies = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [...quotes.map((q) => q.product_family), ...workOrders.map((w) => w.product_type)].filter(
+            Boolean,
+          ),
+        ),
+      ),
+    [quotes, workOrders],
+  )
+  const uniqueModels = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [...quotes.map((q) => q.machine_model), ...workOrders.map((w) => w.machine_model)].filter(
+            Boolean,
+          ),
+        ),
+      ),
+    [quotes, workOrders],
+  )
+
+  const filteredQuotes = useMemo(() => {
+    return quotes.filter((q) => {
+      if (dateRange.from && new Date(q.created_at) < startOfDay(dateRange.from)) return false
+      if (dateRange.to && new Date(q.created_at) > endOfDay(dateRange.to)) return false
+
+      if (filters.salesperson !== 'all' && q.salesperson !== filters.salesperson) return false
+      if (filters.customer !== 'all' && q.customer_name !== filters.customer) return false
+      if (filters.machineFamily !== 'all' && q.product_family !== filters.machineFamily)
+        return false
+      if (filters.machineModel !== 'all' && q.machine_model !== filters.machineModel) return false
+      if (
+        filters.quoteNumber &&
+        !q.quote_number?.toLowerCase().includes(filters.quoteNumber.toLowerCase())
+      )
+        return false
+
+      const sp = salespersons.find((s) => s.name === q.salesperson)
+      if (filters.division !== 'all' && sp?.department !== filters.division) return false
+      if (filters.area !== 'all' && sp?.region !== filters.area) return false
+
+      return true
+    })
+  }, [quotes, dateRange, filters, salespersons])
+
+  const filteredWOs = useMemo(() => {
+    return workOrders.filter((wo) => {
+      if (dateRange.from && new Date(wo.created_at) < startOfDay(dateRange.from)) return false
+      if (dateRange.to && new Date(wo.created_at) > endOfDay(dateRange.to)) return false
+
+      const relatedQuote = quotes.find(
+        (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+      )
+      const spName = relatedQuote?.salesperson || 'Unknown'
+      const sp = salespersons.find((s) => s.name === spName)
+
+      if (filters.salesperson !== 'all' && spName !== filters.salesperson) return false
+      if (filters.customer !== 'all' && wo.customer_name !== filters.customer) return false
+      if (
+        filters.machineFamily !== 'all' &&
+        wo.product_type !== filters.machineFamily &&
+        relatedQuote?.product_family !== filters.machineFamily
+      )
+        return false
+      if (filters.machineModel !== 'all' && wo.machine_model !== filters.machineModel) return false
+      if (filters.woNumber && !wo.wo_number?.toLowerCase().includes(filters.woNumber.toLowerCase()))
+        return false
+
+      if (filters.division !== 'all' && sp?.department !== filters.division) return false
+      if (filters.area !== 'all' && sp?.region !== filters.area) return false
+
+      return true
+    })
+  }, [workOrders, quotes, salespersons, dateRange, filters])
+
+  // KPIs Calculations
+  const totalQuotes = filteredQuotes.length
+  const totalWOs = filteredWOs.length
+  const numberOfPurchases = totalWOs
+
+  const grossRevenue = filteredWOs.reduce((sum, wo) => {
+    const relatedQuote = quotes.find(
+      (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+    )
+    return sum + Number(wo.price || relatedQuote?.quote_value || 0)
+  }, 0)
+
+  let totalMargin = 0
+  let marginCount = 0
+  filteredWOs.forEach((wo) => {
+    const relatedQuote = quotes.find(
+      (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+    )
+    const margin = Number(wo.profit_margin || relatedQuote?.profit_margin_percentage)
+    if (!isNaN(margin) && margin > 0) {
+      totalMargin += margin
+      marginCount++
+    }
+  })
+  const avgProfitMargin = marginCount > 0 ? totalMargin / marginCount : 0
+
+  const approvedQuotesCount = filteredQuotes.filter(
+    (q) => q.status === 'approved' || q.status === 'converted',
+  ).length
+  const conversionRate = totalQuotes > 0 ? (approvedQuotesCount / totalQuotes) * 100 : 0
+
+  let totalCycleDays = 0
+  let cycleCount = 0
+  filteredQuotes
+    .filter((q) => q.status === 'approved' || q.status === 'converted')
+    .forEach((q) => {
+      if (q.created_at && q.approval_date) {
+        const diff = differenceInDays(new Date(q.approval_date), new Date(q.created_at))
+        if (diff >= 0) {
+          totalCycleDays += diff
+          cycleCount++
+        }
+      }
+    })
+  const avgSalesCycle = cycleCount > 0 ? totalCycleDays / cycleCount : 0
+
+  const uniqueCustomerNames = new Set(filteredWOs.map((w) => w.customer_name).filter(Boolean))
+  const clv = uniqueCustomerNames.size > 0 ? grossRevenue / uniqueCustomerNames.size : 0
+  const avgPurchaseValue = totalWOs > 0 ? grossRevenue / totalWOs : 0
+
+  // Charts Data
+  const revenueByDate = filteredWOs.reduce(
+    (acc, wo) => {
+      const date = format(new Date(wo.created_at), 'yyyy-MM-dd')
+      const relatedQuote = quotes.find(
+        (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+      )
+      acc[date] = (acc[date] || 0) + Number(wo.price || relatedQuote?.quote_value || 0)
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  const revenueTrend = Object.entries(revenueByDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, revenue]) => ({
+      date: format(new Date(date), 'MM/dd'),
+      revenue,
+    }))
+
+  const wosBySp = filteredWOs.reduce(
+    (acc, wo) => {
+      const relatedQuote = quotes.find(
+        (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+      )
+      const sp = relatedQuote?.salesperson || 'Unknown'
+      acc[sp] = (acc[sp] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  const wosBySpData = Object.entries(wosBySp)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, wos]) => ({ name, wos }))
+
+  const familyDist = filteredWOs.reduce(
+    (acc, wo) => {
+      const relatedQuote = quotes.find(
+        (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+      )
+      const family = wo.product_type || relatedQuote?.product_family || 'Other'
+      acc[family] = (acc[family] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  const familyData = Object.entries(familyDist)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+
+  const marginByDate = filteredWOs.reduce(
+    (acc, wo) => {
+      const date = format(new Date(wo.created_at), 'yyyy-MM-dd')
+      if (!acc[date]) acc[date] = { total: 0, count: 0 }
+      const relatedQuote = quotes.find(
+        (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+      )
+      const margin = Number(wo.profit_margin || relatedQuote?.profit_margin_percentage || 0)
+      if (!isNaN(margin) && margin > 0) {
+        acc[date].total += margin
+        acc[date].count += 1
+      }
+      return acc
+    },
+    {} as Record<string, { total: number; count: number }>,
+  )
+
+  const marginTrend = Object.entries(marginByDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, data]) => ({
+      date: format(new Date(date), 'MM/dd'),
+      margin: data.count > 0 ? data.total / data.count : 0,
+    }))
+
+  const revenueBySp = filteredWOs.reduce(
+    (acc, wo) => {
+      const relatedQuote = quotes.find(
+        (q) => q.id === wo.quote_id || q.wo_number_ref === wo.wo_number,
+      )
+      const sp = relatedQuote?.salesperson || 'Unknown'
+      acc[sp] = (acc[sp] || 0) + Number(wo.price || relatedQuote?.quote_value || 0)
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  const topSalespersons = Object.entries(revenueBySp)
+    .map(([name, revenue]) => ({ name, revenue }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10)
+
+  // Chart Configs
+  const lineConfig = { revenue: { label: 'Revenue ($)', color: '#4f46e5' } }
+  const barConfig = { wos: { label: 'Work Orders', color: '#0ea5e9' } }
+  const areaConfig = { margin: { label: 'Profit Margin (%)', color: '#10b981' } }
+  const pieConfig = familyData.reduce(
     (acc, curr, i) => {
       acc[curr.name] = { label: curr.name, color: COLORS[i % COLORS.length] }
       return acc
@@ -176,11 +418,12 @@ export default function SalesDashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-fade-in">
+    <div className="flex flex-col gap-6 animate-fade-in pb-8">
+      {/* Header & Global Period Filter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
         <div>
-          <h2 className="text-xl font-semibold text-slate-800">Performance Indicators</h2>
-          <p className="text-sm text-slate-500">Real-time sales and quote metrics</p>
+          <h2 className="text-xl font-semibold text-slate-800">Sales Dashboard</h2>
+          <p className="text-sm text-slate-500">Real-time commercial performance and insights</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
@@ -191,6 +434,8 @@ export default function SalesDashboard() {
               <SelectItem value="7">Last 7 days</SelectItem>
               <SelectItem value="30">Last 30 days</SelectItem>
               <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="ytd">Year to Date</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
               <SelectItem value="custom">Custom</SelectItem>
             </SelectContent>
           </Select>
@@ -216,7 +461,7 @@ export default function SalesDashboard() {
                       format(dateRange.from, 'MM/dd/yyyy')
                     )
                   ) : (
-                    <span>Select date</span>
+                    <span>Select date range</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -240,7 +485,195 @@ export default function SalesDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+      {/* Advanced Filters */}
+      <Collapsible
+        open={isFiltersOpen}
+        onOpenChange={setIsFiltersOpen}
+        className="w-full bg-white p-4 rounded-lg border border-slate-200 shadow-sm"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-base font-semibold text-slate-800">Advanced Filters</h3>
+          </div>
+          <div className="flex items-center gap-4">
+            {isFiltersOpen && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetFilters}
+                className="text-slate-500 hover:text-slate-700"
+              >
+                Reset Filters
+              </Button>
+            )}
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="w-9 p-0">
+                {isFiltersOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                <span className="sr-only">Toggle Filters</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+        </div>
+
+        <CollapsibleContent className="mt-4 border-t border-slate-100 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Salesperson</Label>
+              <Select
+                value={filters.salesperson}
+                onValueChange={(v) => setFilters((f) => ({ ...f, salesperson: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Salespersons</SelectItem>
+                  {uniqueSalespersons.map((sp) => (
+                    <SelectItem key={sp} value={sp}>
+                      {sp}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Division</Label>
+              <Select
+                value={filters.division}
+                onValueChange={(v) => setFilters((f) => ({ ...f, division: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Divisions</SelectItem>
+                  {uniqueDivisions.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Area/Region</Label>
+              <Select
+                value={filters.area}
+                onValueChange={(v) => setFilters((f) => ({ ...f, area: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Areas</SelectItem>
+                  {uniqueAreas.map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {a}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Customer</Label>
+              <Select
+                value={filters.customer}
+                onValueChange={(v) => setFilters((f) => ({ ...f, customer: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Customers</SelectItem>
+                  {uniqueCustomers.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Machine Family</Label>
+              <Select
+                value={filters.machineFamily}
+                onValueChange={(v) => setFilters((f) => ({ ...f, machineFamily: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Families</SelectItem>
+                  {uniqueFamilies.map((mf) => (
+                    <SelectItem key={mf} value={mf}>
+                      {mf}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Machine Model</Label>
+              <Select
+                value={filters.machineModel}
+                onValueChange={(v) => setFilters((f) => ({ ...f, machineModel: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Models</SelectItem>
+                  {uniqueModels.map((mm) => (
+                    <SelectItem key={mm} value={mm}>
+                      {mm}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Quote Number</Label>
+              <Input
+                placeholder="Search Quote..."
+                value={filters.quoteNumber}
+                onChange={(e) => setFilters((f) => ({ ...f, quoteNumber: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">WO Number</Label>
+              <Input
+                placeholder="Search WO..."
+                value={filters.woNumber}
+                onChange={(e) => setFilters((f) => ({ ...f, woNumber: e.target.value }))}
+              />
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* KPI Cards */}
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <Card className="bg-white shadow-sm border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Gross Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">
+              $
+              {grossRevenue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Total Quotes</CardTitle>
@@ -253,18 +686,18 @@ export default function SalesDashboard() {
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Approved Quotes</CardTitle>
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Total WOs</CardTitle>
+            <ClipboardList className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">{totalApproved}</div>
+            <div className="text-2xl font-bold text-slate-900">{totalWOs}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Conversion Rate</CardTitle>
-            <Percent className="h-4 w-4 text-blue-500" />
+            <Percent className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">{conversionRate.toFixed(1)}%</div>
@@ -273,13 +706,36 @@ export default function SalesDashboard() {
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Sales Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-amber-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Avg Profit Margin</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">{avgProfitMargin.toFixed(1)}%</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Avg Sales Cycle</CardTitle>
+            <Clock className="h-4 w-4 text-cyan-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">
+              {avgSalesCycle.toFixed(1)}{' '}
+              <span className="text-sm font-normal text-slate-500">days</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Customer LTV</CardTitle>
+            <Users className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
               $
-              {totalSalesValue.toLocaleString(undefined, {
+              {clv.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -289,66 +745,123 @@ export default function SalesDashboard() {
 
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Average Margin</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Avg Purchase Value</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-teal-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">{avgProfitMargin.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-slate-900">
+              $
+              {avgPurchaseValue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Total Purchases</CardTitle>
+            <ShoppingBag className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">{numberOfPurchases}</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-7">
-        <Card className="col-span-4 bg-white shadow-sm border-slate-200">
+      {/* Charts */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-slate-800">Sales Trend (Value)</CardTitle>
-            <CardDescription>Volume of approved sales in the selected period</CardDescription>
+            <CardTitle className="text-slate-800 text-lg">Revenue Over Time</CardTitle>
+            <CardDescription>Gross revenue generated across the selected period</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <LineChart data={trendData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  tick={{ fill: '#64748b', fontSize: 12 }}
-                />
-                <YAxis
-                  tickFormatter={(value) =>
-                    `${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
-                  }
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#64748b', fontSize: 12 }}
-                  width={60}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#4f46e5"
-                  strokeWidth={3}
-                  dot={{ r: 3, fill: '#4f46e5' }}
-                  activeDot={{ r: 6, fill: '#4f46e5' }}
-                />
-              </LineChart>
-            </ChartContainer>
+            {revenueTrend.length > 0 ? (
+              <ChartContainer config={lineConfig} className="h-[300px] w-full">
+                <LineChart data={revenueTrend} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={10}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickFormatter={(value) =>
+                      `$${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
+                    }
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    width={60}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#4f46e5"
+                    strokeWidth={3}
+                    dot={{ r: 3, fill: '#4f46e5' }}
+                    activeDot={{ r: 6, fill: '#4f46e5' }}
+                  />
+                </LineChart>
+              </ChartContainer>
+            ) : (
+              <div className="flex h-[300px] items-center justify-center text-slate-500">
+                No data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card className="col-span-3 bg-white shadow-sm border-slate-200">
+        <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-slate-800">Product Distribution</CardTitle>
-            <CardDescription>Value of approved sales by type</CardDescription>
+            <CardTitle className="text-slate-800 text-lg">Work Orders by Salesperson</CardTitle>
+            <CardDescription>Number of WOs generated per salesperson</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {wosBySpData.length > 0 ? (
+              <ChartContainer config={barConfig} className="h-[300px] w-full">
+                <BarChart data={wosBySpData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={10}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="wos" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            ) : (
+              <div className="flex h-[300px] items-center justify-center text-slate-500">
+                No data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-slate-800 text-lg">Machine Family Distribution</CardTitle>
+            <CardDescription>Share of work orders by product family</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            {distributionData.length > 0 ? (
+            {familyData.length > 0 ? (
               <ChartContainer config={pieConfig} className="h-[300px] w-full">
                 <PieChart>
                   <Pie
-                    data={distributionData}
+                    data={familyData}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
@@ -357,7 +870,7 @@ export default function SalesDashboard() {
                     outerRadius={90}
                     paddingAngle={2}
                   >
-                    {distributionData.map((entry, index) => (
+                    {familyData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -371,40 +884,94 @@ export default function SalesDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <Card className="bg-white shadow-sm border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-slate-800 text-lg">Profit Margin Trend</CardTitle>
+            <CardDescription>Average profit margin over time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {marginTrend.length > 0 ? (
+              <ChartContainer config={areaConfig} className="h-[300px] w-full">
+                <AreaChart data={marginTrend} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={10}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickFormatter={(value) => `${value}%`}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area
+                    type="monotone"
+                    dataKey="margin"
+                    stroke="#10b981"
+                    fill="#10b981"
+                    fillOpacity={0.2}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            ) : (
+              <div className="flex h-[300px] items-center justify-center text-slate-500">
+                No data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Summary Table */}
       <Card className="bg-white shadow-sm border-slate-200">
         <CardHeader>
-          <CardTitle className="text-slate-800">Top 5 Customers</CardTitle>
-          <CardDescription>Largest customers by purchase volume in the period</CardDescription>
+          <CardTitle className="text-slate-800 text-lg">Top 10 Salespersons</CardTitle>
+          <CardDescription>Highest generating sales professionals by revenue</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead className="font-semibold text-slate-700">Customer</TableHead>
-                <TableHead className="text-right font-semibold text-slate-700">
-                  Sales Value
-                </TableHead>
+                <TableHead className="w-[80px] font-semibold text-slate-700">Rank</TableHead>
+                <TableHead className="font-semibold text-slate-700">Salesperson</TableHead>
+                <TableHead className="font-semibold text-slate-700">Division</TableHead>
+                <TableHead className="font-semibold text-slate-700">Area</TableHead>
+                <TableHead className="text-right font-semibold text-slate-700">Revenue</TableHead>
+                <TableHead className="text-right font-semibold text-slate-700">WOs</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {topCustomers.map((c, i) => (
-                <TableRow key={i} className="hover:bg-slate-50/50">
-                  <TableCell className="font-medium text-slate-900">{c.name}</TableCell>
-                  <TableCell className="text-right text-slate-700 font-medium">
+              {topSalespersons.map((sp, index) => (
+                <TableRow key={sp.name} className="hover:bg-slate-50/50">
+                  <TableCell className="font-medium text-slate-500">#{index + 1}</TableCell>
+                  <TableCell className="font-medium text-slate-900">{sp.name}</TableCell>
+                  <TableCell className="text-slate-600">
+                    {salespersons.find((s) => s.name === sp.name)?.department || '-'}
+                  </TableCell>
+                  <TableCell className="text-slate-600">
+                    {salespersons.find((s) => s.name === sp.name)?.region || '-'}
+                  </TableCell>
+                  <TableCell className="text-right text-emerald-600 font-medium">
                     $
-                    {c.value.toLocaleString(undefined, {
+                    {sp.revenue.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </TableCell>
+                  <TableCell className="text-right text-slate-700 font-medium">
+                    {wosBySp[sp.name] || 0}
+                  </TableCell>
                 </TableRow>
               ))}
-              {topCustomers.length === 0 && (
+              {topSalespersons.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center text-slate-500 py-8">
-                    No sales recorded in the selected period.
+                  <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                    No sales data available for the selected filters.
                   </TableCell>
                 </TableRow>
               )}
