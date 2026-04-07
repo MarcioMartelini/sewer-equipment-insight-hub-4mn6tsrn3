@@ -58,6 +58,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import html2canvas from 'html2canvas'
 
 const COLORS = [
   '#4f46e5',
@@ -411,66 +414,143 @@ export default function SalesDashboard() {
   const handleExportPDF = async () => {
     setIsExporting(true)
     try {
-      const payload = {
-        header: {
-          date: format(new Date(), 'MM/dd/yyyy HH:mm'),
-          period,
-          filters,
-        },
-        kpis: {
-          totalQuotes,
-          totalWOs,
-          grossRevenue,
-          avgProfitMargin,
-          conversionRate,
-          avgSalesCycle,
-          clv,
-          avgPurchaseValue,
-          numberOfPurchases,
-        },
-        charts: {
-          revenueTrend: revenueTrend.map((d) => ({ label: d.date, value: d.revenue })),
-          wosBySp: wosBySpData.map((d) => ({ label: d.name, value: d.wos })),
-          familyDist: familyData.map((d) => ({ label: d.name, value: d.value })),
-          marginTrend: marginTrend.map((d) => ({ label: d.date, value: d.margin })),
-        },
-        topSalespersons,
+      const doc = new jsPDF()
+
+      // Header
+      doc.setFontSize(18)
+      doc.setTextColor(30, 41, 59)
+      doc.text('Sales Dashboard Report', 14, 20)
+
+      doc.setFontSize(10)
+      doc.setTextColor(100, 116, 139)
+      const dateStr = format(new Date(), 'MM/dd/yyyy HH:mm')
+      doc.text(`Generated on: ${dateStr}`, 14, 28)
+      doc.text(`Period: ${period}`, 14, 33)
+
+      const filtersStr = []
+      if (filters.salesperson !== 'all') filtersStr.push(`Salesperson: ${filters.salesperson}`)
+      if (filters.division !== 'all') filtersStr.push(`Division: ${filters.division}`)
+      if (filters.area !== 'all') filtersStr.push(`Area: ${filters.area}`)
+      if (filters.customer !== 'all') filtersStr.push(`Customer: ${filters.customer}`)
+      if (filters.machineFamily !== 'all')
+        filtersStr.push(`Machine Family: ${filters.machineFamily}`)
+      if (filters.machineModel !== 'all') filtersStr.push(`Machine Model: ${filters.machineModel}`)
+      if (filters.quoteNumber) filtersStr.push(`Quote Number: ${filters.quoteNumber}`)
+      if (filters.woNumber) filtersStr.push(`WO Number: ${filters.woNumber}`)
+
+      if (filtersStr.length > 0) {
+        const filterText = doc.splitTextToSize(`Filters: ${filtersStr.join(', ')}`, 180)
+        doc.text(filterText, 14, 38)
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      // KPIs
+      doc.setFontSize(14)
+      doc.setTextColor(30, 41, 59)
+      doc.text('Executive Summary', 14, 50)
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-sales-pdf`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify(payload),
+      const formatMoney = (val: number) =>
+        `$${(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+      const kpiData = [
+        ['Gross Revenue', formatMoney(grossRevenue), 'Total Quotes', totalQuotes.toString()],
+        ['Total WOs', totalWOs.toString(), 'Conversion Rate', `${conversionRate.toFixed(1)}%`],
+        [
+          'Avg Profit Margin',
+          `${avgProfitMargin.toFixed(1)}%`,
+          'Avg Sales Cycle',
+          `${avgSalesCycle.toFixed(1)} days`,
+        ],
+        ['Customer LTV', formatMoney(clv), 'Avg Purchase Value', formatMoney(avgPurchaseValue)],
+        ['Total Purchases', numberOfPurchases.toString(), '', ''],
+      ]
+
+      autoTable(doc, {
+        startY: 55,
+        body: kpiData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 4 },
+        columnStyles: {
+          0: { fontStyle: 'bold', fillColor: [248, 250, 252] },
+          2: { fontStyle: 'bold', fillColor: [248, 250, 252] },
         },
-      )
+      })
 
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF')
+      let currentY = (doc as any).lastAutoTable.finalY + 15
+
+      // Charts
+      doc.setFontSize(14)
+      doc.text('Performance Charts', 14, currentY)
+      currentY += 5
+
+      // Capture charts using html2canvas
+      const chartIds = ['chart-revenue', 'chart-wos', 'chart-family', 'chart-margin']
+      const chartImages: (string | null)[] = []
+
+      for (const id of chartIds) {
+        const el = document.getElementById(id)
+        if (el) {
+          const canvas = await html2canvas(el, { scale: 2, logging: false, useCORS: true })
+          chartImages.push(canvas.toDataURL('image/png'))
+        } else {
+          chartImages.push(null)
+        }
       }
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `Sales_Report_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      // Draw charts side by side
+      // Row 1
+      if (chartImages[0]) doc.addImage(chartImages[0]!, 'PNG', 14, currentY, 85, 60)
+      if (chartImages[1]) doc.addImage(chartImages[1]!, 'PNG', 110, currentY, 85, 60)
+      currentY += 65
 
-      toast({ title: 'Report exported successfully!' })
+      // Row 2
+      if (chartImages[2]) doc.addImage(chartImages[2]!, 'PNG', 14, currentY, 85, 60)
+      if (chartImages[3]) doc.addImage(chartImages[3]!, 'PNG', 110, currentY, 85, 60)
+      currentY += 65
+
+      // Top 10 Salespersons
+      if (currentY > 250) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      doc.setFontSize(14)
+      doc.text('Top 10 Salespersons', 14, currentY)
+      currentY += 5
+
+      const spTableData = topSalespersons.map((sp, i) => [
+        `#${i + 1}`,
+        sp.name,
+        sp.department || '-',
+        sp.region || '-',
+        formatMoney(sp.revenue),
+        (sp.wos || 0).toString(),
+      ])
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Rank', 'Salesperson', 'Division', 'Area', 'Revenue', 'WOs']],
+        body: spTableData,
+        theme: 'striped',
+        headStyles: { fillColor: [79, 70, 229] },
+        styles: { fontSize: 9 },
+      })
+
+      // Footer
+      const pageCount = (doc as any).internal.getNumberOfPages()
+      doc.setFontSize(8)
+      doc.setTextColor(150, 150, 150)
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+        doc.text('CONFIDENTIAL: This report contains sensitive commercial information.', 14, 290)
+        doc.text(`Page ${i} of ${pageCount}`, 190, 290, { align: 'right' })
+      }
+
+      doc.save(`Sales_Dashboard_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`)
+
+      toast({ title: 'Dashboard exported successfully!' })
     } catch (error) {
       console.error(error)
-      toast({ title: 'Error exporting report', variant: 'destructive' })
+      toast({ title: 'Error exporting dashboard', variant: 'destructive' })
     } finally {
       setIsExporting(false)
     }
@@ -516,7 +596,7 @@ export default function SalesDashboard() {
             ) : (
               <Download className="w-4 h-4 mr-2" />
             )}
-            Export Report to PDF
+            Export Dashboard to PDF
           </Button>
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-[180px]">
@@ -869,7 +949,7 @@ export default function SalesDashboard() {
             <CardTitle className="text-slate-800 text-lg">Revenue Over Time</CardTitle>
             <CardDescription>Gross revenue generated across the selected period</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent id="chart-revenue">
             {revenueTrend.length > 0 ? (
               <ChartContainer config={lineConfig} className="h-[300px] w-full">
                 <LineChart data={revenueTrend} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
@@ -914,7 +994,7 @@ export default function SalesDashboard() {
             <CardTitle className="text-slate-800 text-lg">Work Orders by Salesperson</CardTitle>
             <CardDescription>Number of WOs generated per salesperson</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent id="chart-wos">
             {wosBySpData.length > 0 ? (
               <ChartContainer config={barConfig} className="h-[300px] w-full">
                 <BarChart data={wosBySpData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -948,7 +1028,7 @@ export default function SalesDashboard() {
             <CardTitle className="text-slate-800 text-lg">Machine Family Distribution</CardTitle>
             <CardDescription>Share of work orders by product family</CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center">
+          <CardContent className="flex justify-center" id="chart-family">
             {familyData.length > 0 ? (
               <ChartContainer config={pieConfig} className="h-[300px] w-full">
                 <PieChart>
@@ -982,7 +1062,7 @@ export default function SalesDashboard() {
             <CardTitle className="text-slate-800 text-lg">Profit Margin Trend</CardTitle>
             <CardDescription>Average profit margin over time</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent id="chart-margin">
             {marginTrend.length > 0 ? (
               <ChartContainer config={areaConfig} className="h-[300px] w-full">
                 <AreaChart data={marginTrend} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
