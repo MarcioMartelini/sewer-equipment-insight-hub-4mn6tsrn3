@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Factory,
   ShieldCheck,
+  Users,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { title: 'Compras', url: '/purchasing', icon: ShoppingCart },
   { title: 'Produção', url: '/production', icon: Factory },
   { title: 'Qualidade', url: '/quality', icon: ShieldCheck },
+  { title: 'RH', url: '/hr', icon: Users },
   { title: 'Relatórios', url: '/relatorios', icon: FileBarChart },
   { title: 'Configurações', url: '/configuracoes', icon: Settings },
 ]
