@@ -645,6 +645,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       production_final_assembly: {
         Row: {
           created_at: string | null
@@ -1519,6 +1560,15 @@ export const Constants = {
 //   metric_value: numeric (nullable)
 //   recorded_date: date (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: notifications
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   type: text (not null)
+//   message: text (not null)
+//   is_read: boolean (not null, default: false)
+//   created_at: timestamp with time zone (not null, default: now())
+//   related_entity_id: uuid (nullable)
+//   related_entity_type: text (nullable)
 // Table: production_final_assembly
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_id: uuid (nullable)
@@ -1711,6 +1761,10 @@ export const Constants = {
 // Table: metrics_tracking
 //   PRIMARY KEY metrics_tracking_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY metrics_tracking_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: notifications
+//   PRIMARY KEY notifications_pkey: PRIMARY KEY (id)
+//   CHECK notifications_type_check: CHECK ((type = ANY (ARRAY['Sales'::text, 'Engineering'::text, 'Purchasing'::text, 'Production'::text, 'Quality'::text, 'HR'::text, 'System'::text])))
+//   FOREIGN KEY notifications_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 // Table: production_final_assembly
 //   PRIMARY KEY production_final_assembly_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY production_final_assembly_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
@@ -1882,6 +1936,14 @@ export const Constants = {
 //     USING: true
 //   Policy "Auth update metrics_tracking" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: notifications
+//   Policy "System can insert notifications" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Users can read own notifications" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can update own notifications" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
+//     WITH CHECK: (auth.uid() = user_id)
 // Table: production_final_assembly
 //   Policy "Auth delete production_final_assembly" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -2044,6 +2106,8 @@ export const Constants = {
 // --- INDEXES ---
 // Table: departments
 //   CREATE UNIQUE INDEX departments_name_key ON public.departments USING btree (name)
+// Table: notifications
+//   CREATE INDEX notifications_user_id_idx ON public.notifications USING btree (user_id)
 // Table: quotes
 //   CREATE UNIQUE INDEX quotes_quote_number_key ON public.quotes USING btree (quote_number)
 // Table: work_orders

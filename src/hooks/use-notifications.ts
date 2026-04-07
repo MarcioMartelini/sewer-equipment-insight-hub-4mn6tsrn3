@@ -34,8 +34,9 @@ export function useNotifications() {
 
     fetchNotifications()
 
+    const channelName = `public:notifications:${Math.random().toString(36).substring(2)}`
     const subscription = supabase
-      .channel('public:notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
