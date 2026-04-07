@@ -192,6 +192,57 @@ export type Database = {
           },
         ]
       }
+      customer_history: {
+        Row: {
+          action: string | null
+          changed_at: string | null
+          customer_id: string | null
+          field_changed: string
+          id: string
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          changed_at?: string | null
+          customer_id?: string | null
+          field_changed: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          changed_at?: string | null
+          customer_id?: string | null
+          field_changed?: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'customer_history_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'customers'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'customer_history_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -1741,6 +1792,16 @@ export const Constants = {
 //   action: text (nullable)
 //   description: text (nullable)
 //   timestamp: timestamp with time zone (nullable, default: now())
+// Table: customer_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   customer_id: uuid (nullable)
+//   user_id: uuid (nullable)
+//   field_changed: text (not null)
+//   old_value: text (nullable)
+//   new_value: text (nullable)
+//   action: text (nullable)
+//   notes: text (nullable)
+//   changed_at: timestamp with time zone (nullable, default: now())
 // Table: customers
 //   id: uuid (not null, default: gen_random_uuid())
 //   customer_id: text (not null)
@@ -2077,6 +2138,10 @@ export const Constants = {
 //   PRIMARY KEY audit_log_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY audit_log_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id)
 //   FOREIGN KEY audit_log_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: customer_history
+//   FOREIGN KEY customer_history_customer_id_fkey: FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+//   PRIMARY KEY customer_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY customer_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 // Table: customers
 //   UNIQUE customers_customer_id_key: UNIQUE (customer_id)
 //   PRIMARY KEY customers_pkey: PRIMARY KEY (id)
@@ -2207,6 +2272,11 @@ export const Constants = {
 //     USING: true
 // Table: audit_log
 //   Policy "Auth read audit" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: customer_history
+//   Policy "Auth insert customer_history" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read customer_history" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: customers
 //   Policy "Auth delete customers" (DELETE, PERMISSIVE) roles={authenticated}
@@ -2501,6 +2571,34 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION log_customer_changes()
+//   CREATE OR REPLACE FUNCTION public.log_customer_changes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_old_json jsonb := to_jsonb(OLD);
+//       v_new_json jsonb := to_jsonb(NEW);
+//       v_key text;
+//       v_user_id uuid;
+//   BEGIN
+//       v_user_id := auth.uid();
+//
+//       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
+//       LOOP
+//           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
+//               IF v_old_json->>v_key IS DISTINCT FROM v_new_json->>v_key THEN
+//                   INSERT INTO public.customer_history (customer_id, user_id, field_changed, old_value, new_value)
+//                   VALUES (NEW.id, v_user_id, v_key, v_old_json->>v_key, v_new_json->>v_key);
+//               END IF;
+//           END IF;
+//       END LOOP;
+//
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION log_quote_changes()
 //   CREATE OR REPLACE FUNCTION public.log_quote_changes()
 //    RETURNS trigger
@@ -2531,6 +2629,8 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: customers
+//   on_customer_update: CREATE TRIGGER on_customer_update AFTER UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION log_customer_changes()
 // Table: quotes
 //   on_quote_update: CREATE TRIGGER on_quote_update AFTER UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION log_quote_changes()
 

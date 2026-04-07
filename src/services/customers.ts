@@ -16,10 +16,16 @@ export interface Customer {
   last_wo_date: string | null
   created_at: string
   updated_at: string
+  deleted_at?: string | null
 }
 
 export const fetchCustomerById = async (id: string): Promise<Customer> => {
-  const { data, error } = await supabase.from('customers').select('*').eq('id', id).single()
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single()
 
   if (error) throw error
   return data as Customer
@@ -29,6 +35,7 @@ export const fetchCustomers = async (): Promise<Customer[]> => {
   const { data, error } = await supabase
     .from('customers')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -54,8 +61,19 @@ export const updateCustomer = async (id: string, customer: Partial<Customer>) =>
   return data as Customer
 }
 
-export const deleteCustomer = async (id: string) => {
-  const { error } = await supabase.from('customers').delete().eq('id', id)
+export const deleteCustomer = async (id: string, userId: string) => {
+  const { error } = await supabase
+    .from('customers')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
 
   if (error) throw error
+
+  await supabase.from('customer_history').insert({
+    customer_id: id,
+    user_id: userId,
+    field_changed: 'status',
+    action: 'Deleted',
+    notes: 'Cliente deletado',
+  })
 }

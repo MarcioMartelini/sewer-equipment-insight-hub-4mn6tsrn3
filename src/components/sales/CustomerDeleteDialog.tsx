@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { deleteCustomer } from '@/services/customers'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 interface Props {
   open: boolean
@@ -15,17 +16,18 @@ interface Props {
 export default function CustomerDeleteDialog({ open, onOpenChange, customerId, onSuccess }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const { user } = useAuth()
 
   const handleDelete = async () => {
-    if (!customerId) return
+    if (!customerId || !user) return
     setLoading(true)
     try {
-      await deleteCustomer(customerId)
-      toast({ title: 'Customer deleted successfully' })
+      await deleteCustomer(customerId, user.id)
+      toast({ title: 'Cliente deletado com sucesso' })
       onSuccess()
       onOpenChange(false)
     } catch (error) {
-      toast({ title: 'Error deleting customer', variant: 'destructive' })
+      toast({ title: 'Erro ao deletar cliente', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -35,18 +37,18 @@ export default function CustomerDeleteDialog({ open, onOpenChange, customerId, o
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Delete Customer</DialogTitle>
+          <DialogTitle>Deletar Cliente</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-slate-500 my-4">
-          Are you sure you want to delete this customer? This action cannot be undone.
+          Tem certeza que deseja deletar este cliente? Esta ação não pode ser desfeita.
         </p>
         <div className="flex justify-end gap-3 mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
+            Cancelar
           </Button>
           <Button variant="destructive" onClick={handleDelete} disabled={loading}>
             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Delete
+            Confirmar Deletar
           </Button>
         </div>
       </DialogContent>
