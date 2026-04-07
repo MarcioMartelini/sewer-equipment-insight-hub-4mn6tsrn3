@@ -1150,6 +1150,39 @@ export type Database = {
           },
         ]
       }
+      report_history: {
+        Row: {
+          created_at: string | null
+          date_end: string | null
+          date_start: string | null
+          department: string | null
+          format: string
+          id: string
+          report_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_end?: string | null
+          date_start?: string | null
+          department?: string | null
+          format: string
+          id?: string
+          report_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date_end?: string | null
+          date_start?: string | null
+          department?: string | null
+          format?: string
+          id?: string
+          report_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string | null
@@ -1673,6 +1706,15 @@ export const Constants = {
 //   created_by: uuid (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+// Table: report_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   report_type: text (not null)
+//   department: text (nullable)
+//   date_start: date (nullable)
+//   date_end: date (nullable)
+//   format: text (not null)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: users
 //   id: uuid (not null)
 //   email: text (not null)
@@ -1803,6 +1845,9 @@ export const Constants = {
 //   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
 //   UNIQUE quotes_quote_number_key: UNIQUE (quote_number)
 //   CHECK quotes_status_check: CHECK ((status = ANY (ARRAY['draft'::text, 'sent'::text, 'approved'::text, 'rejected'::text, 'expired'::text])))
+// Table: report_history
+//   PRIMARY KEY report_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY report_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: users
 //   FOREIGN KEY users_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY users_pkey: PRIMARY KEY (id)
@@ -2049,6 +2094,11 @@ export const Constants = {
 //   Policy "Update quotes" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: report_history
+//   Policy "Users can insert own report history" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can read own report history" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
 // Table: users
 //   Policy "Users can read own profile or admin reads all" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))

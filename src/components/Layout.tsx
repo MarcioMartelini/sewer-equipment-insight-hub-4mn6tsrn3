@@ -32,6 +32,7 @@ import {
   LineChart,
   Settings as SettingsIcon,
   Bell,
+  FileText,
 } from 'lucide-react'
 
 function NotificationsBadge() {
@@ -54,6 +55,7 @@ const navigation = [
     items: [
       { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
       { title: 'High Management', icon: LineChart, url: '/high-management' },
+      { title: 'Reports', icon: FileText, url: '/reports' },
     ],
   },
   {
