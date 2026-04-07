@@ -11,14 +11,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
-import { Calendar, User, Percent } from 'lucide-react'
+import { Calendar as CalendarIcon, User, Percent, LayoutGrid, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ProductionKanbanKPIs } from './production-kanban-kpis'
+import { ProductionKanbanCalendar } from './production-kanban-calendar'
 
 export function ProductionKanban() {
   const { session } = useAuth()
   const [tasks, setTasks] = useState<any[]>([])
+  const [viewMode, setViewMode] = useState<string>('kanban')
   const [filters, setFilters] = useState({
     department: 'all',
     subDepartment: 'all',
@@ -153,138 +157,161 @@ export function ProductionKanban() {
 
   return (
     <div className="flex flex-col h-full gap-4 animate-fade-in">
-      <div className="flex flex-col sm:flex-row flex-wrap gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <Select
-          value={filters.department}
-          onValueChange={(v) => setFilters((f) => ({ ...f, department: v }))}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Departments</SelectItem>
-            {departments.map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <ProductionKanbanKPIs tasks={filteredTasks} />
 
-        <Select
-          value={filters.subDepartment}
-          onValueChange={(v) => setFilters((f) => ({ ...f, subDepartment: v }))}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Sub-Department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Sub-Departments</SelectItem>
-            {subDepartments.map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Input
-          placeholder="Filter by WO Number..."
-          className="w-full sm:w-[200px]"
-          value={filters.woNumber}
-          onChange={(e) => setFilters((f) => ({ ...f, woNumber: e.target.value }))}
-        />
-
-        <Input
-          placeholder="Filter by Salesperson..."
-          className="w-full sm:w-[200px]"
-          value={filters.salesperson}
-          onChange={(e) => setFilters((f) => ({ ...f, salesperson: e.target.value }))}
-        />
-      </div>
-
-      <div className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] h-[calc(100vh-280px)] custom-scrollbar">
-        {columns.map((col) => (
-          <div
-            key={col.id}
-            className={cn(
-              'flex flex-col w-[350px] shrink-0 rounded-xl border',
-              col.color,
-              col.borderColor,
-            )}
-            onDrop={(e) => handleDrop(e, col.id)}
-            onDragOver={handleDragOver}
+      <div className="flex flex-col xl:flex-row flex-wrap gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm justify-between items-start xl:items-center">
+        <div className="flex flex-wrap gap-4 w-full xl:w-auto">
+          <Select
+            value={filters.department}
+            onValueChange={(v) => setFilters((f) => ({ ...f, department: v }))}
           >
-            <div className="p-4 border-b border-inherit bg-white/50 backdrop-blur-sm rounded-t-xl font-semibold flex justify-between items-center text-slate-800">
-              {col.title}
-              <Badge variant="outline" className="bg-white/80">
-                {filteredTasks.filter((t) => t.status === col.id).length}
-              </Badge>
-            </div>
-            <ScrollArea className="flex-1 p-3">
-              <div className="flex flex-col gap-3 min-h-[100px]">
-                {filteredTasks
-                  .filter((t) => t.status === col.id)
-                  .map((task) => (
-                    <Card
-                      key={task.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, task.id)}
-                      className="cursor-grab active:cursor-grabbing hover:shadow-md transition-all hover:-translate-y-0.5 border-slate-200"
-                    >
-                      <CardContent className="p-4 flex flex-col gap-2">
-                        <div className="flex justify-between items-start gap-2">
-                          <span className="font-semibold text-sm leading-tight text-slate-900">
-                            {task.task_name}
-                          </span>
-                          <Badge variant="secondary" className="shrink-0">
-                            {task.wo_number}
-                          </Badge>
-                        </div>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectValue placeholder="Department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-                        <div className="text-xs text-slate-500 font-medium">
-                          {task.department}{' '}
-                          {task.sub_department && (
-                            <span className="opacity-60">› {task.sub_department}</span>
-                          )}
-                        </div>
+          <Select
+            value={filters.subDepartment}
+            onValueChange={(v) => setFilters((f) => ({ ...f, subDepartment: v }))}
+          >
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectValue placeholder="Sub-Department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sub-Departments</SelectItem>
+              {subDepartments.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-                        <div className="grid grid-cols-2 gap-y-2 gap-x-1 mt-2 text-xs text-slate-600 bg-slate-50/50 p-2 rounded-md">
-                          <div className="flex items-center gap-1.5" title="Start Date">
-                            <Calendar className="w-3.5 h-3.5 opacity-70" />
-                            <span className="truncate">{task.start_date || '-'}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5" title="Finish Date">
-                            <Calendar className="w-3.5 h-3.5 opacity-70" />
-                            <span className="truncate">{task.finish_date || '-'}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5" title="Assigned To">
-                            <User className="w-3.5 h-3.5 opacity-70" />
-                            <span className="truncate">
-                              {task.assigned_to_name || 'Unassigned'}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5" title="Progress">
-                            <Percent className="w-3.5 h-3.5 opacity-70" />
-                            <span>{task.progress}%</span>
-                          </div>
-                        </div>
-                        <div className="text-[10px] mt-1 text-slate-400 font-medium flex justify-between">
-                          <span>Rep: {task.salesperson}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                {filteredTasks.filter((t) => t.status === col.id).length === 0 && (
-                  <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-300/50 rounded-lg text-slate-400 text-xs font-medium">
-                    Drop tasks here
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
-        ))}
+          <Input
+            placeholder="Filter by WO Number..."
+            className="w-full sm:w-[180px]"
+            value={filters.woNumber}
+            onChange={(e) => setFilters((f) => ({ ...f, woNumber: e.target.value }))}
+          />
+
+          <Input
+            placeholder="Filter by Salesperson..."
+            className="w-full sm:w-[180px]"
+            value={filters.salesperson}
+            onChange={(e) => setFilters((f) => ({ ...f, salesperson: e.target.value }))}
+          />
+        </div>
+
+        <Tabs value={viewMode} onValueChange={setViewMode} className="w-full xl:w-auto">
+          <TabsList className="w-full xl:w-auto grid grid-cols-2">
+            <TabsTrigger value="kanban" className="flex items-center gap-2">
+              <LayoutGrid className="w-4 h-4" />
+              Kanban
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <CalendarDays className="w-4 h-4" />
+              Calendário
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
+
+      {viewMode === 'kanban' ? (
+        <div className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] h-[calc(100vh-420px)] custom-scrollbar">
+          {columns.map((col) => (
+            <div
+              key={col.id}
+              className={cn(
+                'flex flex-col w-[350px] shrink-0 rounded-xl border',
+                col.color,
+                col.borderColor,
+              )}
+              onDrop={(e) => handleDrop(e, col.id)}
+              onDragOver={handleDragOver}
+            >
+              <div className="p-4 border-b border-inherit bg-white/50 backdrop-blur-sm rounded-t-xl font-semibold flex justify-between items-center text-slate-800">
+                {col.title}
+                <Badge variant="outline" className="bg-white/80">
+                  {filteredTasks.filter((t) => t.status === col.id).length}
+                </Badge>
+              </div>
+              <ScrollArea className="flex-1 p-3">
+                <div className="flex flex-col gap-3 min-h-[100px]">
+                  {filteredTasks
+                    .filter((t) => t.status === col.id)
+                    .map((task) => (
+                      <Card
+                        key={task.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task.id)}
+                        className="cursor-grab active:cursor-grabbing hover:shadow-md transition-all hover:-translate-y-0.5 border-slate-200"
+                      >
+                        <CardContent className="p-4 flex flex-col gap-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="font-semibold text-sm leading-tight text-slate-900">
+                              {task.task_name}
+                            </span>
+                            <Badge variant="secondary" className="shrink-0">
+                              {task.wo_number}
+                            </Badge>
+                          </div>
+
+                          <div className="text-xs text-slate-500 font-medium">
+                            {task.department}{' '}
+                            {task.sub_department && (
+                              <span className="opacity-60">› {task.sub_department}</span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-y-2 gap-x-1 mt-2 text-xs text-slate-600 bg-slate-50/50 p-2 rounded-md">
+                            <div className="flex items-center gap-1.5" title="Start Date">
+                              <CalendarIcon className="w-3.5 h-3.5 opacity-70" />
+                              <span className="truncate">{task.start_date || '-'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5" title="Finish Date">
+                              <CalendarIcon className="w-3.5 h-3.5 opacity-70" />
+                              <span className="truncate">{task.finish_date || '-'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5" title="Assigned To">
+                              <User className="w-3.5 h-3.5 opacity-70" />
+                              <span className="truncate">
+                                {task.assigned_to_name || 'Unassigned'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5" title="Progress">
+                              <Percent className="w-3.5 h-3.5 opacity-70" />
+                              <span>{task.progress}%</span>
+                            </div>
+                          </div>
+                          <div className="text-[10px] mt-1 text-slate-400 font-medium flex justify-between">
+                            <span>Rep: {task.salesperson}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  {filteredTasks.filter((t) => t.status === col.id).length === 0 && (
+                    <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-300/50 rounded-lg text-slate-400 text-xs font-medium">
+                      Drop tasks here
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="min-h-[600px] h-[calc(100vh-420px)] w-full">
+          <ProductionKanbanCalendar tasks={filteredTasks} />
+        </div>
+      )}
     </div>
   )
 }
