@@ -2263,10 +2263,14 @@ export const Constants = {
 //   Policy "Auth read wo_history" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: work_orders
+//   Policy "Creator can read WO" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (created_by = auth.uid())
 //   Policy "Insert WO" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 //   Policy "Read WO by department or admin" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((department = get_user_department()) OR (get_user_role() = 'admin'::text))
+//   Policy "Sales can read WOs linked to quotes" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((quote_id IS NOT NULL) AND ((get_user_department() = 'Sales'::text) OR (get_user_department() = 'Vendas'::text)))
 //   Policy "Update WO" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((department = get_user_department()) OR (get_user_role() = 'admin'::text))
 

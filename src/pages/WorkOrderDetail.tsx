@@ -33,7 +33,15 @@ import {
   ShieldCheck,
   Users,
   ArrowLeft,
+  Activity,
 } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const MODULES = [
@@ -81,6 +89,19 @@ export default function WorkOrderDetail() {
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const [formData, setFormData] = useState<any>({})
+  const [statusOpen, setStatusOpen] = useState(false)
+  const [statusForm, setStatusForm] = useState({ status: '', notes: '' })
+
+  const STATUS_OPTIONS = [
+    'Pending',
+    'In Progress',
+    'Engineering',
+    'Purchasing',
+    'Production',
+    'Quality',
+    'Completed',
+    'On Hold',
+  ]
 
   const fetchWorkOrder = async () => {
     setLoading(true)
@@ -114,6 +135,63 @@ export default function WorkOrderDetail() {
       notes: '',
     })
     setEditOpen(true)
+  }
+
+  const openStatusUpdate = () => {
+    setStatusForm({ status: wo.status || '', notes: '' })
+    setStatusOpen(true)
+  }
+
+  const handleStatusSave = async () => {
+    if (!user) return
+    if (!statusForm.status) return toast.error('Status is required')
+
+    const updates = { status: statusForm.status }
+    const { error } = await supabase.from('work_orders').update(updates).eq('id', id)
+    if (error) return toast.error('Failed to update status')
+
+    const { data: uData } = await supabase
+      .from('users')
+      .select('department')
+      .eq('id', user.id)
+      .single()
+
+    await supabase.from('wo_history').insert({
+      wo_id: id,
+      user_id: user.id,
+      department: uData?.department || 'System',
+      old_status: wo.status,
+      new_status: statusForm.status,
+      notes: statusForm.notes || 'Status updated',
+    })
+
+    const targetDept = ['Engineering', 'Purchasing', 'Production', 'Quality'].includes(
+      statusForm.status,
+    )
+      ? statusForm.status
+      : wo.department
+
+    if (targetDept) {
+      const { data: deptUsers } = await supabase
+        .from('users')
+        .select('id')
+        .eq('department', targetDept)
+
+      if (deptUsers && deptUsers.length > 0) {
+        const notifications = deptUsers.map((u) => ({
+          user_id: u.id,
+          type: 'System',
+          message: `WO ${wo.wo_number} status changed to ${statusForm.status}`,
+          related_entity_id: id,
+          related_entity_type: 'work_order',
+        }))
+        await supabase.from('notifications').insert(notifications)
+      }
+    }
+
+    toast.success('Status updated successfully')
+    setStatusOpen(false)
+    fetchWorkOrder()
   }
 
   const handleSave = async () => {
@@ -172,9 +250,14 @@ export default function WorkOrderDetail() {
             {wo.status}
           </Badge>
         </div>
-        <Button onClick={openEdit}>
-          <FileEdit className="mr-2 h-4 w-4" /> Edit WO
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={openStatusUpdate}>
+            <Activity className="mr-2 h-4 w-4" /> Update Status
+          </Button>
+          <Button onClick={openEdit}>
+            <FileEdit className="mr-2 h-4 w-4" /> Edit WO
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -276,6 +359,48 @@ export default function WorkOrderDetail() {
           </Table>
         </div>
       </Card>
+
+      <Dialog open={statusOpen} onOpenChange={setStatusOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Work Order Status</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select
+                value={statusForm.status}
+                onValueChange={(value) => setStatusForm({ ...statusForm, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Notes (Optional)</Label>
+              <Textarea
+                value={statusForm.notes}
+                onChange={(e) => setStatusForm({ ...statusForm, notes: e.target.value })}
+                placeholder="Add any relevant notes for this status change..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleStatusSave}>Save Status</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
