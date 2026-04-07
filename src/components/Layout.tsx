@@ -26,6 +26,10 @@ import {
   CheckSquare,
   FlaskConical,
   ClipboardList,
+  Users,
+  Wrench,
+  Briefcase,
+  LineChart,
 } from 'lucide-react'
 
 import companyLogo from '@/assets/sewer-equipment-blue-fill-white-gray-globe-blue-gray-text-white-border-1024x1024-26940.webp'
@@ -36,15 +40,19 @@ const navigation = [
     title: 'Overview',
     items: [
       { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
+      { title: 'High Management', icon: LineChart, url: '/high-management' },
       { title: 'WO Registry', icon: ClipboardList, url: '/wo-registry-page' },
     ],
   },
   {
     title: 'Departments',
     items: [
+      { title: 'Sales', icon: Briefcase, url: '/sales' },
+      { title: 'Engineering', icon: Wrench, url: '/engineering' },
       { title: 'Production', icon: Factory, url: '/production' },
       { title: 'Quality', icon: ShieldCheck, url: '/quality' },
       { title: 'Purchasing', icon: ShoppingCart, url: '/purchasing' },
+      { title: 'HR', icon: Users, url: '/hr' },
     ],
   },
   {

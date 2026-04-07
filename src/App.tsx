@@ -12,6 +12,7 @@ import Purchasing from './pages/Purchasing'
 import Production from './pages/Production'
 import Quality from './pages/Quality'
 import HR from './pages/HR'
+import HighManagement from './pages/HighManagement'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/production" element={<Production />} />
             <Route path="/quality" element={<Quality />} />
             <Route path="/hr" element={<HR />} />
+            <Route path="/high-management" element={<HighManagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
