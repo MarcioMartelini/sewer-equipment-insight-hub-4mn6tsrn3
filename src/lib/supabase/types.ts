@@ -1622,6 +1622,53 @@ export type Database = {
           },
         ]
       }
+      wo_tasks: {
+        Row: {
+          created_at: string
+          department: string
+          finish_date: string | null
+          id: string
+          start_date: string | null
+          status: string
+          sub_department: string | null
+          task_name: string
+          updated_at: string
+          wo_id: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          finish_date?: string | null
+          id?: string
+          start_date?: string | null
+          status?: string
+          sub_department?: string | null
+          task_name: string
+          updated_at?: string
+          wo_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          finish_date?: string | null
+          id?: string
+          start_date?: string | null
+          status?: string
+          sub_department?: string | null
+          task_name?: string
+          updated_at?: string
+          wo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'wo_tasks_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       work_orders: {
         Row: {
           actual_completion_date: string | null
@@ -2220,6 +2267,17 @@ export const Constants = {
 //   field_changed: text (nullable)
 //   old_value: text (nullable)
 //   new_value: text (nullable)
+// Table: wo_tasks
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (not null)
+//   department: text (not null)
+//   sub_department: text (nullable)
+//   task_name: text (not null)
+//   start_date: date (nullable)
+//   finish_date: date (nullable)
+//   status: text (not null, default: 'Pending'::text)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: work_orders
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_number: text (not null)
@@ -2373,6 +2431,9 @@ export const Constants = {
 //   PRIMARY KEY wo_history_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY wo_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 //   FOREIGN KEY wo_history_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: wo_tasks
+//   PRIMARY KEY wo_tasks_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY wo_tasks_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: work_orders
 //   FOREIGN KEY work_orders_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id)
 //   PRIMARY KEY work_orders_pkey: PRIMARY KEY (id)
@@ -2666,6 +2727,16 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "Auth read wo_history" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: wo_tasks
+//   Policy "Auth delete wo_tasks" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert wo_tasks" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read wo_tasks" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update wo_tasks" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: work_orders
 //   Policy "Creator can read WO" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (created_by = auth.uid())
@@ -2821,5 +2892,7 @@ export const Constants = {
 //   CREATE UNIQUE INDEX quotes_quote_number_key ON public.quotes USING btree (quote_number)
 // Table: salespersons
 //   CREATE UNIQUE INDEX salespersons_salesperson_id_key ON public.salespersons USING btree (salesperson_id)
+// Table: wo_tasks
+//   CREATE INDEX wo_tasks_wo_id_idx ON public.wo_tasks USING btree (wo_id)
 // Table: work_orders
 //   CREATE UNIQUE INDEX work_orders_wo_number_key ON public.work_orders USING btree (wo_number)

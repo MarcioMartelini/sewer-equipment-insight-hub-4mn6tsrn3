@@ -51,6 +51,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
 
 const MODULES = [
   {
@@ -223,7 +224,9 @@ export default function WorkOrderDetail() {
   const [statusForm, setStatusForm] = useState({ status: '', notes: '' })
 
   const [releaseOpen, setReleaseOpen] = useState(false)
-  const [taskDates, setTaskDates] = useState<Record<string, { start: string; finish: string }>>({})
+  const [taskDates, setTaskDates] = useState<
+    Record<string, { start: string; finish: string; na?: boolean }>
+  >({})
 
   const STATUS_OPTIONS = [
     'Pending',
@@ -443,21 +446,37 @@ export default function WorkOrderDetail() {
     }))
   }
 
+  const handleNAChange = (dept: string, subDept: string | null, task: string, checked: boolean) => {
+    const key = `${dept}-${subDept || 'none'}-${task}`
+    setTaskDates((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        na: checked,
+      },
+    }))
+  }
+
   const handleRelease = async () => {
     const inserts = TASK_GROUPS.flatMap((group) =>
-      group.tasks.map((taskName) => {
-        const key = `${group.department}-${group.subDepartment || 'none'}-${taskName}`
-        const dates = taskDates[key] || {}
-        return {
-          wo_id: id,
-          department: group.department,
-          sub_department: group.subDepartment,
-          task_name: taskName,
-          start_date: dates.start || null,
-          finish_date: dates.finish || null,
-          status: 'Pending',
-        }
-      }),
+      group.tasks
+        .filter((taskName) => {
+          const key = `${group.department}-${group.subDepartment || 'none'}-${taskName}`
+          return !taskDates[key]?.na
+        })
+        .map((taskName) => {
+          const key = `${group.department}-${group.subDepartment || 'none'}-${taskName}`
+          const dates = taskDates[key] || {}
+          return {
+            wo_id: id,
+            department: group.department,
+            sub_department: group.subDepartment,
+            task_name: taskName,
+            start_date: dates.start || null,
+            finish_date: dates.finish || null,
+            status: 'Pending',
+          }
+        }),
     )
 
     const { error } = await supabase.from('wo_tasks').insert(inserts)
@@ -711,20 +730,42 @@ export default function WorkOrderDetail() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead className="w-1/2">Task Name</TableHead>
-                              <TableHead>Start Date</TableHead>
-                              <TableHead>Finish Date</TableHead>
+                              <TableHead className="w-2/5">Task Name</TableHead>
+                              <TableHead className="w-1/5 text-center">Not Applicable</TableHead>
+                              <TableHead className="w-1/5">Start Date</TableHead>
+                              <TableHead className="w-1/5">Finish Date</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {group.tasks.map((task) => {
                               const key = `${group.department}-${group.subDepartment || 'none'}-${task}`
+                              const isNa = taskDates[key]?.na || false
                               return (
-                                <TableRow key={task}>
+                                <TableRow
+                                  key={task}
+                                  className={isNa ? 'opacity-50 bg-muted/50' : ''}
+                                >
                                   <TableCell className="font-medium">{task}</TableCell>
+                                  <TableCell className="text-center">
+                                    <div className="flex items-center justify-center">
+                                      <Checkbox
+                                        id={`na-${key}`}
+                                        checked={isNa}
+                                        onCheckedChange={(checked) =>
+                                          handleNAChange(
+                                            group.department,
+                                            group.subDepartment,
+                                            task,
+                                            checked as boolean,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </TableCell>
                                   <TableCell>
                                     <Input
                                       type="date"
+                                      disabled={isNa}
                                       value={taskDates[key]?.start || ''}
                                       onChange={(e) =>
                                         handleDateChange(
@@ -740,6 +781,7 @@ export default function WorkOrderDetail() {
                                   <TableCell>
                                     <Input
                                       type="date"
+                                      disabled={isNa}
                                       value={taskDates[key]?.finish || ''}
                                       onChange={(e) =>
                                         handleDateChange(
