@@ -52,6 +52,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
+import { useToast } from '@/hooks/use-toast'
+import { Download } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -393,9 +395,86 @@ export default function SalesDashboard() {
   )
 
   const topSalespersons = Object.entries(revenueBySp)
-    .map(([name, revenue]) => ({ name, revenue }))
+    .map(([name, revenue]) => ({
+      name,
+      revenue,
+      department: salespersons.find((s) => s.name === name)?.department || '-',
+      region: salespersons.find((s) => s.name === name)?.region || '-',
+      wos: wosBySp[name] || 0,
+    }))
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 10)
+
+  const { toast } = useToast()
+  const [isExporting, setIsExporting] = useState(false)
+
+  const handleExportPDF = async () => {
+    setIsExporting(true)
+    try {
+      const payload = {
+        header: {
+          date: format(new Date(), 'MM/dd/yyyy HH:mm'),
+          period,
+          filters,
+        },
+        kpis: {
+          totalQuotes,
+          totalWOs,
+          grossRevenue,
+          avgProfitMargin,
+          conversionRate,
+          avgSalesCycle,
+          clv,
+          avgPurchaseValue,
+          numberOfPurchases,
+        },
+        charts: {
+          revenueTrend: revenueTrend.map((d) => ({ label: d.date, value: d.revenue })),
+          wosBySp: wosBySpData.map((d) => ({ label: d.name, value: d.wos })),
+          familyDist: familyData.map((d) => ({ label: d.name, value: d.value })),
+          marginTrend: marginTrend.map((d) => ({ label: d.date, value: d.margin })),
+        },
+        topSalespersons,
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-sales-pdf`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify(payload),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Sales_Report_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({ title: 'Report exported successfully!' })
+    } catch (error) {
+      console.error(error)
+      toast({ title: 'Error exporting report', variant: 'destructive' })
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   // Chart Configs
   const lineConfig = { revenue: { label: 'Revenue ($)', color: '#4f46e5' } }
@@ -426,6 +505,19 @@ export default function SalesDashboard() {
           <p className="text-sm text-slate-500">Real-time commercial performance and insights</p>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Export Report to PDF
+          </Button>
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select period" />
