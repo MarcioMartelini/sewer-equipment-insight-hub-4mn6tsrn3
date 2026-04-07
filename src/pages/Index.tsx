@@ -1,12 +1,89 @@
-/* Home Page - Replace this page layout, components, content, behavior with what you want and translate to the language of the user */
-const Index = () => {
+import { useState, useMemo } from 'react'
+import { WorkOrderFilters } from '@/components/WorkOrderFilters'
+import { WorkOrderTable } from '@/components/WorkOrderTable'
+import { WorkOrderKanban } from '@/components/WorkOrderKanban'
+import { mockWorkOrders } from '@/lib/mock-data'
+import { Department, Status, PrazoFilter } from '@/types/work-order'
+
+export default function Index() {
+  const [search, setSearch] = useState('')
+  const [selectedDepts, setSelectedDepts] = useState<Department[]>([])
+  const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([])
+  const [prazo, setPrazo] = useState<PrazoFilter>('Todos')
+  const [view, setView] = useState<'table' | 'kanban'>('table')
+
+  const filteredData = useMemo(() => {
+    return mockWorkOrders.filter((wo) => {
+      // 1. Text Search (WO ID or Customer)
+      const searchTerm = search.toLowerCase()
+      const matchesSearch =
+        wo.id.toLowerCase().includes(searchTerm) || wo.customer.toLowerCase().includes(searchTerm)
+
+      // 2. Department Filter
+      const matchesDept = selectedDepts.length === 0 || selectedDepts.includes(wo.department)
+
+      // 3. Status Filter
+      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(wo.status)
+
+      // 4. Prazo Filter
+      let matchesPrazo = true
+      if (prazo !== 'Todos') {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const due = new Date(wo.dueDate)
+        due.setHours(0, 0, 0, 0)
+
+        // Simple mock logic for prazo comparison
+        const diffTime = due.getTime() - today.getTime()
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+        if (prazo === 'Atrasado') {
+          matchesPrazo = diffDays < 0
+        } else if (prazo === 'Esta semana') {
+          matchesPrazo = diffDays >= 0 && diffDays <= 7
+        } else if (prazo === 'Próxima semana') {
+          matchesPrazo = diffDays > 7 && diffDays <= 14
+        } else if (prazo === 'Futuro') {
+          matchesPrazo = diffDays > 14
+        }
+      }
+
+      return matchesSearch && matchesDept && matchesStatus && matchesPrazo
+    })
+  }, [search, selectedDepts, selectedStatuses, prazo])
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">
-        This is a example page ready to be rewritten with your own content
-      </h1>
+    <div className="flex flex-col w-full h-full max-w-[1600px] mx-auto">
+      <div className="mb-2">
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight sm:hidden mb-4">
+          Registro de Work Orders
+        </h2>
+        <p className="text-slate-500 mb-6 max-w-2xl text-sm">
+          Gerencie o ciclo de vida das ordens de produção, identifique gargalos e monitore os prazos
+          em tempo real.
+        </p>
+      </div>
+
+      <WorkOrderFilters
+        search={search}
+        setSearch={setSearch}
+        selectedDepts={selectedDepts}
+        setSelectedDepts={setSelectedDepts}
+        selectedStatuses={selectedStatuses}
+        setSelectedStatuses={setSelectedStatuses}
+        prazo={prazo}
+        setPrazo={setPrazo}
+        view={view}
+        setView={setView}
+      />
+
+      <div className="flex-1 mt-2">
+        {view === 'table' ? (
+          <WorkOrderTable data={filteredData} />
+        ) : (
+          <WorkOrderKanban data={filteredData} />
+        )}
+      </div>
     </div>
   )
 }
-
-export default Index
