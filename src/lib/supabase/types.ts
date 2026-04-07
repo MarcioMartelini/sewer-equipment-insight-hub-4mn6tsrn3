@@ -1186,29 +1186,41 @@ export type Database = {
       users: {
         Row: {
           created_at: string | null
+          critical_alerts: boolean | null
+          daily_summary: boolean | null
           department: string | null
           email: string
+          email_notifications: boolean | null
           full_name: string
           id: string
           role: string | null
+          system_notifications: boolean | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          critical_alerts?: boolean | null
+          daily_summary?: boolean | null
           department?: string | null
           email: string
+          email_notifications?: boolean | null
           full_name: string
           id: string
           role?: string | null
+          system_notifications?: boolean | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          critical_alerts?: boolean | null
+          daily_summary?: boolean | null
           department?: string | null
           email?: string
+          email_notifications?: boolean | null
           full_name?: string
           id?: string
           role?: string | null
+          system_notifications?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1723,6 +1735,10 @@ export const Constants = {
 //   role: text (nullable, default: 'user'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   email_notifications: boolean (nullable, default: true)
+//   system_notifications: boolean (nullable, default: true)
+//   critical_alerts: boolean (nullable, default: true)
+//   daily_summary: boolean (nullable, default: false)
 // Table: warranty_claims
 //   id: uuid (not null, default: gen_random_uuid())
 //   serial_number: text (nullable)
@@ -2102,6 +2118,9 @@ export const Constants = {
 // Table: users
 //   Policy "Users can read own profile or admin reads all" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
+//   Policy "Users can update own profile" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = id)
+//     WITH CHECK: (auth.uid() = id)
 // Table: warranty_claims
 //   Policy "Auth read warranty" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true

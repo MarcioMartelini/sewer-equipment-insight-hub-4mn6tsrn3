@@ -16,8 +16,21 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
-import { User, Mail, Building, Shield, Clock, Activity, Settings, KeyRound } from 'lucide-react'
+import {
+  User,
+  Mail,
+  Building,
+  Shield,
+  Clock,
+  Activity,
+  Settings,
+  KeyRound,
+  Camera,
+  Loader2,
+} from 'lucide-react'
 import { format } from 'date-fns'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
 
 export default function Profile() {
   const { user } = useAuth()
@@ -33,6 +46,8 @@ export default function Profile() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
+
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -117,6 +132,47 @@ export default function Profile() {
     }
   }
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true)
+
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('Você deve selecionar uma imagem para fazer upload.')
+      }
+
+      const file = event.target.files[0]
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user?.id}-${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('avatars').getPublicUrl(filePath)
+
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user?.id)
+
+      if (updateError) {
+        throw updateError
+      }
+
+      setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }))
+      toast({ title: 'Sucesso', description: 'Foto de perfil atualizada.' })
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handlePreferenceChange = async (key: string, value: boolean) => {
     if (!user) return
     setProfile((prev: any) => ({ ...prev, [key]: value }))
@@ -155,30 +211,64 @@ export default function Profile() {
                 Dados Pessoais
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                  <User className="w-4 h-4" /> Nome
-                </p>
-                <p className="font-medium">{profile.full_name}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> Email
-                </p>
-                <p className="font-medium">{profile.email}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                  <Building className="w-4 h-4" /> Departamento
-                </p>
-                <p className="font-medium">{profile.department || '-'}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                  <Shield className="w-4 h-4" /> Função (Role)
-                </p>
-                <p className="font-medium capitalize">{profile.role || 'User'}</p>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <div className="relative group">
+                  <Avatar className="w-24 h-24 border">
+                    <AvatarImage src={profile.avatar_url} className="object-cover" />
+                    <AvatarFallback className="text-2xl uppercase">
+                      {profile.full_name?.substring(0, 2) || 'US'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <label
+                    htmlFor="avatar-upload"
+                    className={cn(
+                      'absolute inset-0 flex items-center justify-center bg-black/50 text-white rounded-full cursor-pointer transition-opacity',
+                      uploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                    )}
+                  >
+                    {uploading ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                      <Camera className="w-6 h-6" />
+                    )}
+                  </label>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                  />
+                </div>
+
+                <div className="space-y-4 flex-1 w-full">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                      <User className="w-4 h-4" /> Nome
+                    </p>
+                    <p className="font-medium">{profile.full_name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                      <Mail className="w-4 h-4" /> Email
+                    </p>
+                    <p className="font-medium">{profile.email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                      <Building className="w-4 h-4" /> Departamento
+                    </p>
+                    <p className="font-medium">{profile.department || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                      <Shield className="w-4 h-4" /> Função (Role)
+                    </p>
+                    <p className="font-medium capitalize">{profile.role || 'User'}</p>
+                  </div>
+                </div>
               </div>
 
               <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
