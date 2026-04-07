@@ -117,6 +117,184 @@ export type Database = {
         }
         Relationships: []
       }
+      engineering_accessories: {
+        Row: {
+          accessories_list_name: string
+          created_at: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          accessories_list_name: string
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          accessories_list_name?: string
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'engineering_accessories_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      engineering_boms: {
+        Row: {
+          bom_name: string
+          created_at: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          bom_name: string
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          bom_name?: string
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'engineering_boms_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      engineering_layouts: {
+        Row: {
+          created_at: string | null
+          id: string
+          layout_name: string
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          layout_name: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          layout_name?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'engineering_layouts_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      engineering_tasks: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string | null
+          task_name: string
+          task_type: string
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name: string
+          task_type: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          task_name?: string
+          task_type?: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'engineering_tasks_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      engineering_travelers: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string | null
+          traveler_name: string
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          traveler_name: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          traveler_name?: string
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'engineering_travelers_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       metrics: {
         Row: {
           created_at: string | null
@@ -537,6 +715,42 @@ export const Constants = {
 //   name: text (not null)
 //   description: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: engineering_accessories
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   accessories_list_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: engineering_boms
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   bom_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: engineering_layouts
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   layout_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: engineering_tasks
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   task_type: text (not null)
+//   task_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: engineering_travelers
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   traveler_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: metrics
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_id: uuid (nullable)
@@ -609,6 +823,21 @@ export const Constants = {
 // Table: departments
 //   UNIQUE departments_name_key: UNIQUE (name)
 //   PRIMARY KEY departments_pkey: PRIMARY KEY (id)
+// Table: engineering_accessories
+//   PRIMARY KEY engineering_accessories_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY engineering_accessories_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: engineering_boms
+//   PRIMARY KEY engineering_boms_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY engineering_boms_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: engineering_layouts
+//   PRIMARY KEY engineering_layouts_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY engineering_layouts_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: engineering_tasks
+//   PRIMARY KEY engineering_tasks_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY engineering_tasks_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: engineering_travelers
+//   PRIMARY KEY engineering_travelers_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY engineering_travelers_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: metrics
 //   PRIMARY KEY metrics_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY metrics_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
@@ -640,6 +869,51 @@ export const Constants = {
 //     USING: true
 // Table: departments
 //   Policy "Read all departments" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: engineering_accessories
+//   Policy "Auth delete engineering_accessories" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert engineering_accessories" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read engineering_accessories" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update engineering_accessories" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: engineering_boms
+//   Policy "Auth delete engineering_boms" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert engineering_boms" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read engineering_boms" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update engineering_boms" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: engineering_layouts
+//   Policy "Auth delete engineering_layouts" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert engineering_layouts" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read engineering_layouts" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update engineering_layouts" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: engineering_tasks
+//   Policy "Auth delete engineering_tasks" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert engineering_tasks" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read engineering_tasks" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update engineering_tasks" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: engineering_travelers
+//   Policy "Auth delete engineering_travelers" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert engineering_travelers" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read engineering_travelers" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update engineering_travelers" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: metrics
 //   Policy "Auth read metrics" (SELECT, PERMISSIVE) roles={authenticated}
