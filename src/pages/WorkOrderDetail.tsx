@@ -21,6 +21,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -35,6 +41,7 @@ import {
   ArrowLeft,
   Activity,
   Trash2,
+  Rocket,
 } from 'lucide-react'
 import {
   Select,
@@ -81,18 +88,142 @@ const MODULES = [
   { id: 'hr', name: 'HR', icon: Users, color: 'text-pink-500', bg: 'bg-pink-500/10', path: '/hr' },
 ]
 
+const TASK_GROUPS = [
+  {
+    department: 'Engineering',
+    subDepartment: null,
+    tasks: ['Layout', 'BOM', 'Traveler', 'Accessories List'],
+  },
+  {
+    department: 'Purchasing',
+    subDepartment: null,
+    tasks: [
+      'Engine',
+      'Hydraulics',
+      'Water Pump',
+      'Water Tank',
+      'Debris Box',
+      'Blower',
+      'Van Air',
+      'Sewer Hose',
+      'Shroud',
+    ],
+  },
+  {
+    department: 'Production',
+    subDepartment: 'Weld Shop',
+    tasks: [
+      'Chassis frame',
+      'Trailer frame',
+      'Boiler frame',
+      'Engine frame',
+      'Pump frame',
+      'Upper blower frame',
+      'Boom',
+      'Debris Box',
+      'Shroud',
+      'Cab electric box',
+      'Mid electric box',
+      'Reel electric box',
+      'RVCR',
+      'Slider',
+      'Hose Reel',
+      'UPRT',
+    ],
+  },
+  {
+    department: 'Production',
+    subDepartment: 'Paint',
+    tasks: [
+      'Chassis frame',
+      'Trailer frame',
+      'Boiler frame',
+      'Engine frame',
+      'Pump frame',
+      'Upper blower frame',
+      'Boom',
+      'Debris Box',
+      'Shroud',
+      'Cab electric box',
+      'Mid electric box',
+      'Reel electric box',
+      'RVCR',
+      'Slider',
+      'Hose Reel',
+      'UPRT',
+    ],
+  },
+  {
+    department: 'Production',
+    subDepartment: 'Sub-Assembly',
+    tasks: [
+      'Chassis frame',
+      'Trailer frame',
+      'Boiler frame',
+      'Engine frame',
+      'Pump frame',
+      'Upper blower frame',
+      'Boom',
+      'Debris Box',
+      'Shroud',
+      'Cab electric box',
+      'Mid electric box',
+      'Reel electric box',
+      'RVCR',
+      'Slider',
+      'Hose Reel',
+      'UPRT',
+    ],
+  },
+  {
+    department: 'Production',
+    subDepartment: 'Warehouse',
+    tasks: ['Accessories'],
+  },
+  {
+    department: 'Production',
+    subDepartment: 'Final Assembly',
+    tasks: [
+      'Chassis mod',
+      'Station #1',
+      'Station #2',
+      'Station #3',
+      'Station #4',
+      'Station #5',
+      'Offline',
+      'Trim and Pack',
+    ],
+  },
+  {
+    department: 'Production',
+    subDepartment: 'Tests',
+    tasks: [
+      'First test',
+      'Gig event',
+      'Second Test',
+      'Paint repair',
+      'Final test',
+      'Trim and Pack',
+    ],
+  },
+]
+
 export default function WorkOrderDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
   const [wo, setWo] = useState<any>(null)
   const [history, setHistory] = useState<any[]>([])
+  const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [formData, setFormData] = useState<any>({})
   const [statusOpen, setStatusOpen] = useState(false)
   const [statusForm, setStatusForm] = useState({ status: '', notes: '' })
+
+  const [releaseOpen, setReleaseOpen] = useState(false)
+  const [taskDates, setTaskDates] = useState<Record<string, { start: string; finish: string }>>({})
 
   const STATUS_OPTIONS = [
     'Pending',
@@ -117,6 +248,15 @@ export default function WorkOrderDetail() {
       .eq('wo_id', id)
       .order('changed_at', { ascending: false })
     if (hData) setHistory(hData)
+
+    const { data: tData } = await supabase
+      .from('wo_tasks')
+      .select('*')
+      .eq('wo_id', id)
+      .order('department')
+      .order('sub_department')
+    if (tData) setTasks(tData)
+
     setLoading(false)
   }
 
@@ -206,7 +346,6 @@ export default function WorkOrderDetail() {
   const handleSave = async () => {
     if (!user) return
 
-    // Validation
     if (!formData.wo_number || !formData.customer_name || !formData.status) {
       return toast.error('Please fill all mandatory fields (WO Number, Customer, Status).')
     }
@@ -226,7 +365,6 @@ export default function WorkOrderDetail() {
       actual_completion_date: formData.actual_completion_date || null,
     }
 
-    // Check what changed
     const changedFields: any[] = []
     for (const key in updates) {
       const oldVal = wo[key]
@@ -244,14 +382,12 @@ export default function WorkOrderDetail() {
       return
     }
 
-    // Save to DB
     const { error } = await supabase.from('work_orders').update(updates).eq('id', id)
     if (error) {
       console.error(error)
       return toast.error('Failed to update Work Order')
     }
 
-    // Save History
     if (changedFields.length > 0 || formData.notes) {
       const { data: uData } = await supabase
         .from('users')
@@ -290,6 +426,65 @@ export default function WorkOrderDetail() {
     fetchWorkOrder()
   }
 
+  const handleDateChange = (
+    dept: string,
+    subDept: string | null,
+    task: string,
+    field: 'start' | 'finish',
+    value: string,
+  ) => {
+    const key = `${dept}-${subDept || 'none'}-${task}`
+    setTaskDates((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value,
+      },
+    }))
+  }
+
+  const handleRelease = async () => {
+    const inserts = TASK_GROUPS.flatMap((group) =>
+      group.tasks.map((taskName) => {
+        const key = `${group.department}-${group.subDepartment || 'none'}-${taskName}`
+        const dates = taskDates[key] || {}
+        return {
+          wo_id: id,
+          department: group.department,
+          sub_department: group.subDepartment,
+          task_name: taskName,
+          start_date: dates.start || null,
+          finish_date: dates.finish || null,
+          status: 'Pending',
+        }
+      }),
+    )
+
+    const { error } = await supabase.from('wo_tasks').insert(inserts)
+    if (error) {
+      console.error(error)
+      return toast.error('Failed to release to production')
+    }
+
+    const { data: uData } = await supabase
+      .from('users')
+      .select('department')
+      .eq('id', user?.id)
+      .single()
+
+    await supabase.from('wo_history').insert({
+      wo_id: id,
+      user_id: user?.id,
+      department: uData?.department || 'System',
+      action: 'Released to Production',
+      notes: 'Generated production tasks schedule',
+    } as any)
+
+    toast.success('Work Order released to production')
+    setReleaseOpen(false)
+    fetchWorkOrder()
+  }
+
   if (loading)
     return (
       <div className="p-8 max-w-7xl mx-auto">
@@ -312,6 +507,13 @@ export default function WorkOrderDetail() {
           </Badge>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => setReleaseOpen(true)}
+            disabled={tasks.length > 0}
+          >
+            <Rocket className="mr-2 h-4 w-4" /> Release to Production
+          </Button>
           <Button variant="outline" onClick={openStatusUpdate}>
             <Activity className="mr-2 h-4 w-4" /> Update Status
           </Button>
@@ -365,6 +567,52 @@ export default function WorkOrderDetail() {
           </Card>
         ))}
       </div>
+
+      {tasks.length > 0 && (
+        <>
+          <h3 className="text-xl font-semibold mt-8">Tasks Schedule</h3>
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Sub-Department</TableHead>
+                    <TableHead>Task Name</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>Finish Date</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tasks.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-medium">{t.department}</TableCell>
+                      <TableCell>{t.sub_department || '-'}</TableCell>
+                      <TableCell>{t.task_name}</TableCell>
+                      <TableCell>
+                        {t.start_date
+                          ? format(new Date(`${t.start_date}T00:00:00`), 'MMM dd, yyyy')
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {t.finish_date
+                          ? format(new Date(`${t.finish_date}T00:00:00`), 'MMM dd, yyyy')
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={t.status === 'Pending' ? 'secondary' : 'default'}>
+                          {t.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </>
+      )}
 
       <h3 className="text-xl font-semibold mt-8">Module Links</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -443,6 +691,87 @@ export default function WorkOrderDetail() {
           </Table>
         </div>
       </Card>
+
+      <Dialog open={releaseOpen} onOpenChange={setReleaseOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Release to Production - Task Schedule</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto py-4">
+            <Accordion type="multiple" className="w-full space-y-4">
+              {TASK_GROUPS.map((group, idx) => {
+                const groupTitle = `${group.department}${group.subDepartment ? ` - ${group.subDepartment}` : ''}`
+                return (
+                  <AccordionItem value={`item-${idx}`} key={idx} className="border rounded-lg px-4">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      {groupTitle}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="overflow-x-auto pt-4">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-1/2">Task Name</TableHead>
+                              <TableHead>Start Date</TableHead>
+                              <TableHead>Finish Date</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {group.tasks.map((task) => {
+                              const key = `${group.department}-${group.subDepartment || 'none'}-${task}`
+                              return (
+                                <TableRow key={task}>
+                                  <TableCell className="font-medium">{task}</TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="date"
+                                      value={taskDates[key]?.start || ''}
+                                      onChange={(e) =>
+                                        handleDateChange(
+                                          group.department,
+                                          group.subDepartment,
+                                          task,
+                                          'start',
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="date"
+                                      value={taskDates[key]?.finish || ''}
+                                      onChange={(e) =>
+                                        handleDateChange(
+                                          group.department,
+                                          group.subDepartment,
+                                          task,
+                                          'finish',
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )
+              })}
+            </Accordion>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setReleaseOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRelease}>Save and Release</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={statusOpen} onOpenChange={setStatusOpen}>
         <DialogContent className="max-w-md">
