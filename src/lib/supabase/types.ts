@@ -360,6 +360,94 @@ export type Database = {
         }
         Relationships: []
       }
+      purchasing_components: {
+        Row: {
+          actual_delivery_date: string | null
+          component_name: string
+          component_type: string
+          created_at: string | null
+          expected_delivery_date: string | null
+          id: string
+          order_date: string | null
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          actual_delivery_date?: string | null
+          component_name: string
+          component_type: string
+          created_at?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          order_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          actual_delivery_date?: string | null
+          component_name?: string
+          component_type?: string
+          created_at?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          order_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'purchasing_components_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      purchasing_expedites: {
+        Row: {
+          component_type: string
+          created_at: string | null
+          expedite_date: string | null
+          expedite_reason: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+          wo_id: string | null
+        }
+        Insert: {
+          component_type: string
+          created_at?: string | null
+          expedite_date?: string | null
+          expedite_reason?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Update: {
+          component_type?: string
+          created_at?: string | null
+          expedite_date?: string | null
+          expedite_reason?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          wo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'purchasing_expedites_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       quotes: {
         Row: {
           approval_date: string | null
@@ -766,6 +854,26 @@ export const Constants = {
 //   product_type: text (nullable)
 //   description: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: purchasing_components
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   component_type: text (not null)
+//   component_name: text (not null)
+//   status: text (nullable, default: 'pending'::text)
+//   order_date: date (nullable)
+//   expected_delivery_date: date (nullable)
+//   actual_delivery_date: date (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: purchasing_expedites
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (nullable)
+//   component_type: text (not null)
+//   expedite_reason: text (nullable)
+//   expedite_date: date (nullable)
+//   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: quotes
 //   id: uuid (not null, default: gen_random_uuid())
 //   quote_number: text (not null)
@@ -843,6 +951,14 @@ export const Constants = {
 //   FOREIGN KEY metrics_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: products
 //   PRIMARY KEY products_pkey: PRIMARY KEY (id)
+// Table: purchasing_components
+//   CHECK purchasing_components_component_type_check: CHECK ((component_type = ANY (ARRAY['Engine'::text, 'Hydraulics'::text, 'Water Pump'::text, 'Water Tank'::text, 'Debris Box'::text, 'Blower'::text, 'Van Air'::text, 'Sewer Hose'::text, 'Shroud'::text])))
+//   PRIMARY KEY purchasing_components_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY purchasing_components_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: purchasing_expedites
+//   CHECK purchasing_expedites_component_type_check: CHECK ((component_type = ANY (ARRAY['Engine'::text, 'Hydraulics'::text, 'Water Pump'::text, 'Water Tank'::text, 'Debris Box'::text, 'Blower'::text, 'Van Air'::text, 'Sewer Hose'::text, 'Shroud'::text])))
+//   PRIMARY KEY purchasing_expedites_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY purchasing_expedites_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: quotes
 //   FOREIGN KEY quotes_created_by_fkey: FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 //   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
@@ -920,6 +1036,24 @@ export const Constants = {
 //     USING: true
 // Table: products
 //   Policy "Auth read products" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: purchasing_components
+//   Policy "Auth delete purchasing_components" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert purchasing_components" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read purchasing_components" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update purchasing_components" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: purchasing_expedites
+//   Policy "Auth delete purchasing_expedites" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert purchasing_expedites" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read purchasing_expedites" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update purchasing_expedites" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: quotes
 //   Policy "Auth read quotes" (SELECT, PERMISSIVE) roles={authenticated}
