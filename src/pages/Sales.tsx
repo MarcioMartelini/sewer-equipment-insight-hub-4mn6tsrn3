@@ -35,6 +35,7 @@ import { format } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Check, Loader2 } from 'lucide-react'
+import SalesDashboard from '@/components/sales/SalesDashboard'
 
 const quoteSchema = z.object({
   customer_name: z.string().min(1, 'Obrigatório'),
@@ -144,11 +145,16 @@ export default function Sales() {
         </p>
       </div>
 
-      <Tabs defaultValue="quotes" className="w-full">
-        <TabsList className="grid w-[400px] grid-cols-2 bg-slate-100">
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-[600px] grid-cols-3 bg-slate-100">
+          <TabsTrigger value="dashboard">Dashboard Executivo</TabsTrigger>
           <TabsTrigger value="quotes">Cotações</TabsTrigger>
           <TabsTrigger value="work-orders">Ordens de Trabalho</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="mt-6">
+          <SalesDashboard />
+        </TabsContent>
 
         <TabsContent value="quotes" className="mt-6">
           <div className="flex justify-between items-center mb-4">
