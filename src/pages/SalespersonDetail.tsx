@@ -549,12 +549,11 @@ export default function SalespersonDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Salesperson?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this salesperson? This action cannot be undone and
-              will mark them as inactive in the system.
+              Tem certeza que deseja deletar este vendedor? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault()
@@ -564,7 +563,7 @@ export default function SalespersonDetail() {
               disabled={isDeleting}
             >
               {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Confirm Delete
+              Confirmar Deletar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

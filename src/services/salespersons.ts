@@ -60,12 +60,31 @@ export async function updateSalesperson(id: string, sp: Partial<Salesperson>) {
 }
 
 export async function deleteSalesperson(id: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const userId = session?.user?.id
+
+  const now = new Date().toISOString()
   const { error } = await supabase
     .from('salespersons')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({ deleted_at: now, status: 'Inactive' })
     .eq('id', id)
 
   if (error) throw error
+
+  if (userId) {
+    await supabase.from('salesperson_history' as any).insert({
+      salesperson_id: id,
+      user_id: userId,
+      field_changed: 'status',
+      old_value: 'Active',
+      new_value: 'Inactive',
+      action: 'Deleted',
+      notes: 'Vendedor deletado (soft delete)',
+      changed_at: now,
+    })
+  }
 }
 
 export interface SalespersonHistory {
