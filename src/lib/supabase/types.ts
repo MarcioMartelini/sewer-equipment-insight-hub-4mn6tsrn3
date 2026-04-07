@@ -1096,28 +1096,34 @@ export type Database = {
       }
       quote_history: {
         Row: {
+          action: string | null
           changed_at: string | null
           field_changed: string
           id: string
           new_value: string | null
+          notes: string | null
           old_value: string | null
           quote_id: string | null
           user_id: string | null
         }
         Insert: {
+          action?: string | null
           changed_at?: string | null
           field_changed: string
           id?: string
           new_value?: string | null
+          notes?: string | null
           old_value?: string | null
           quote_id?: string | null
           user_id?: string | null
         }
         Update: {
+          action?: string | null
           changed_at?: string | null
           field_changed?: string
           id?: string
           new_value?: string | null
+          notes?: string | null
           old_value?: string | null
           quote_id?: string | null
           user_id?: string | null
@@ -1149,6 +1155,7 @@ export type Database = {
           customer_name: string
           customer_state: string | null
           date_order: string | null
+          deleted_at: string | null
           expected_completion_date: string | null
           expiration_date: string | null
           id: string
@@ -1176,6 +1183,7 @@ export type Database = {
           customer_name: string
           customer_state?: string | null
           date_order?: string | null
+          deleted_at?: string | null
           expected_completion_date?: string | null
           expiration_date?: string | null
           id?: string
@@ -1203,6 +1211,7 @@ export type Database = {
           customer_name?: string
           customer_state?: string | null
           date_order?: string | null
+          deleted_at?: string | null
           expected_completion_date?: string | null
           expiration_date?: string | null
           id?: string
@@ -1859,6 +1868,8 @@ export const Constants = {
 //   field_changed: text (not null)
 //   old_value: text (nullable)
 //   new_value: text (nullable)
+//   action: text (nullable)
+//   notes: text (nullable)
 // Table: quotes
 //   id: uuid (not null, default: gen_random_uuid())
 //   quote_number: text (not null)
@@ -1885,6 +1896,7 @@ export const Constants = {
 //   date_order: timestamp with time zone (nullable)
 //   customer_city: text (nullable)
 //   customer_state: text (nullable)
+//   deleted_at: timestamp with time zone (nullable)
 // Table: report_history
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)

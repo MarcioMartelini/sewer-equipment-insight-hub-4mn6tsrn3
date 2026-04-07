@@ -77,6 +77,7 @@ const quoteSchema = z.object({
   special_custom: z.string().optional(),
   truck_information: z.string().optional(),
   truck_supplier: z.string().optional(),
+  wo_number_ref: z.string().optional(),
   status: z.string().optional(),
   expected_completion_date: z.string().optional(),
   actual_completion_date: z.string().optional(),
@@ -109,6 +110,7 @@ export default function QuoteDetail() {
       special_custom: '',
       truck_information: '',
       truck_supplier: '',
+      wo_number_ref: '',
       status: '',
       expected_completion_date: '',
       actual_completion_date: '',
@@ -135,6 +137,7 @@ export default function QuoteDetail() {
         special_custom: quoteData.special_custom || '',
         truck_information: quoteData.truck_information || '',
         truck_supplier: quoteData.truck_supplier || '',
+        wo_number_ref: quoteData.wo_number_ref || '',
         status: quoteData.status || '',
         expected_completion_date: quoteData.expected_completion_date || '',
         actual_completion_date: quoteData.actual_completion_date || '',
@@ -153,7 +156,12 @@ export default function QuoteDetail() {
   const onSubmitEdit = async (data: QuoteFormValues) => {
     if (!id) return
     try {
-      await updateQuote(id, data)
+      const payload = {
+        ...data,
+        expected_completion_date: data.expected_completion_date || null,
+        actual_completion_date: data.actual_completion_date || null,
+      }
+      await updateQuote(id, payload)
       toast({ title: 'Success', description: 'Quote updated successfully' })
       setIsEditModalOpen(false)
       loadData()
@@ -585,6 +593,19 @@ export default function QuoteDetail() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Truck Supplier</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="wo_number_ref"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>WO Number</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
