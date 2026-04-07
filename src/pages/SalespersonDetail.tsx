@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
+import { DateRange } from 'react-day-picker'
 import {
   fetchSalespersonById,
   deleteSalesperson,
@@ -31,12 +33,15 @@ import {
   Wallet,
   Edit,
   Trash2,
-  Calendar,
+  Calendar as CalendarIcon,
   CheckCircle2,
   Clock,
   ExternalLink,
   Percent,
 } from 'lucide-react'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import SalespersonFormModal from '@/components/sales/SalespersonFormModal'
 import {
@@ -66,6 +71,8 @@ export default function SalespersonDetail() {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   useEffect(() => {
     loadData()
@@ -120,21 +127,33 @@ export default function SalespersonDetail() {
     }
   }
 
+  const filteredWos = useMemo(() => {
+    if (!dateRange?.from) return wos
+    return wos.filter((wo) => {
+      const woDate = new Date(wo.created_at)
+      const from = startOfDay(dateRange.from!)
+      const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from!)
+      return isWithinInterval(woDate, { start: from, end: to })
+    })
+  }, [wos, dateRange])
+
   const stats = useMemo(() => {
-    const totalWos = wos.length
-    const completedWos = wos.filter((w) =>
+    const totalWos = filteredWos.length
+    const completedWos = filteredWos.filter((w) =>
       ['Completed', 'Concluído', 'Finalizado'].includes(w.status),
     ).length
-    const canceledWos = wos.filter((w) => ['Canceled', 'Cancelado'].includes(w.status)).length
+    const canceledWos = filteredWos.filter((w) =>
+      ['Canceled', 'Cancelado'].includes(w.status),
+    ).length
     const inProgressWos = totalWos - completedWos - canceledWos
 
-    const totalSalesValue = wos.reduce((acc, w) => acc + Number(w.price || 0), 0)
+    const totalSalesValue = filteredWos.reduce((acc, w) => acc + Number(w.price || 0), 0)
     const commissionRate = salesperson?.commission_rate || 0
     const totalCommission = (totalSalesValue * commissionRate) / 100
 
     let lastWoDate = 'N/A'
-    if (wos.length > 0) {
-      const dates = wos.map((w) => new Date(w.created_at).getTime())
+    if (filteredWos.length > 0) {
+      const dates = filteredWos.map((w) => new Date(w.created_at).getTime())
       lastWoDate = new Date(Math.max(...dates)).toLocaleDateString()
     }
 
@@ -146,7 +165,7 @@ export default function SalespersonDetail() {
       totalCommission,
       lastWoDate,
     }
-  }, [wos, salesperson])
+  }, [filteredWos, salesperson])
 
   if (loading)
     return (
@@ -186,7 +205,51 @@ export default function SalespersonDetail() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'justify-start text-left font-normal',
+                  !dateRange && 'text-slate-500',
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
+                    </>
+                  ) : (
+                    format(dateRange.from, 'LLL dd, y')
+                  )
+                ) : (
+                  <span>Filter by Date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+              />
+              <div className="p-3 border-t border-slate-100 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDateRange(undefined)}
+                  className="text-slate-500"
+                >
+                  Clear Filter
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
             <Edit className="w-4 h-4 mr-2" />
             Edit Salesperson
@@ -316,7 +379,7 @@ export default function SalespersonDetail() {
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
-              <Calendar className="w-5 h-5" />
+              <CalendarIcon className="w-5 h-5" />
             </div>
             <div>
               <p className="text-lg font-bold text-slate-900 truncate">{stats.lastWoDate}</p>
@@ -329,7 +392,7 @@ export default function SalespersonDetail() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
         <TabsList className="bg-slate-100">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="wos">Work Orders History ({wos.length})</TabsTrigger>
+          <TabsTrigger value="wos">Work Orders History ({filteredWos.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="mt-6 text-slate-500">
           <Card>
@@ -342,10 +405,10 @@ export default function SalespersonDetail() {
         </TabsContent>
         <TabsContent value="wos" className="mt-6">
           <Card className="shadow-sm border-slate-200">
-            {wos.length === 0 ? (
+            {filteredWos.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-48 text-slate-500">
                 <Briefcase className="w-8 h-8 text-slate-300 mb-2" />
-                <p>No Work Orders found for this salesperson.</p>
+                <p>No Work Orders found for the selected period.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -364,7 +427,7 @@ export default function SalespersonDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {wos.map((wo) => (
+                    {filteredWos.map((wo) => (
                       <TableRow key={wo.id}>
                         <TableCell className="font-medium text-slate-900">{wo.wo_number}</TableCell>
                         <TableCell>{wo.customer_name}</TableCell>
