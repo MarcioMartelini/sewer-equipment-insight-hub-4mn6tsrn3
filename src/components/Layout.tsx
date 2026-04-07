@@ -8,6 +8,7 @@ import {
   Wrench,
   ShoppingCart,
   Factory,
+  ShieldCheck,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { title: 'Engenharia', url: '/engineering', icon: Wrench },
   { title: 'Compras', url: '/purchasing', icon: ShoppingCart },
   { title: 'Produção', url: '/production', icon: Factory },
+  { title: 'Qualidade', url: '/quality', icon: ShieldCheck },
   { title: 'Relatórios', url: '/relatorios', icon: FileBarChart },
   { title: 'Configurações', url: '/configuracoes', icon: Settings },
 ]
