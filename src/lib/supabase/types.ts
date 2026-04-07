@@ -1364,10 +1364,13 @@ export type Database = {
           action: string | null
           changed_at: string | null
           department: string | null
+          field_changed: string | null
           id: string
           new_status: string | null
+          new_value: string | null
           notes: string | null
           old_status: string | null
+          old_value: string | null
           user_id: string | null
           wo_id: string | null
         }
@@ -1375,10 +1378,13 @@ export type Database = {
           action?: string | null
           changed_at?: string | null
           department?: string | null
+          field_changed?: string | null
           id?: string
           new_status?: string | null
+          new_value?: string | null
           notes?: string | null
           old_status?: string | null
+          old_value?: string | null
           user_id?: string | null
           wo_id?: string | null
         }
@@ -1386,10 +1392,13 @@ export type Database = {
           action?: string | null
           changed_at?: string | null
           department?: string | null
+          field_changed?: string | null
           id?: string
           new_status?: string | null
+          new_value?: string | null
           notes?: string | null
           old_status?: string | null
+          old_value?: string | null
           user_id?: string | null
           wo_id?: string | null
         }
@@ -1427,7 +1436,10 @@ export type Database = {
           profit_margin: number | null
           progress: number | null
           quote_id: string | null
+          special_custom: string | null
           status: string
+          truck_information: string | null
+          truck_supplier: string | null
           updated_at: string | null
           wo_number: string
         }
@@ -1447,7 +1459,10 @@ export type Database = {
           profit_margin?: number | null
           progress?: number | null
           quote_id?: string | null
+          special_custom?: string | null
           status?: string
+          truck_information?: string | null
+          truck_supplier?: string | null
           updated_at?: string | null
           wo_number: string
         }
@@ -1467,7 +1482,10 @@ export type Database = {
           profit_margin?: number | null
           progress?: number | null
           quote_id?: string | null
+          special_custom?: string | null
           status?: string
+          truck_information?: string | null
+          truck_supplier?: string | null
           updated_at?: string | null
           wo_number?: string
         }
@@ -1944,6 +1962,9 @@ export const Constants = {
 //   new_status: text (nullable)
 //   notes: text (nullable)
 //   action: text (nullable)
+//   field_changed: text (nullable)
+//   old_value: text (nullable)
+//   new_value: text (nullable)
 // Table: work_orders
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_number: text (not null)
@@ -1963,6 +1984,9 @@ export const Constants = {
 //   expected_completion_date: date (nullable)
 //   actual_completion_date: date (nullable)
 //   deleted_at: timestamp with time zone (nullable)
+//   special_custom: text (nullable)
+//   truck_information: text (nullable)
+//   truck_supplier: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: alert_rules

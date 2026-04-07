@@ -58,6 +58,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SalesDashboard from '@/components/sales/SalesDashboard'
+import CustomersList from '@/components/sales/CustomersList'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -551,10 +552,11 @@ export default function Sales() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-[600px] grid-cols-3 bg-slate-100">
+        <TabsList className="grid w-[800px] grid-cols-4 bg-slate-100 overflow-x-auto h-auto">
           <TabsTrigger value="dashboard">Executive Dashboard</TabsTrigger>
           <TabsTrigger value="quotes">Quotes</TabsTrigger>
           <TabsTrigger value="work-orders">Work Orders</TabsTrigger>
+          <TabsTrigger value="customers">Customers</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-6">
@@ -1424,6 +1426,10 @@ export default function Sales() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <TabsContent value="customers" className="mt-6">
+          <CustomersList />
+        </TabsContent>
       </Tabs>
     </div>
   )
