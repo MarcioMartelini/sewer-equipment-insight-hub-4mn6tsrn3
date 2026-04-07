@@ -126,12 +126,16 @@ export default function WorkOrderDetail() {
 
   const openEdit = () => {
     setFormData({
+      wo_number: wo.wo_number || '',
       status: wo.status || '',
       customer_name: wo.customer_name || '',
       product_type: wo.product_type || '',
       machine_model: wo.machine_model || '',
       price: wo.price?.toString() || '',
       profit_margin: wo.profit_margin?.toString() || '',
+      special_custom: wo.special_custom || '',
+      truck_information: wo.truck_information || '',
+      truck_supplier: wo.truck_supplier || '',
       expected_completion_date: wo.expected_completion_date || wo.due_date || '',
       actual_completion_date: wo.actual_completion_date || '',
       notes: '',
@@ -162,34 +166,11 @@ export default function WorkOrderDetail() {
       wo_id: id,
       user_id: user.id,
       department: uData?.department || 'System',
-      old_status: wo.status,
-      new_status: statusForm.status,
+      field_changed: 'status',
+      old_value: wo.status,
+      new_value: statusForm.status,
       notes: statusForm.notes || 'Status updated',
     })
-
-    const targetDept = ['Engineering', 'Purchasing', 'Production', 'Quality'].includes(
-      statusForm.status,
-    )
-      ? statusForm.status
-      : wo.department
-
-    if (targetDept) {
-      const { data: deptUsers } = await supabase
-        .from('users')
-        .select('id')
-        .eq('department', targetDept)
-
-      if (deptUsers && deptUsers.length > 0) {
-        const notifications = deptUsers.map((u) => ({
-          user_id: u.id,
-          type: 'System',
-          message: `WO ${wo.wo_number} status changed to ${statusForm.status}`,
-          related_entity_id: id,
-          related_entity_type: 'work_order',
-        }))
-        await supabase.from('notifications').insert(notifications)
-      }
-    }
 
     toast.success('Status updated successfully')
     setStatusOpen(false)
@@ -224,35 +205,87 @@ export default function WorkOrderDetail() {
 
   const handleSave = async () => {
     if (!user) return
-    const updates = {
+
+    // Validation
+    if (!formData.wo_number || !formData.customer_name || !formData.status) {
+      return toast.error('Please fill all mandatory fields (WO Number, Customer, Status).')
+    }
+
+    const updates: any = {
+      wo_number: formData.wo_number,
       status: formData.status,
       customer_name: formData.customer_name,
       product_type: formData.product_type,
       machine_model: formData.machine_model,
       price: formData.price ? parseFloat(formData.price) : null,
       profit_margin: formData.profit_margin ? parseFloat(formData.profit_margin) : null,
+      special_custom: formData.special_custom,
+      truck_information: formData.truck_information,
+      truck_supplier: formData.truck_supplier,
       expected_completion_date: formData.expected_completion_date || null,
       actual_completion_date: formData.actual_completion_date || null,
     }
-    const { error } = await supabase.from('work_orders').update(updates).eq('id', id)
-    if (error) return toast.error('Failed to update Work Order')
 
-    if (wo.status !== formData.status || formData.notes) {
+    // Check what changed
+    const changedFields: any[] = []
+    for (const key in updates) {
+      const oldVal = wo[key]
+      const newVal = updates[key]
+
+      if (oldVal != newVal) {
+        if ((oldVal === null || oldVal === undefined) && newVal === '') continue
+        changedFields.push({ field: key, old: oldVal, new: newVal })
+      }
+    }
+
+    if (changedFields.length === 0 && !formData.notes) {
+      toast.info('No changes detected.')
+      setEditOpen(false)
+      return
+    }
+
+    // Save to DB
+    const { error } = await supabase.from('work_orders').update(updates).eq('id', id)
+    if (error) {
+      console.error(error)
+      return toast.error('Failed to update Work Order')
+    }
+
+    // Save History
+    if (changedFields.length > 0 || formData.notes) {
       const { data: uData } = await supabase
         .from('users')
         .select('department')
         .eq('id', user.id)
         .single()
-      await supabase.from('wo_history').insert({
-        wo_id: id,
-        user_id: user.id,
-        department: uData?.department || 'System',
-        old_status: wo.status,
-        new_status: formData.status,
-        notes: formData.notes || 'WO Updated',
-      })
+
+      const historyInserts =
+        changedFields.length > 0
+          ? changedFields.map((cf) => ({
+              wo_id: id,
+              user_id: user.id,
+              department: uData?.department || 'System',
+              field_changed: cf.field,
+              old_value: cf.old ? String(cf.old) : null,
+              new_value: cf.new ? String(cf.new) : null,
+              action: 'Field Update',
+              notes: formData.notes || null,
+            }))
+          : [
+              {
+                wo_id: id,
+                user_id: user.id,
+                department: uData?.department || 'System',
+                action: 'Update',
+                notes: formData.notes,
+              },
+            ]
+
+      const { error: histError } = await supabase.from('wo_history').insert(historyInserts)
+      if (histError) console.error('History Error:', histError)
     }
-    toast.success('Work Order updated')
+
+    toast.success('Work Order updated successfully')
     setEditOpen(false)
     fetchWorkOrder()
   }
@@ -278,7 +311,7 @@ export default function WorkOrderDetail() {
             {wo.status}
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" onClick={openStatusUpdate}>
             <Activity className="mr-2 h-4 w-4" /> Update Status
           </Button>
@@ -300,9 +333,12 @@ export default function WorkOrderDetail() {
             label: 'Price / Margin',
             value: wo.price ? `$${wo.price.toLocaleString()} (${wo.profit_margin || 0}%)` : 'N/A',
           },
+          { label: 'Special Custom', value: wo.special_custom || 'N/A' },
           {
-            label: 'Date Created',
-            value: wo.created_at ? format(new Date(wo.created_at), 'MMM dd, yyyy') : 'N/A',
+            label: 'Truck Info',
+            value: wo.truck_information
+              ? `${wo.truck_information} (${wo.truck_supplier || 'No supplier'})`
+              : 'N/A',
           },
           {
             label: 'Expected Completion',
@@ -322,7 +358,7 @@ export default function WorkOrderDetail() {
               <CardTitle className="text-sm text-muted-foreground">{item.label}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-semibold truncate" title={item.value}>
+              <div className="text-lg font-semibold truncate" title={item.value}>
                 {item.value}
               </div>
             </CardContent>
@@ -360,7 +396,7 @@ export default function WorkOrderDetail() {
                 <TableHead>Date / Time</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>User</TableHead>
-                <TableHead>Action / Status Change</TableHead>
+                <TableHead>Action / Field Change</TableHead>
                 <TableHead>Notes</TableHead>
               </TableRow>
             </TableHeader>
@@ -373,8 +409,21 @@ export default function WorkOrderDetail() {
                     </TableCell>
                     <TableCell>{h.department}</TableCell>
                     <TableCell>{h.users?.full_name || 'System'}</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {h.action ? (
+                    <TableCell>
+                      {h.field_changed ? (
+                        <div className="flex flex-col text-sm">
+                          <span className="font-semibold text-muted-foreground uppercase text-xs mb-1">
+                            {h.field_changed.replace(/_/g, ' ')}
+                          </span>
+                          <span>
+                            <span className="line-through opacity-70 mr-1">
+                              {h.old_value || 'Empty'}
+                            </span>
+                            &rarr;{' '}
+                            <span className="font-medium ml-1">{h.new_value || 'Empty'}</span>
+                          </span>
+                        </div>
+                      ) : h.action ? (
                         <Badge variant="outline">{h.action}</Badge>
                       ) : (
                         `${h.old_status || ''} → ${h.new_status || ''}`
@@ -459,24 +508,48 @@ export default function WorkOrderDetail() {
       </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Work Order</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>
+                WO Number <span className="text-red-500">*</span>
+              </Label>
               <Input
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                value={formData.wo_number}
+                onChange={(e) => setFormData({ ...formData, wo_number: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Customer</Label>
+              <Label>
+                Customer <span className="text-red-500">*</span>
+              </Label>
               <Input
                 value={formData.customer_name}
                 onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Status <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Product Family</Label>
@@ -509,6 +582,27 @@ export default function WorkOrderDetail() {
               />
             </div>
             <div className="space-y-2">
+              <Label>Special Custom</Label>
+              <Input
+                value={formData.special_custom}
+                onChange={(e) => setFormData({ ...formData, special_custom: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Truck Information</Label>
+              <Input
+                value={formData.truck_information}
+                onChange={(e) => setFormData({ ...formData, truck_information: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Truck Supplier</Label>
+              <Input
+                value={formData.truck_supplier}
+                onChange={(e) => setFormData({ ...formData, truck_supplier: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Expected Completion</Label>
               <Input
                 type="date"
@@ -528,7 +622,7 @@ export default function WorkOrderDetail() {
                 }
               />
             </div>
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2 sm:col-span-2 lg:col-span-3">
               <Label>Notes (for history)</Label>
               <Textarea
                 value={formData.notes}

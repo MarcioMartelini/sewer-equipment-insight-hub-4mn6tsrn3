@@ -1361,6 +1361,7 @@ export type Database = {
       }
       wo_history: {
         Row: {
+          action: string | null
           changed_at: string | null
           department: string | null
           id: string
@@ -1371,6 +1372,7 @@ export type Database = {
           wo_id: string | null
         }
         Insert: {
+          action?: string | null
           changed_at?: string | null
           department?: string | null
           id?: string
@@ -1381,6 +1383,7 @@ export type Database = {
           wo_id?: string | null
         }
         Update: {
+          action?: string | null
           changed_at?: string | null
           department?: string | null
           id?: string
@@ -1413,6 +1416,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           customer_name: string
+          deleted_at: string | null
           department: string | null
           due_date: string | null
           expected_completion_date: string | null
@@ -1432,6 +1436,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           customer_name: string
+          deleted_at?: string | null
           department?: string | null
           due_date?: string | null
           expected_completion_date?: string | null
@@ -1451,6 +1456,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           customer_name?: string
+          deleted_at?: string | null
           department?: string | null
           due_date?: string | null
           expected_completion_date?: string | null
@@ -1937,6 +1943,7 @@ export const Constants = {
 //   old_status: text (nullable)
 //   new_status: text (nullable)
 //   notes: text (nullable)
+//   action: text (nullable)
 // Table: work_orders
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_number: text (not null)
@@ -1955,6 +1962,7 @@ export const Constants = {
 //   profit_margin: numeric (nullable)
 //   expected_completion_date: date (nullable)
 //   actual_completion_date: date (nullable)
+//   deleted_at: timestamp with time zone (nullable)
 
 // --- CONSTRAINTS ---
 // Table: alert_rules
