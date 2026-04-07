@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase/client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ProductionDashboard } from '@/components/production-dashboard'
 import { ProductionSubDepartmentDashboard } from '@/components/production-sub-department-dashboard'
+import { ProductionKanban } from '@/components/production-kanban'
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ export default function Production() {
     warehouse: 'warehouse',
     'final-assembly': 'final_assembly',
     tests: 'tests',
+    kanban: 'kanban',
   }
 
   const reverseMapping: Record<string, string> = {
@@ -34,6 +36,7 @@ export default function Production() {
     warehouse: 'warehouse',
     final_assembly: 'final-assembly',
     tests: 'tests',
+    kanban: 'kanban',
   }
 
   const activeTab = subDepartment ? tabMapping[subDepartment] || 'dashboard' : 'dashboard'
@@ -85,6 +88,7 @@ export default function Production() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-2 p-1">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="kanban">Kanban</TabsTrigger>
           <TabsTrigger value="weld_shop">Weld Shop</TabsTrigger>
           <TabsTrigger value="paint">Paint</TabsTrigger>
           <TabsTrigger value="sub_assembly">Sub Assembly</TabsTrigger>
@@ -95,6 +99,10 @@ export default function Production() {
 
         <TabsContent value="dashboard" className="m-0">
           <ProductionDashboard />
+        </TabsContent>
+
+        <TabsContent value="kanban" className="m-0">
+          <ProductionKanban />
         </TabsContent>
 
         <TabsContent value="weld_shop" className="m-0">
