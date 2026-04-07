@@ -1,19 +1,14 @@
 export type Department =
-  | 'Vendas'
-  | 'Engenharia'
-  | 'Compras'
-  | 'Produção'
-  | 'Qualidade'
-  | 'Entrega'
-  | 'Garantia'
+  | 'Sales'
+  | 'Engineering'
+  | 'Purchasing'
+  | 'Production'
+  | 'Quality'
+  | 'Delivery'
+  | 'Warranty'
+  | 'High Management'
 
-export type Status =
-  | 'Não iniciado'
-  | 'Estacionado'
-  | 'No prazo'
-  | 'Em risco'
-  | 'Atrasado'
-  | 'Concluído'
+export type Status = 'Not started' | 'Parked' | 'On track' | 'At risk' | 'Delayed' | 'Complete'
 
 export type PrazoFilter = 'Todos' | 'Atrasado' | 'Esta semana' | 'Próxima semana' | 'Futuro'
 

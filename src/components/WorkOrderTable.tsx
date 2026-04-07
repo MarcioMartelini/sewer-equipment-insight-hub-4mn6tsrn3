@@ -68,7 +68,7 @@ export function WorkOrderTable({ data }: WorkOrderTableProps) {
                     indicatorClassName={cn(
                       'bg-indigo-500',
                       wo.progress === 100 && 'bg-emerald-500',
-                      wo.status === 'Atrasado' && 'bg-red-500',
+                      wo.status === 'Delayed' && 'bg-red-500',
                     )}
                   />
                   <span className="text-xs font-medium text-slate-500 w-8">{wo.progress}%</span>

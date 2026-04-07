@@ -25,23 +25,16 @@ interface WorkOrderFiltersProps {
 }
 
 const DEPARTMENTS: Department[] = [
-  'Vendas',
-  'Engenharia',
-  'Compras',
-  'Produção',
-  'Qualidade',
-  'Entrega',
-  'Garantia',
-  'High Management' as Department,
+  'Sales',
+  'Engineering',
+  'Purchasing',
+  'Production',
+  'Quality',
+  'Delivery',
+  'Warranty',
+  'High Management',
 ]
-const STATUSES: Status[] = [
-  'Não iniciado',
-  'Estacionado',
-  'No prazo',
-  'Em risco',
-  'Atrasado',
-  'Concluído',
-]
+const STATUSES: Status[] = ['Not started', 'Parked', 'On track', 'At risk', 'Delayed', 'Complete']
 
 export function WorkOrderFilters({
   search,
