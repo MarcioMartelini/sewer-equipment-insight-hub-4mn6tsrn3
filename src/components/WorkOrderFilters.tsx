@@ -32,6 +32,7 @@ const DEPARTMENTS: Department[] = [
   'Qualidade',
   'Entrega',
   'Garantia',
+  'High Management' as Department,
 ]
 const STATUSES: Status[] = [
   'Não iniciado',

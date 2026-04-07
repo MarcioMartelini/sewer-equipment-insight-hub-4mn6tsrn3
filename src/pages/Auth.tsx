@@ -101,6 +101,7 @@ export default function AuthPage() {
                     <option value="Qualidade">Qualidade</option>
                     <option value="Entrega">Entrega</option>
                     <option value="Garantia">Garantia</option>
+                    <option value="High Management">High Management</option>
                   </select>
                 </div>
               </>
