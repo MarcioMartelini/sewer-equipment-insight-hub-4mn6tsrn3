@@ -202,7 +202,7 @@ export default function Layout() {
                     className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-900/20"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign Out</span>
+                    <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
