@@ -65,7 +65,7 @@ export default function AuthPage() {
           </CardTitle>
           <CardDescription>
             {isLogin
-              ? 'Enter your credentials to access the WO Registry'
+              ? 'Enter your credentials to access the Sewer Equipment Insight HUB'
               : 'Fill in the details to create your account'}
           </CardDescription>
         </CardHeader>
