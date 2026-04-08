@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
-import { Factory } from 'lucide-react'
+import logoImg from '@/assets/design-sem-nome-7ddcb.png'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -59,9 +59,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg border-0 ring-1 ring-slate-200">
         <CardHeader className="space-y-1 flex flex-col items-center text-center">
-          <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
-            <Factory className="w-6 h-6" />
-          </div>
+          <img src={logoImg} alt="Insight HUB Logo" className="h-24 w-auto mb-4 object-contain" />
           <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
             {isLogin ? 'System Login' : 'Create Account'}
           </CardTitle>
