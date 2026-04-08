@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +15,15 @@ import {
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { useNotifications } from '@/hooks/use-notifications'
+import { useAuth } from '@/hooks/use-auth'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   LayoutDashboard,
   Factory,
@@ -34,6 +43,8 @@ import {
   Bell,
   FileText,
   User,
+  UserCircle,
+  LogOut,
 } from 'lucide-react'
 
 function NotificationsBadge() {
@@ -89,6 +100,18 @@ const navigation = [
 
 export default function Layout() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login')
+  }
+
+  const handleSwitchProfile = async () => {
+    await signOut()
+    navigate('/login')
+  }
 
   return (
     <SidebarProvider>
@@ -146,13 +169,44 @@ export default function Layout() {
                 : location.pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ')}
             </div>
             <div className="ml-auto flex items-center space-x-4">
-              <Link
-                to="/profile"
-                className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-                title="My Profile"
-              >
-                <User className="w-5 h-5" />
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 outline-none"
+                    title="Account Menu"
+                  >
+                    <User className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user?.email || 'Account'}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        Manage your session
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>My Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSwitchProfile} className="cursor-pointer">
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Enter with another profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-900/20"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Link
                 to="/notifications"
                 className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
