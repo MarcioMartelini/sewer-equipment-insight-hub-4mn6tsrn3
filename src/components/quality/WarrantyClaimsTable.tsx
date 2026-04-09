@@ -112,7 +112,7 @@ export function WarrantyClaimsTable() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Registro de Garantias</CardTitle>
-        <Button onClick={() => setCreating(true)} size="sm">
+        <Button className="bg-[#1511f2]" onClick={() => setCreating(true)} size="sm">
           <Plus className="mr-2 h-4 w-4" />
           Nova Garantia
         </Button>
