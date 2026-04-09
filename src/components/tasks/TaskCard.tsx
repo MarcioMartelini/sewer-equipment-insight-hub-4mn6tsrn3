@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -9,7 +9,17 @@ import { format, differenceInDays, startOfDay } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
-import { Loader2, CalendarIcon, CheckCircle2, MessageSquare, Briefcase } from 'lucide-react'
+import {
+  Loader2,
+  CalendarIcon,
+  CheckCircle2,
+  MessageSquare,
+  Briefcase,
+  Pencil,
+  Trash2,
+  X,
+  Check,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface TaskWithWO {
@@ -32,10 +42,38 @@ export interface TaskWithWO {
 }
 
 export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () => void }) {
-  const [comment, setComment] = useState(task.comments || '')
+  const [newComment, setNewComment] = useState('')
+  const [commentsList, setCommentsList] = useState<any[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+
   const { user } = useAuth()
   const { toast } = useToast()
+
+  const loadComments = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('wo_task_comments_history')
+      .select('*, author:users(full_name)')
+      .eq('task_id', task.id)
+      .is('deleted_at' as any, null)
+      .order('created_at', { ascending: false })
+
+    if (!error && data) {
+      setCommentsList(data)
+    }
+  }, [task.id])
+
+  useEffect(() => {
+    loadComments()
+
+    const checkAdmin = async () => {
+      const { data } = await supabase.rpc('get_user_role')
+      setIsAdmin(data === 'admin')
+    }
+    checkAdmin()
+  }, [loadComments])
 
   const getDateColor = (finishDateStr: string | null) => {
     if (!finishDateStr) return 'bg-muted text-muted-foreground'
@@ -43,36 +81,73 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
     const today = startOfDay(new Date())
     const diff = differenceInDays(finishDate, today)
 
-    if (diff < 0) return 'bg-destructive/10 text-destructive border-destructive/20' // delayed
+    if (diff < 0) return 'bg-destructive/10 text-destructive border-destructive/20'
     if (diff <= 2)
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800' // soon
-    return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' // on time
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+    return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
   }
 
-  const handleSaveComment = async () => {
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return
     setIsSaving(true)
     try {
-      const { error: updateError } = await supabase
-        .from('wo_tasks')
-        .update({ comments: comment })
-        .eq('id', task.id)
+      const { error } = await supabase.from('wo_task_comments_history').insert({
+        task_id: task.id,
+        comment: newComment.trim(),
+        author_id: user?.id,
+      })
+      if (error) throw error
 
-      if (updateError) throw updateError
-
-      if (comment.trim() && comment !== task.comments) {
-        const { error: historyError } = await supabase.from('wo_task_comments_history').insert({
-          task_id: task.id,
-          comment: comment,
-          author_id: user?.id,
-        })
-        if (historyError) throw historyError
-      }
-
-      toast({ title: 'Comentário salvo com sucesso' })
-      if (onUpdate) onUpdate()
+      toast({ title: 'Comentário adicionado com sucesso' })
+      setNewComment('')
+      loadComments()
     } catch (e: any) {
       console.error(e)
-      toast({ title: 'Erro ao salvar comentário', variant: 'destructive' })
+      toast({ title: 'Erro ao adicionar comentário', variant: 'destructive' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteComment = async (id: string) => {
+    if (!confirm('Tem certeza que deseja deletar este comentário?')) return
+    setIsSaving(true)
+    try {
+      const { error } = await supabase
+        .from('wo_task_comments_history')
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq('id', id)
+
+      if (error) throw error
+      toast({ title: 'Comentário deletado' })
+      loadComments()
+    } catch (e: any) {
+      console.error(e)
+      toast({ title: 'Erro ao deletar comentário', variant: 'destructive' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleEditComment = async (id: string) => {
+    if (!editContent.trim()) return
+    setIsSaving(true)
+    try {
+      const { error } = await supabase
+        .from('wo_task_comments_history')
+        .update({
+          comment: editContent.trim(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+
+      if (error) throw error
+      toast({ title: 'Comentário atualizado' })
+      setEditingCommentId(null)
+      loadComments()
+    } catch (e: any) {
+      console.error(e)
+      toast({ title: 'Erro ao atualizar comentário', variant: 'destructive' })
     } finally {
       setIsSaving(false)
     }
@@ -92,8 +167,17 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
 
       if (error) throw error
 
+      if (checked) {
+        await supabase.from('wo_task_comments_history').insert({
+          task_id: task.id,
+          comment: 'Task marked as completed',
+          author_id: user?.id,
+        })
+      }
+
       toast({ title: checked ? 'Tarefa marcada como concluída' : 'Tarefa reaberta' })
       if (onUpdate) onUpdate()
+      loadComments()
     } catch (e: any) {
       console.error(e)
       toast({ title: 'Erro ao atualizar tarefa', variant: 'destructive' })
@@ -175,26 +259,121 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
         </div>
 
         {/* 4. Comments Field */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">
             Comentários
           </Label>
-          <Textarea
-            placeholder="Descreva atrasos ou problemas..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="min-h-[80px] resize-none text-sm"
-          />
-          {comment !== (task.comments || '') && (
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Digite seu comentário..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="min-h-[80px] resize-none text-sm"
+              disabled={isSaving || task.is_completed || false}
+            />
             <div className="flex justify-end">
-              <Button size="sm" variant="secondary" onClick={handleSaveComment} disabled={isSaving}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleAddComment}
+                disabled={isSaving || !newComment.trim() || task.is_completed || false}
+              >
                 {isSaving ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
                 ) : (
                   <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
                 )}
-                Salvar Comentário
+                Add Comment
               </Button>
+            </div>
+          </div>
+
+          {/* Comments List */}
+          {commentsList.length > 0 && (
+            <div className="space-y-2 mt-4 max-h-[200px] overflow-y-auto pr-2">
+              {commentsList.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="p-2 bg-muted/50 rounded-md text-sm border space-y-1"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-medium text-xs text-muted-foreground">
+                      {comment.author?.full_name || 'Sistema'} -{' '}
+                      {comment.created_at
+                        ? format(new Date(comment.created_at), 'dd/MM/yyyy HH:mm')
+                        : ''}
+                      {comment.updated_at && ' (Editado)'}
+                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {user?.id === comment.author_id &&
+                        !task.is_completed &&
+                        editingCommentId !== comment.id &&
+                        comment.comment !== 'Task marked as completed' && (
+                          <button
+                            onClick={() => {
+                              setEditingCommentId(comment.id)
+                              setEditContent(comment.comment)
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
+                      {isAdmin &&
+                        !task.is_completed &&
+                        comment.comment !== 'Task marked as completed' && (
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                    </div>
+                  </div>
+
+                  {editingCommentId === comment.id ? (
+                    <div className="space-y-2 mt-2">
+                      <Textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="min-h-[60px] text-sm"
+                        disabled={isSaving}
+                      />
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={() => setEditingCommentId(null)}
+                          disabled={isSaving}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="default"
+                          className="h-6 w-6"
+                          onClick={() => handleEditComment(comment.id)}
+                          disabled={isSaving || !editContent.trim()}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p
+                      className={cn(
+                        'text-foreground whitespace-pre-wrap',
+                        comment.comment === 'Task marked as completed' &&
+                          'text-emerald-600 font-medium italic',
+                      )}
+                    >
+                      {comment.comment}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -214,15 +393,15 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
             htmlFor={`complete-${task.id}`}
             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none"
           >
-            Task Completed
+            Mark as Complete
           </Label>
         </div>
 
         {/* 6. Completion Date */}
         {task.is_completed && task.completion_date && (
-          <div className="flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-medium pl-7 animate-in fade-in slide-in-from-left-2">
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-            Concluído em: {format(new Date(task.completion_date), "dd/MM/yyyy 'às' HH:mm")}
+          <div className="flex items-center text-sm text-emerald-600 dark:text-emerald-400 font-bold pl-7 animate-in fade-in slide-in-from-left-2">
+            <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
+            Completed on {format(new Date(task.completion_date), 'dd/MM/yyyy HH:mm')}
           </div>
         )}
       </CardFooter>
