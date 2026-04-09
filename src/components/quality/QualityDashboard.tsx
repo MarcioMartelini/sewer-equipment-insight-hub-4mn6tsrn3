@@ -292,7 +292,12 @@ export function QualityDashboard() {
 
           <div className="flex items-center gap-6 h-10 px-2">
             <div className="flex items-center space-x-2">
-              <Switch id="show-warranty" checked={showWarranty} onCheckedChange={setShowWarranty} />
+              <Switch
+                className="bg-[#2614f8]"
+                id="show-warranty"
+                checked={showWarranty}
+                onCheckedChange={setShowWarranty}
+              />
               <Label htmlFor="show-warranty" className="text-sm font-medium cursor-pointer">
                 Warranty Claims
               </Label>
