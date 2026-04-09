@@ -6,81 +6,91 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* slate-50 */
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 3.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: 238.7 83.5% 66.7%; /* indigo-500 approx */
-    --primary-foreground: 210 40% 98%;
+    /* Sewer Equipment Brand Green */
+    --primary: 85 54% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 214.3 31.8% 91.4%;
-    --secondary-foreground: 222.2 84% 4.9%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --accent: 85 54% 94%;
+    --accent-foreground: 85 54% 20%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 238.7 83.5% 66.7%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 85 54% 45%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 238.7 83.5% 66.7%;
+    --sidebar-foreground: 240 10% 3.9%;
+    --sidebar-primary: 85 54% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222.2 84% 4.9%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 238.7 83.5% 66.7%;
+    --sidebar-accent: 85 54% 94%;
+    --sidebar-accent-foreground: 85 54% 20%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-ring: 85 54% 45%;
 
-    --chart-1: 34 100% 44%;
-    --chart-2: 189 100% 38%;
-    --chart-3: 209 100% 32%;
-    --chart-4: 42 100% 50%;
-    --chart-5: 33 100% 50%;
+    --chart-1: 85 54% 45%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    /* Dark mode colors kept default as spec doesn't strictly demand it, but structured correctly */
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 222.2 84% 4.9%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 222.2 84% 4.9%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 222.2 84% 4.9%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 222.2 84% 4.9%;
-    --input: 222.2 84% 4.9%;
-    --ring: 214.3 31.8% 91.4%;
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 222.2 84% 4.9%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222.2 84% 4.9%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222.2 84% 4.9%;
-    --sidebar-ring: 222.2 84% 4.9%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Sewer Equipment Brand Green */
+    --primary: 85 54% 51%;
+    --primary-foreground: 240 10% 3.9%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 85 54% 15%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 85 54% 51%;
+
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 85 54% 51%;
+    --sidebar-primary-foreground: 240 10% 3.9%;
+    --sidebar-accent: 85 54% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 85 54% 51%;
   }
 
   section[aria-label='Notifications alt+T'] {
