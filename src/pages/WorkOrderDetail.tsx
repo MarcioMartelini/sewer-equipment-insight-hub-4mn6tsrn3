@@ -221,7 +221,11 @@ export default function WorkOrderDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [formData, setFormData] = useState<any>({})
   const [statusOpen, setStatusOpen] = useState(false)
-  const [statusForm, setStatusForm] = useState({ status: '', notes: '' })
+  const [statusForm, setStatusForm] = useState({
+    status: '',
+    notes: '',
+    expected_completion_date: '',
+  })
 
   const [releaseOpen, setReleaseOpen] = useState(false)
   const [taskDates, setTaskDates] = useState<
@@ -287,7 +291,11 @@ export default function WorkOrderDetail() {
   }
 
   const openStatusUpdate = () => {
-    setStatusForm({ status: wo.status || '', notes: '' })
+    setStatusForm({
+      status: wo.status || '',
+      notes: '',
+      expected_completion_date: wo.expected_completion_date || '',
+    })
     setStatusOpen(true)
   }
 
@@ -295,7 +303,11 @@ export default function WorkOrderDetail() {
     if (!user) return
     if (!statusForm.status) return toast.error('Status is required')
 
-    const updates = { status: statusForm.status }
+    const updates: any = { status: statusForm.status }
+    if (statusForm.expected_completion_date !== undefined) {
+      updates.expected_completion_date = statusForm.expected_completion_date || null
+    }
+
     const { error } = await supabase.from('work_orders').update(updates).eq('id', id)
     if (error) return toast.error('Failed to update status')
 
@@ -305,15 +317,45 @@ export default function WorkOrderDetail() {
       .eq('id', user.id)
       .single()
 
-    await supabase.from('wo_history').insert({
-      wo_id: id,
-      user_id: user.id,
-      department: uData?.department || 'System',
-      field_changed: 'status',
-      old_value: wo.status,
-      new_value: statusForm.status,
-      notes: statusForm.notes || 'Status updated',
-    })
+    const historyInserts = []
+
+    if (wo.status !== statusForm.status) {
+      historyInserts.push({
+        wo_id: id,
+        user_id: user.id,
+        department: uData?.department || 'System',
+        field_changed: 'status',
+        old_value: wo.status,
+        new_value: statusForm.status,
+        notes: statusForm.notes || 'Status updated',
+      })
+    }
+
+    if (wo.expected_completion_date !== statusForm.expected_completion_date) {
+      historyInserts.push({
+        wo_id: id,
+        user_id: user.id,
+        department: uData?.department || 'System',
+        field_changed: 'expected_completion_date',
+        old_value: wo.expected_completion_date || null,
+        new_value: statusForm.expected_completion_date || null,
+        notes: statusForm.notes || 'Expected completion date updated',
+      })
+    }
+
+    if (historyInserts.length === 0 && statusForm.notes) {
+      historyInserts.push({
+        wo_id: id,
+        user_id: user.id,
+        department: uData?.department || 'System',
+        action: 'Notes Added',
+        notes: statusForm.notes,
+      })
+    }
+
+    if (historyInserts.length > 0) {
+      await supabase.from('wo_history').insert(historyInserts as any)
+    }
 
     toast.success('Status updated successfully')
     setStatusOpen(false)
@@ -524,6 +566,15 @@ export default function WorkOrderDetail() {
           <Badge variant="secondary" className="text-sm px-3 py-1">
             {wo.status}
           </Badge>
+          {wo.expected_completion_date && (
+            <Badge
+              variant="outline"
+              className="text-sm px-3 py-1 border-primary/20 text-primary bg-primary/5"
+            >
+              Expected:{' '}
+              {format(new Date(`${wo.expected_completion_date}T00:00:00`), 'MMM dd, yyyy')}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Button
@@ -838,6 +889,16 @@ export default function WorkOrderDetail() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Expected Completion Date</Label>
+              <Input
+                type="date"
+                value={statusForm.expected_completion_date}
+                onChange={(e) =>
+                  setStatusForm({ ...statusForm, expected_completion_date: e.target.value })
+                }
+              />
             </div>
             <div className="space-y-2">
               <Label>Notes (Optional)</Label>
