@@ -26,22 +26,15 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
   }
 
   const getBorderColor = (status: string) => {
-    switch (status) {
-      case 'Not started':
-        return 'border-l-gray-300'
-      case 'Parked':
-        return 'border-l-amber-400'
-      case 'On track':
-        return 'border-l-blue-400'
-      case 'At risk':
-        return 'border-l-orange-400'
-      case 'Delayed':
-        return 'border-l-red-500'
-      case 'Complete':
-        return 'border-l-emerald-400'
-      default:
-        return 'border-l-slate-200'
-    }
+    const s = status?.toLowerCase() || ''
+    if (s.includes('not started') || s === 'pending') return 'border-l-gray-300'
+    if (s.includes('parked')) return 'border-l-amber-400'
+    if (s.includes('on track') || s === 'in process' || s === 'in progress')
+      return 'border-l-blue-400'
+    if (s.includes('at risk')) return 'border-l-orange-400'
+    if (s.includes('delayed')) return 'border-l-red-500'
+    if (s.includes('complete')) return 'border-l-emerald-400'
+    return 'border-l-slate-200'
   }
 
   if (data.length === 0) {
@@ -85,13 +78,14 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
                     <span className="font-bold text-slate-900 text-sm group-hover:text-indigo-700 transition-colors">
                       {wo.id}
                     </span>
-                    {(wo.status === 'Delayed' || wo.status === 'At risk') && (
+                    {(wo.status?.toLowerCase() === 'delayed' ||
+                      wo.status?.toLowerCase() === 'at risk') && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div
                             className={cn(
                               'p-1 rounded-full',
-                              wo.status === 'Delayed'
+                              wo.status?.toLowerCase() === 'delayed'
                                 ? 'bg-red-50 text-red-500 animate-pulse'
                                 : 'bg-orange-50 text-orange-500',
                             )}
@@ -101,10 +95,12 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
                         </TooltipTrigger>
                         <TooltipContent
                           side="top"
-                          className={wo.status === 'Delayed' ? 'bg-red-600' : 'bg-orange-600'}
+                          className={
+                            wo.status?.toLowerCase() === 'delayed' ? 'bg-red-600' : 'bg-orange-600'
+                          }
                         >
                           <p>
-                            {wo.status === 'Delayed'
+                            {wo.status?.toLowerCase() === 'delayed'
                               ? `Delayed by ${wo.daysOverdue || 0} days`
                               : 'Pay attention to deadline'}
                           </p>
@@ -137,7 +133,7 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
                       indicatorClassName={cn(
                         'bg-indigo-500 transition-all duration-500',
                         wo.progress === 100 && 'bg-emerald-500',
-                        wo.status === 'Delayed' && 'bg-red-500',
+                        wo.status?.toLowerCase() === 'delayed' && 'bg-red-500',
                       )}
                     />
                   </div>

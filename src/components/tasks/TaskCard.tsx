@@ -181,7 +181,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
 
   const handleStatusChange = async (newStatus: string) => {
     setIsSaving(true)
-    const isCompleted = newStatus === 'Complete'
+    const isCompleted = newStatus.toLowerCase() === 'complete'
     const completionDate = isCompleted ? new Date().toISOString() : null
 
     let delayed = task.was_delayed
@@ -233,8 +233,23 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
 
   const wo = task.work_orders || ({} as any)
 
+  const currentStatusValue = (() => {
+    if (!task.status) return 'not started'
+    const s = task.status.toLowerCase()
+    if (s === 'pending' || s === 'not started') return 'not started'
+    if (s === 'in process' || s === 'in progress' || s === 'on track') return 'on track'
+    if (s === 'completed' || s === 'complete') return 'complete'
+    if (['parked', 'at risk', 'delayed'].includes(s)) return s
+    return 'not started'
+  })()
+
   return (
-    <Card className={cn('flex flex-col shrink-0', task.is_completed && 'opacity-80 bg-muted/30')}>
+    <Card
+      className={cn(
+        'flex flex-col shrink-0 h-fit min-h-min',
+        task.is_completed && 'opacity-80 bg-muted/30',
+      )}
+    >
       <CardHeader className="pb-3 border-b">
         <div className="flex justify-between items-start gap-2">
           <div>
@@ -254,7 +269,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 pt-4 space-y-4">
+      <CardContent className="pt-4 space-y-4">
         {/* 1. WO Information */}
         <div className="space-y-1.5 p-3 bg-muted/50 rounded-md text-sm">
           <div className="flex justify-between">
@@ -441,7 +456,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
           <div className="flex items-center space-x-2">
             <Label className="text-sm font-medium">Status:</Label>
             <Select
-              value={!task.status || task.status === 'Pending' ? 'Not Started' : task.status}
+              value={currentStatusValue}
               onValueChange={handleStatusChange}
               disabled={isSaving}
             >
@@ -449,9 +464,12 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Not Started">Not Started</SelectItem>
-                <SelectItem value="In Process">In Process</SelectItem>
-                <SelectItem value="Complete">Complete</SelectItem>
+                <SelectItem value="not started">Not Started</SelectItem>
+                <SelectItem value="parked">Parked</SelectItem>
+                <SelectItem value="on track">On Track</SelectItem>
+                <SelectItem value="at risk">At Risk</SelectItem>
+                <SelectItem value="delayed">Delayed</SelectItem>
+                <SelectItem value="complete">Complete</SelectItem>
               </SelectContent>
             </Select>
           </div>

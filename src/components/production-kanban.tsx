@@ -48,10 +48,16 @@ export function ProductionKanban() {
       .in('status', [
         'Pending',
         'Not Started',
+        'not started',
         'In Process',
         'In Progress',
+        'on track',
+        'parked',
+        'at risk',
+        'delayed',
         'Complete',
         'Completed',
+        'complete',
       ])
 
     if (error) {
@@ -96,14 +102,13 @@ export function ProductionKanban() {
     const task = tasks.find((t) => t.id === taskId)
     if (!task) return
 
-    const currentNorm =
-      task.status === 'Pending'
-        ? 'Not Started'
-        : task.status === 'In Progress'
-          ? 'In Process'
-          : task.status === 'Completed'
-            ? 'Complete'
-            : task.status
+    const s = task.status.toLowerCase()
+    let currentNorm = 'not started'
+    if (s === 'pending' || s === 'not started') currentNorm = 'not started'
+    else if (s === 'in process' || s === 'in progress' || s === 'on track') currentNorm = 'on track'
+    else if (s === 'completed' || s === 'complete') currentNorm = 'complete'
+    else if (['parked', 'at risk', 'delayed'].includes(s)) currentNorm = s
+
     if (currentNorm === newStatus) return
 
     const oldStatus = task.status
@@ -151,19 +156,17 @@ export function ProductionKanban() {
 
   const columns = [
     {
-      id: 'Not Started',
+      id: 'not started',
       title: 'Not Started',
       color: 'bg-slate-50',
       borderColor: 'border-slate-200',
     },
+    { id: 'parked', title: 'Parked', color: 'bg-amber-50', borderColor: 'border-amber-200' },
+    { id: 'on track', title: 'On Track', color: 'bg-blue-50', borderColor: 'border-blue-200' },
+    { id: 'at risk', title: 'At Risk', color: 'bg-orange-50', borderColor: 'border-orange-200' },
+    { id: 'delayed', title: 'Delayed', color: 'bg-red-50', borderColor: 'border-red-200' },
     {
-      id: 'In Process',
-      title: 'In Process',
-      color: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-    },
-    {
-      id: 'Complete',
+      id: 'complete',
       title: 'Complete',
       color: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
@@ -263,26 +266,32 @@ export function ProductionKanban() {
                 {col.title}
                 <Badge variant="outline" className="bg-white/80">
                   {
-                    filteredTasks.filter(
-                      (t) =>
-                        t.status === col.id ||
-                        (col.id === 'Not Started' && t.status === 'Pending') ||
-                        (col.id === 'In Process' && t.status === 'In Progress') ||
-                        (col.id === 'Complete' && t.status === 'Completed'),
-                    ).length
+                    filteredTasks.filter((t) => {
+                      const s = t.status.toLowerCase()
+                      let norm = 'not started'
+                      if (s === 'pending' || s === 'not started') norm = 'not started'
+                      else if (s === 'in process' || s === 'in progress' || s === 'on track')
+                        norm = 'on track'
+                      else if (s === 'completed' || s === 'complete') norm = 'complete'
+                      else if (['parked', 'at risk', 'delayed'].includes(s)) norm = s
+                      return norm === col.id
+                    }).length
                   }
                 </Badge>
               </div>
               <ScrollArea className="flex-1 p-3">
                 <div className="flex flex-col gap-3 min-h-[100px]">
                   {filteredTasks
-                    .filter(
-                      (t) =>
-                        t.status === col.id ||
-                        (col.id === 'Not Started' && t.status === 'Pending') ||
-                        (col.id === 'In Process' && t.status === 'In Progress') ||
-                        (col.id === 'Complete' && t.status === 'Completed'),
-                    )
+                    .filter((t) => {
+                      const s = t.status.toLowerCase()
+                      let norm = 'not started'
+                      if (s === 'pending' || s === 'not started') norm = 'not started'
+                      else if (s === 'in process' || s === 'in progress' || s === 'on track')
+                        norm = 'on track'
+                      else if (s === 'completed' || s === 'complete') norm = 'complete'
+                      else if (['parked', 'at risk', 'delayed'].includes(s)) norm = s
+                      return norm === col.id
+                    })
                     .map((task) => (
                       <Card
                         key={task.id}
@@ -333,13 +342,16 @@ export function ProductionKanban() {
                         </CardContent>
                       </Card>
                     ))}
-                  {filteredTasks.filter(
-                    (t) =>
-                      t.status === col.id ||
-                      (col.id === 'Not Started' && t.status === 'Pending') ||
-                      (col.id === 'In Process' && t.status === 'In Progress') ||
-                      (col.id === 'Complete' && t.status === 'Completed'),
-                  ).length === 0 && (
+                  {filteredTasks.filter((t) => {
+                    const s = t.status.toLowerCase()
+                    let norm = 'not started'
+                    if (s === 'pending' || s === 'not started') norm = 'not started'
+                    else if (s === 'in process' || s === 'in progress' || s === 'on track')
+                      norm = 'on track'
+                    else if (s === 'completed' || s === 'complete') norm = 'complete'
+                    else if (['parked', 'at risk', 'delayed'].includes(s)) norm = s
+                    return norm === col.id
+                  }).length === 0 && (
                     <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-300/50 rounded-lg text-slate-400 text-xs font-medium">
                       Drop tasks here
                     </div>
