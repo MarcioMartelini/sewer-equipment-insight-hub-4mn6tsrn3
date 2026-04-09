@@ -3036,6 +3036,30 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION notify_task_status_change()
+//   CREATE OR REPLACE FUNCTION public.notify_task_status_change()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NEW.status IS DISTINCT FROM OLD.status THEN
+//       IF NEW.status = 'delayed'::public.task_status_enum THEN
+//         IF NEW.assigned_to IS NOT NULL THEN
+//           INSERT INTO public.notifications (user_id, type, message, related_entity_id, related_entity_type)
+//           VALUES (NEW.assigned_to, 'System', 'A tarefa "' || NEW.task_name || '" foi marcada como Delayed.', NEW.id, 'wo_tasks');
+//         END IF;
+//       ELSIF NEW.status = 'at_risk'::public.task_status_enum THEN
+//         IF NEW.assigned_to IS NOT NULL THEN
+//           INSERT INTO public.notifications (user_id, type, message, related_entity_id, related_entity_type)
+//           VALUES (NEW.assigned_to, 'System', 'A tarefa "' || NEW.task_name || '" foi marcada como At Risk.', NEW.id, 'wo_tasks');
+//         END IF;
+//       END IF;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: customers
@@ -3044,6 +3068,8 @@ export const Constants = {
 //   on_quote_update: CREATE TRIGGER on_quote_update AFTER UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION log_quote_changes()
 // Table: salespersons
 //   on_salesperson_update: CREATE TRIGGER on_salesperson_update AFTER UPDATE ON public.salespersons FOR EACH ROW EXECUTE FUNCTION log_salesperson_changes()
+// Table: wo_tasks
+//   on_task_status_change: CREATE TRIGGER on_task_status_change AFTER UPDATE ON public.wo_tasks FOR EACH ROW EXECUTE FUNCTION notify_task_status_change()
 
 // --- INDEXES ---
 // Table: customers

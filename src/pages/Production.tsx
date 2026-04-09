@@ -1,24 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase/client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { ProductionDashboard } from '@/components/production-dashboard'
-import { ProductionSubDepartmentDashboard } from '@/components/production-sub-department-dashboard'
-import { ProductionKanban } from '@/components/production-kanban'
-import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ProductionDashboard } from '@/components/production/ProductionDashboard'
+import { ProductionTable } from '@/components/production/ProductionTable'
+import { Input } from '@/components/ui/input'
+import { Search } from 'lucide-react'
+import { ProductionType } from '@/services/production'
 
 export default function Production() {
   const { subDepartment } = useParams()
   const navigate = useNavigate()
-  const [workOrders, setWorkOrders] = useState<any[]>([])
-  const [selectedWoId, setSelectedWoId] = useState<string>('all')
+  const [woFilter, setWoFilter] = useState('')
 
   const tabMapping: Record<string, string> = {
     'weld-shop': 'weld_shop',
@@ -27,8 +19,6 @@ export default function Production() {
     warehouse: 'warehouse',
     'final-assembly': 'final_assembly',
     tests: 'tests',
-    kanban: 'kanban',
-    tasks: 'tasks',
   }
 
   const reverseMapping: Record<string, string> = {
@@ -38,8 +28,6 @@ export default function Production() {
     warehouse: 'warehouse',
     final_assembly: 'final-assembly',
     tests: 'tests',
-    kanban: 'kanban',
-    tasks: 'tasks',
   }
 
   const activeTab = subDepartment ? tabMapping[subDepartment] || 'dashboard' : 'dashboard'
@@ -52,126 +40,64 @@ export default function Production() {
     }
   }
 
-  useEffect(() => {
-    supabase
-      .from('work_orders')
-      .select('id, wo_number')
-      .order('wo_number')
-      .then(({ data }) => {
-        if (data) setWorkOrders(data)
-      })
-  }, [])
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Production</h2>
-          <p className="text-muted-foreground">Manage and track task status at each stage.</p>
+          <p className="text-muted-foreground">Manage production tasks, assembly, and tracking.</p>
         </div>
-        {activeTab !== 'dashboard' && (
-          <div className="w-full sm:w-64">
-            <Select value={selectedWoId} onValueChange={setSelectedWoId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by Work Order" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All WOs</SelectItem>
-                {workOrders.map((wo) => (
-                  <SelectItem key={wo.id} value={wo.id}>
-                    {wo.wo_number}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="w-full sm:w-64 relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+          <Input
+            placeholder="Filter by WO Number..."
+            className="pl-9"
+            value={woFilter}
+            onChange={(e) => setWoFilter(e.target.value)}
+          />
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList className="flex flex-wrap h-auto gap-2 p-1">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks List</TabsTrigger>
-          <TabsTrigger value="kanban">Kanban</TabsTrigger>
-          <TabsTrigger value="weld_shop">Weld Shop</TabsTrigger>
-          <TabsTrigger value="paint">Paint</TabsTrigger>
-          <TabsTrigger value="sub_assembly">Sub Assembly</TabsTrigger>
-          <TabsTrigger value="warehouse">Warehouse</TabsTrigger>
-          <TabsTrigger value="final_assembly">Final Assembly</TabsTrigger>
-          <TabsTrigger value="tests">Tests</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <TabsList className="flex flex-wrap h-auto gap-2 p-1 bg-slate-100/50">
+          <TabsTrigger value="dashboard" className="data-[state=active]:bg-white">
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="weld_shop" className="data-[state=active]:bg-white">
+            Weld Shop
+          </TabsTrigger>
+          <TabsTrigger value="paint" className="data-[state=active]:bg-white">
+            Paint
+          </TabsTrigger>
+          <TabsTrigger value="sub_assembly" className="data-[state=active]:bg-white">
+            Sub Assembly
+          </TabsTrigger>
+          <TabsTrigger value="warehouse" className="data-[state=active]:bg-white">
+            Warehouse
+          </TabsTrigger>
+          <TabsTrigger value="final_assembly" className="data-[state=active]:bg-white">
+            Final Assembly
+          </TabsTrigger>
+          <TabsTrigger value="tests" className="data-[state=active]:bg-white">
+            Tests
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="m-0">
           <ProductionDashboard />
         </TabsContent>
 
-        <TabsContent value="tasks" className="m-0">
-          <DepartmentTasks department="Production" />
-        </TabsContent>
-
-        <TabsContent value="kanban" className="m-0">
-          <ProductionKanban />
-        </TabsContent>
-
-        <TabsContent value="weld_shop" className="m-0 space-y-6">
-          <DepartmentTasks department="Production" subDepartment="Weld Shop" />
-          <ProductionSubDepartmentDashboard
-            department="weld_shop"
-            tableName="production_weld_shop"
-            title="Weld Shop Dashboard"
-            selectedWoId={selectedWoId}
-          />
-        </TabsContent>
-
-        <TabsContent value="paint" className="m-0 space-y-6">
-          <DepartmentTasks department="Production" subDepartment="Paint" />
-          <ProductionSubDepartmentDashboard
-            department="paint"
-            tableName="production_paint"
-            title="Paint Dashboard"
-            selectedWoId={selectedWoId}
-          />
-        </TabsContent>
-
-        <TabsContent value="sub_assembly" className="m-0 space-y-6">
-          <DepartmentTasks department="Production" subDepartment="Sub Assembly" />
-          <ProductionSubDepartmentDashboard
-            department="sub_assembly"
-            tableName="production_sub_assembly"
-            title="Sub Assembly Dashboard"
-            selectedWoId={selectedWoId}
-          />
-        </TabsContent>
-
-        <TabsContent value="warehouse" className="m-0 space-y-6">
-          <DepartmentTasks department="Production" subDepartment="Warehouse" />
-          <ProductionSubDepartmentDashboard
-            department="warehouse"
-            tableName="production_warehouse"
-            title="Warehouse Dashboard"
-            selectedWoId={selectedWoId}
-          />
-        </TabsContent>
-
-        <TabsContent value="final_assembly" className="m-0 space-y-6">
-          <DepartmentTasks department="Production" subDepartment="Final Assembly" />
-          <ProductionSubDepartmentDashboard
-            department="final_assembly"
-            tableName="production_final_assembly"
-            title="Final Assembly Dashboard"
-            selectedWoId={selectedWoId}
-          />
-        </TabsContent>
-
-        <TabsContent value="tests" className="m-0 space-y-6">
-          <DepartmentTasks department="Production" subDepartment="Tests" />
-          <ProductionSubDepartmentDashboard
-            department="tests"
-            tableName="production_tests"
-            title="Tests Dashboard"
-            selectedWoId={selectedWoId}
-          />
-        </TabsContent>
+        {['weld_shop', 'paint', 'sub_assembly', 'warehouse', 'final_assembly', 'tests'].map(
+          (tab) => (
+            <TabsContent key={tab} value={tab} className="m-0">
+              <ProductionTable
+                type={tab as ProductionType}
+                woFilter={woFilter}
+                onClearFilters={() => setWoFilter('')}
+              />
+            </TabsContent>
+          ),
+        )}
       </Tabs>
     </div>
   )
