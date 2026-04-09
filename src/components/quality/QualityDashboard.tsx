@@ -293,7 +293,7 @@ export function QualityDashboard() {
           <div className="flex items-center gap-6 h-10 px-2">
             <div className="flex items-center space-x-2">
               <Switch
-                className="bg-[#2614f8]"
+                className="bg-[#2e1bff]"
                 id="show-warranty"
                 checked={showWarranty}
                 onCheckedChange={setShowWarranty}
