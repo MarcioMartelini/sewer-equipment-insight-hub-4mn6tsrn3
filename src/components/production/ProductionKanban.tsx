@@ -15,7 +15,18 @@ import { CalendarIcon, UserIcon, Loader2, FilterX, GripVertical } from 'lucide-r
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ProductionTaskCard } from '@/components/production/ProductionTaskCard'
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogHeader,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { updateProductionStatus } from '@/services/production'
+import { useToast } from '@/hooks/use-toast'
 
 const STATUSES = [
   {
@@ -38,6 +49,15 @@ export function ProductionKanban() {
   const [filterAssignee, setFilterAssignee] = useState('')
 
   const [selectedTask, setSelectedTask] = useState<any>(null)
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    taskId: string
+    newStatus: string
+  } | null>(null)
+  const [statusComment, setStatusComment] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
+  const { toast } = useToast()
 
   const filteredTasks = tasks.filter((t) => {
     if (filterSubDept !== 'all') {
@@ -67,13 +87,32 @@ export function ProductionKanban() {
     e.dataTransfer.setData('taskId', taskId)
   }
 
+  const executeDropUpdate = async (taskId: string, newStatus: string, comment?: string) => {
+    setIsUpdating(true)
+    try {
+      await updateProductionStatus('all', taskId, newStatus, comment)
+      await refetch()
+      toast({ title: 'Status updated successfully' })
+    } catch (e: any) {
+      console.error(e)
+      toast({ title: 'Error updating status', description: e.message, variant: 'destructive' })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault()
     const taskId = e.dataTransfer.getData('taskId')
     if (taskId) {
       const task = tasks.find((t) => t.id === taskId)
       if (task && task.status !== newStatus) {
-        await handleUpdateStatus(taskId, newStatus)
+        if (newStatus === 'parked' || newStatus === 'at_risk') {
+          setConfirmModal({ isOpen: true, taskId, newStatus })
+          setStatusComment('')
+        } else {
+          await executeDropUpdate(taskId, newStatus)
+        }
       }
     }
   }
@@ -226,6 +265,62 @@ export function ProductionKanban() {
           ))}
         </div>
       )}
+
+      <Dialog
+        open={confirmModal?.isOpen || false}
+        onOpenChange={(open) => !open && !isUpdating && setConfirmModal(null)}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Justification Required</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for changing the status to{' '}
+              <strong className="text-slate-900 font-bold">
+                {confirmModal?.newStatus
+                  ? STATUSES.find((s) => s.id === confirmModal.newStatus)?.label
+                  : ''}
+              </strong>
+              .
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="reason" className="mb-2 block font-medium">
+              Reason
+            </Label>
+            <Textarea
+              id="reason"
+              placeholder="Enter your justification here..."
+              value={statusComment}
+              onChange={(e) => setStatusComment(e.target.value)}
+              className="min-h-[120px] resize-none focus-visible:ring-indigo-500"
+              disabled={isUpdating}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmModal(null)} disabled={isUpdating}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (confirmModal && statusComment.trim()) {
+                  await executeDropUpdate(
+                    confirmModal.taskId,
+                    confirmModal.newStatus,
+                    statusComment,
+                  )
+                  setConfirmModal(null)
+                  setStatusComment('')
+                }
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+              disabled={!statusComment.trim() || isUpdating}
+            >
+              {isUpdating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Confirm Change
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {selectedTask && (
         <Dialog
