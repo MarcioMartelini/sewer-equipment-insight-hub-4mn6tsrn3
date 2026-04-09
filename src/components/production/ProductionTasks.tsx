@@ -147,6 +147,7 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>WO Number</TableHead>
+                  {type === 'all' && <TableHead>Sub Dept</TableHead>}
                   <TableHead>Task Name</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
@@ -155,7 +156,10 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                    <TableCell
+                      colSpan={type === 'all' ? 5 : 4}
+                      className="text-center py-8 text-slate-500"
+                    >
                       No tasks found
                     </TableCell>
                   </TableRow>
@@ -163,6 +167,13 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
                   filteredTasks.map((task) => (
                     <TableRow key={task.id}>
                       <TableCell className="font-medium">{task.wo_number}</TableCell>
+                      {type === 'all' && (
+                        <TableCell>
+                          <Badge variant="outline" className="font-normal">
+                            {task.sub_department || 'General'}
+                          </Badge>
+                        </TableCell>
+                      )}
                       <TableCell>{task.task_name}</TableCell>
                       <TableCell>{getStatusBadge(task.status)}</TableCell>
                       <TableCell>
@@ -211,13 +222,20 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
                       className="border-slate-200 shadow-sm hover:border-slate-300 transition-colors"
                     >
                       <CardContent className="p-4 space-y-3">
-                        <div className="flex justify-between items-start">
+                        <div className="flex justify-between items-start mb-2">
                           <span className="text-xs font-semibold text-slate-500">
                             {task.wo_number}
                           </span>
                           {getStatusBadge(task.status)}
                         </div>
-                        <p className="font-medium text-sm text-slate-900">{task.task_name}</p>
+                        <p className="font-medium text-sm text-slate-900 mb-1">{task.task_name}</p>
+                        {type === 'all' && task.sub_department && (
+                          <div className="mb-3">
+                            <Badge variant="outline" className="text-[10px] py-0 h-4">
+                              {task.sub_department}
+                            </Badge>
+                          </div>
+                        )}
                         <Select
                           value={task.status}
                           onValueChange={(v) => onStatusChange(task.id, v)}

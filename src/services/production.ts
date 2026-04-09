@@ -14,6 +14,7 @@ export interface ProductionTask {
   wo_id: string
   wo_number: string
   task_name: string
+  sub_department?: string
   status: string
   created_at: string
   updated_at: string
@@ -36,6 +37,7 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
       id,
       wo_id,
       task_name,
+      sub_department,
       status,
       created_at,
       updated_at,
@@ -60,12 +62,12 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
     wo_id: item.wo_id,
     wo_number: item.work_orders?.wo_number || 'Unknown',
     task_name: item.task_name,
-    status: item.status || 'not started',
+    sub_department: item.sub_department,
+    status: item.status || 'not_started',
     created_at: item.created_at,
     updated_at: item.updated_at,
   }))
 }
-
 export async function updateProductionStatus(
   type: ProductionType,
   id: string,

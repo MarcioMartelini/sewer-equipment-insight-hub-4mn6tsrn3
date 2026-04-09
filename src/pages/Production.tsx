@@ -26,6 +26,7 @@ export default function Production() {
       <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-4 flex flex-wrap h-auto">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="tasks">Task Lists</TabsTrigger>
           <TabsTrigger value="weld_shop">Weld Shop</TabsTrigger>
           <TabsTrigger value="paint">Paint</TabsTrigger>
           <TabsTrigger value="sub_assembly">Sub Assembly</TabsTrigger>
@@ -40,7 +41,7 @@ export default function Production() {
 
         {currentTab !== 'dashboard' && (
           <TabsContent value={currentTab} className="mt-0">
-            <ProductionTasks type={currentTab as any} />
+            <ProductionTasks type={currentTab === 'tasks' ? 'all' : (currentTab as any)} />
           </TabsContent>
         )}
       </Tabs>
