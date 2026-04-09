@@ -253,6 +253,8 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
         task_id: task.id,
         comment: `Status changed from ${oldStatusFormatted} to ${newStatusFormatted}`,
         author_id: user?.id,
+        status: newStatus as any,
+        created_at: new Date().toISOString(),
       })
 
       toast({ title: `Status atualizado para ${newStatusFormatted}` })

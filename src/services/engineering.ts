@@ -51,10 +51,58 @@ export async function getEngineeringTasks(type: EngineeringType): Promise<Engine
 }
 
 export async function updateEngineeringStatus(type: EngineeringType, id: string, status: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: oldTask } = await supabase
+    .from('wo_tasks')
+    .select('status, was_delayed, finish_date')
+    .eq('id', id)
+    .single()
+
+  const oldStatus = oldTask?.status || 'not_started'
+  const isCompleted = status === 'complete'
+  const completionDate = isCompleted ? new Date().toISOString() : null
+
+  let delayed = oldTask?.was_delayed || false
+  if (!delayed && oldTask?.finish_date) {
+    const finish = new Date(oldTask.finish_date)
+    const today = new Date()
+    finish.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    if (today > finish) {
+      delayed = true
+    }
+  }
+
   const { error } = await supabase
     .from('wo_tasks')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({
+      status: status as any,
+      is_completed: isCompleted,
+      completion_date: completionDate,
+      was_delayed: delayed,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
 
   if (error) throw error
+
+  if (oldStatus !== status) {
+    const formatStatus = (s: string) => {
+      if (s === 'not_started') return 'Not Started'
+      if (s === 'on_track') return 'On Track'
+      if (s === 'at_risk') return 'At Risk'
+      return s.charAt(0).toUpperCase() + s.slice(1)
+    }
+
+    await supabase.from('wo_task_comments_history').insert({
+      task_id: id,
+      comment: `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}`,
+      author_id: user?.id,
+      status: status as any,
+      created_at: new Date().toISOString(),
+    })
+  }
 }
