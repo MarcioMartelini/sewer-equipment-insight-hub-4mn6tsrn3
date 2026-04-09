@@ -1788,6 +1788,7 @@ export type Database = {
           machine_model: string | null
           price: number | null
           product_type: string | null
+          production_schedule: Json | null
           profit_margin: number | null
           progress: number | null
           quote_id: string | null
@@ -1811,6 +1812,7 @@ export type Database = {
           machine_model?: string | null
           price?: number | null
           product_type?: string | null
+          production_schedule?: Json | null
           profit_margin?: number | null
           progress?: number | null
           quote_id?: string | null
@@ -1834,6 +1836,7 @@ export type Database = {
           machine_model?: string | null
           price?: number | null
           product_type?: string | null
+          production_schedule?: Json | null
           profit_margin?: number | null
           progress?: number | null
           quote_id?: string | null
@@ -2426,6 +2429,7 @@ export const Constants = {
 //   special_custom: text (nullable)
 //   truck_information: text (nullable)
 //   truck_supplier: text (nullable)
+//   production_schedule: jsonb (nullable, default: '{}'::jsonb)
 
 // --- CONSTRAINTS ---
 // Table: alert_rules

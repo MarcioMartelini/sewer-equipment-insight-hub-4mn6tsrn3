@@ -1,8 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { format, differenceInDays, startOfDay } from 'date-fns'
@@ -30,9 +36,11 @@ export interface TaskWithWO {
   sub_department: string | null
   start_date: string | null
   finish_date: string | null
+  status: string
   is_completed: boolean | null
   completion_date: string | null
   comments: string | null
+  was_delayed?: boolean
   work_orders: {
     wo_number: string
     customer_name: string
@@ -51,6 +59,24 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
 
   const { user } = useAuth()
   const { toast } = useToast()
+
+  const isCurrentlyDelayed =
+    !!task.finish_date &&
+    differenceInDays(startOfDay(new Date()), startOfDay(new Date(task.finish_date))) > 0 &&
+    !task.is_completed
+  const isDelayed = task.was_delayed || isCurrentlyDelayed
+
+  useEffect(() => {
+    if (isCurrentlyDelayed && !task.was_delayed) {
+      supabase
+        .from('wo_tasks')
+        .update({ was_delayed: true })
+        .eq('id', task.id)
+        .then(() => {
+          if (onUpdate) onUpdate()
+        })
+    }
+  }, [isCurrentlyDelayed, task.was_delayed, task.id, onUpdate])
 
   const loadComments = useCallback(async () => {
     const { data, error } = await supabase
@@ -153,34 +179,53 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
     }
   }
 
-  const handleToggleComplete = async (checked: boolean) => {
+  const handleStatusChange = async (newStatus: string) => {
     setIsSaving(true)
-    const completionDate = checked ? new Date().toISOString() : null
+    const isCompleted = newStatus === 'Complete'
+    const completionDate = isCompleted ? new Date().toISOString() : null
+
+    let delayed = task.was_delayed
+    if (!delayed && task.finish_date) {
+      const finish = startOfDay(new Date(task.finish_date))
+      const today = startOfDay(new Date())
+      if (differenceInDays(today, finish) > 0) {
+        delayed = true
+      }
+    }
+
     try {
       const { error } = await supabase
         .from('wo_tasks')
         .update({
-          is_completed: checked,
+          status: newStatus,
+          is_completed: isCompleted,
           completion_date: completionDate,
+          was_delayed: delayed,
         })
         .eq('id', task.id)
 
       if (error) throw error
 
-      if (checked) {
+      if (isCompleted && !task.is_completed) {
         await supabase.from('wo_task_comments_history').insert({
           task_id: task.id,
           comment: 'Task marked as completed',
           author_id: user?.id,
         })
+      } else if (!isCompleted && task.is_completed) {
+        await supabase.from('wo_task_comments_history').insert({
+          task_id: task.id,
+          comment: `Task reopened and status changed to ${newStatus}`,
+          author_id: user?.id,
+        })
       }
 
-      toast({ title: checked ? 'Tarefa marcada como concluída' : 'Tarefa reaberta' })
+      toast({ title: `Status atualizado para ${newStatus}` })
       if (onUpdate) onUpdate()
       loadComments()
     } catch (e: any) {
       console.error(e)
-      toast({ title: 'Erro ao atualizar tarefa', variant: 'destructive' })
+      toast({ title: 'Erro ao atualizar status', variant: 'destructive' })
     } finally {
       setIsSaving(false)
     }
@@ -391,26 +436,38 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
       </CardContent>
 
       <CardFooter className="pt-4 border-t bg-muted/10 flex-col items-start gap-3">
-        {/* 5. Checkbox Mark as Complete */}
-        <div className="flex items-center space-x-2 w-full">
-          <Checkbox
-            id={`complete-${task.id}`}
-            checked={!!task.is_completed}
-            onCheckedChange={(checked) => handleToggleComplete(checked as boolean)}
-            disabled={isSaving}
-            className="h-5 w-5"
-          />
-          <Label
-            htmlFor={`complete-${task.id}`}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none"
-          >
-            Mark as Complete
-          </Label>
+        {/* 5. Status Selection */}
+        <div className="flex items-center justify-between w-full gap-2">
+          <div className="flex items-center space-x-2">
+            <Label className="text-sm font-medium">Status:</Label>
+            <Select
+              value={!task.status || task.status === 'Pending' ? 'Not Started' : task.status}
+              onValueChange={handleStatusChange}
+              disabled={isSaving}
+            >
+              <SelectTrigger className="w-[140px] h-8 text-sm bg-background">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Not Started">Not Started</SelectItem>
+                <SelectItem value="In Process">In Process</SelectItem>
+                <SelectItem value="Complete">Complete</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isDelayed && (
+            <Badge
+              variant="destructive"
+              className="shrink-0 bg-red-500 hover:bg-red-600 text-[10px] px-1.5 py-0 h-5"
+            >
+              Task Delayed
+            </Badge>
+          )}
         </div>
 
         {/* 6. Completion Date */}
         {task.is_completed && task.completion_date && (
-          <div className="flex items-center text-sm text-emerald-600 dark:text-emerald-400 font-bold pl-7 animate-in fade-in slide-in-from-left-2">
+          <div className="flex items-center text-sm text-emerald-600 dark:text-emerald-400 font-bold animate-in fade-in slide-in-from-left-2 mt-1">
             <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
             Completed on {format(new Date(task.completion_date), 'dd/MM/yyyy HH:mm')}
           </div>
