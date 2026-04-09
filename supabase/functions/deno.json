@@ -1,3 +1,5 @@
 {
-  "_versions": {}
+  "_versions": {
+    "update-task-status": 1
+  }
 }
