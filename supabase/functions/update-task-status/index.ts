@@ -62,11 +62,64 @@ Deno.serve(async (req: Request) => {
       throw atRiskError
     }
 
+    // Rule 3: If task is 'parked' for more than 3 days, notify assigned user
+    const threeDaysAgo = new Date(now)
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+    const parkedDateStr = threeDaysAgo.toISOString()
+
+    const { data: parkedTasks, error: parkedError } = await supabase
+      .from('wo_tasks')
+      .select('id, assigned_to, task_name')
+      .eq('status', 'parked')
+      .lt('updated_at', parkedDateStr)
+      .not('assigned_to', 'is', null)
+
+    if (parkedError) {
+      console.error('Error fetching parked tasks:', parkedError)
+      throw parkedError
+    }
+
+    let parkedNotificationsCount = 0
+    if (parkedTasks && parkedTasks.length > 0) {
+      const taskIds = parkedTasks.map((t) => t.id)
+      const { data: existingNotifs } = await supabase
+        .from('notifications')
+        .select('related_entity_id')
+        .in('related_entity_id', taskIds)
+        .like('message', '%Parked por mais de 3 dias%')
+
+      const notifiedTaskIds = new Set(existingNotifs?.map((n) => n.related_entity_id) || [])
+
+      const notificationsToInsert = parkedTasks
+        .filter((task) => !notifiedTaskIds.has(task.id))
+        .map((task) => ({
+          user_id: task.assigned_to,
+          type: 'System',
+          message: `A tarefa "${task.task_name}" está em status Parked por mais de 3 dias.`,
+          related_entity_id: task.id,
+          related_entity_type: 'wo_tasks',
+          is_read: false,
+        }))
+
+      if (notificationsToInsert.length > 0) {
+        const { error: notifyError } = await supabase
+          .from('notifications')
+          .insert(notificationsToInsert)
+
+        if (notifyError) {
+          console.error('Error inserting parked notifications:', notifyError)
+          throw notifyError
+        }
+        parkedNotificationsCount = notificationsToInsert.length
+      }
+    }
+
     return new Response(
       JSON.stringify({
         message: 'Tasks updated successfully',
         delayedCount: delayedTasks?.length || 0,
         atRiskCount: atRiskTasks?.length || 0,
+        parkedNotificationsCount,
         timestamp: new Date().toISOString(),
       }),
       {
