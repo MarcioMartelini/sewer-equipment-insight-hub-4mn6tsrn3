@@ -9,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { X, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface WorkOrderTableProps {
@@ -20,7 +21,24 @@ interface WorkOrderTableProps {
 }
 
 export function WorkOrderTable({ data, totalCount, onClearFilters }: WorkOrderTableProps) {
+  const [displayLimit, setDisplayLimit] = useState(100)
   const isFiltered = totalCount !== undefined && data.length < totalCount
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const lastElementRef = useCallback(
+    (node: HTMLTableRowElement | null) => {
+      if (observerRef.current) observerRef.current.disconnect()
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && displayLimit < data.length) {
+          setDisplayLimit((prev) => prev + 100)
+        }
+      })
+      if (node) observerRef.current.observe(node)
+    },
+    [displayLimit, data.length],
+  )
+
+  const displayData = data.slice(0, displayLimit)
 
   if (data.length === 0) {
     return (
@@ -76,37 +94,51 @@ export function WorkOrderTable({ data, totalCount, onClearFilters }: WorkOrderTa
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((wo) => (
-              <TableRow key={wo.id} className="group hover:bg-slate-50/50 transition-colors">
-                <TableCell className="font-semibold text-slate-900">
-                  {wo.woNumber || wo.id}
-                </TableCell>
-                <TableCell className="font-medium text-slate-700">{wo.customer}</TableCell>
-                <TableCell className="hidden md:table-cell text-slate-500">
-                  {wo.productType}
-                </TableCell>
-                <TableCell>
-                  <StatusBadge status={wo.status} />
-                </TableCell>
-                <TableCell className="text-slate-600 font-medium">
-                  {formatDate(wo.dueDate)}
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  <div className="flex items-center gap-3">
-                    <Progress
-                      value={wo.progress}
-                      className="h-2 flex-1 bg-slate-100"
-                      indicatorClassName={cn(
-                        'bg-indigo-500',
-                        wo.progress === 100 && 'bg-emerald-500',
-                        wo.status === 'Delayed' && 'bg-red-500',
-                      )}
-                    />
-                    <span className="text-xs font-medium text-slate-500 w-8">{wo.progress}%</span>
-                  </div>
+            {displayData.map((wo, i) => {
+              const isLast = i === displayData.length - 1
+              return (
+                <TableRow
+                  key={wo.id}
+                  ref={isLast ? lastElementRef : null}
+                  className="group hover:bg-slate-50/50 transition-colors"
+                >
+                  <TableCell className="font-semibold text-slate-900">
+                    {wo.woNumber || wo.id}
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-700">{wo.customer}</TableCell>
+                  <TableCell className="hidden md:table-cell text-slate-500">
+                    {wo.productType}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={wo.status} />
+                  </TableCell>
+                  <TableCell className="text-slate-600 font-medium">
+                    {formatDate(wo.dueDate)}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <div className="flex items-center gap-3">
+                      <Progress
+                        value={wo.progress}
+                        className="h-2 flex-1 bg-slate-100"
+                        indicatorClassName={cn(
+                          'bg-indigo-500',
+                          wo.progress === 100 && 'bg-emerald-500',
+                          wo.status === 'Delayed' && 'bg-red-500',
+                        )}
+                      />
+                      <span className="text-xs font-medium text-slate-500 w-8">{wo.progress}%</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+            {displayLimit < data.length && (
+              <TableRow>
+                <TableCell colSpan={6} className="h-16 text-center">
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto text-indigo-500" />
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
