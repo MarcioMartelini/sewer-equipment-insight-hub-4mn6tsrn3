@@ -16,41 +16,18 @@ import { useToast } from '@/hooks/use-toast'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import logoUrl from '@/assets/design-sem-nome-70de8.png'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useAuth } from '@/hooks/use-auth'
+import { LateCardPullDialog } from './LateCardPullDialog'
 
 export function LateCardPullsTable() {
   const [pulls, setPulls] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogState, setDialogState] = useState<'create' | 'edit' | 'view' | null>(null)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedPull, setSelectedPull] = useState<any>(null)
   const [filters, setFilters] = useState({ dateFrom: '', dateTo: '', pn: '', supervisor: '' })
-  const [formData, setFormData] = useState({
-    date: '',
-    part_number: '',
-    area_supervisor: '',
-    occurrence_description: '',
-    status: 'pending',
-  })
 
   const { toast } = useToast()
-  const { user } = useAuth()
 
   const fetchData = async () => {
     setLoading(true)
@@ -71,14 +48,7 @@ export function LateCardPullsTable() {
   }, [filters])
 
   const openDialog = (type: 'create' | 'edit' | 'view', pull?: any) => {
-    setSelectedId(pull?.id || null)
-    setFormData({
-      date: pull?.date || new Date().toISOString().split('T')[0],
-      part_number: pull?.part_number || '',
-      area_supervisor: pull?.area_supervisor || '',
-      occurrence_description: pull?.occurrence_description || '',
-      status: pull?.status || 'pending',
-    })
+    setSelectedPull(pull || null)
     setDialogState(type)
   }
 
@@ -130,22 +100,6 @@ export function LateCardPullsTable() {
     })
 
     doc.save(`late_card_pulls_${new Date().toISOString().split('T')[0]}.pdf`)
-  }
-
-  const handleSave = async () => {
-    const dataToSave = dialogState === 'create' ? { ...formData, created_by: user?.id } : formData
-    const req =
-      dialogState === 'create'
-        ? supabase.from('late_card_pulls').insert(dataToSave)
-        : supabase.from('late_card_pulls').update(dataToSave).eq('id', selectedId)
-
-    const { error } = await req
-    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
-    else {
-      toast({ title: 'Salvo com sucesso' })
-      setDialogState(null)
-      fetchData()
-    }
   }
 
   return (
@@ -289,82 +243,12 @@ export function LateCardPullsTable() {
           </Table>
         </div>
 
-        <Dialog open={!!dialogState} onOpenChange={(o) => !o && setDialogState(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {dialogState === 'create'
-                  ? 'Novo Late Card Pull'
-                  : dialogState === 'edit'
-                    ? 'Editar Late Card Pull'
-                    : 'Detalhes do Late Card Pull'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label>Data</Label>
-                <Input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  disabled={dialogState === 'view'}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>PN (Part Number)</Label>
-                <Input
-                  value={formData.part_number}
-                  onChange={(e) => setFormData({ ...formData, part_number: e.target.value })}
-                  disabled={dialogState === 'view'}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Supervisor</Label>
-                <Input
-                  value={formData.area_supervisor}
-                  onChange={(e) => setFormData({ ...formData, area_supervisor: e.target.value })}
-                  disabled={dialogState === 'view'}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Ocorrência</Label>
-                <Textarea
-                  value={formData.occurrence_description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, occurrence_description: e.target.value })
-                  }
-                  disabled={dialogState === 'view'}
-                />
-              </div>
-              {dialogState !== 'create' && (
-                <div className="grid gap-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(v) => setFormData({ ...formData, status: v })}
-                    disabled={dialogState === 'view'}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="N/A">N/A</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogState(null)}>
-                Fechar
-              </Button>
-              {dialogState !== 'view' && <Button onClick={handleSave}>Salvar</Button>}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <LateCardPullDialog
+          dialogState={dialogState}
+          setDialogState={setDialogState}
+          pull={selectedPull}
+          onSaved={fetchData}
+        />
       </CardContent>
     </Card>
   )
