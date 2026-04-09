@@ -69,8 +69,31 @@ export function WarrantyClaimsTable() {
   const [formData, setFormData] = useState(DEFAULT_FORM)
   const [itemToDelete, setItemToDelete] = useState<any>(null)
 
+  const [customers, setCustomers] = useState<string[]>([])
+  const [productFamilies, setProductFamilies] = useState<string[]>([])
+  const [machineModels, setMachineModels] = useState<string[]>([])
+
   const { toast } = useToast()
   const { user } = useAuth()
+
+  const fetchDropdownData = async () => {
+    const { data: custData } = await supabase
+      .from('customers')
+      .select('customer_name')
+      .order('customer_name')
+    if (custData)
+      setCustomers(Array.from(new Set(custData.map((c) => c.customer_name).filter(Boolean))))
+
+    const { data: quotesData } = await supabase
+      .from('quotes')
+      .select('product_family, machine_model')
+    if (quotesData) {
+      setProductFamilies(
+        Array.from(new Set(quotesData.map((q) => q.product_family).filter(Boolean))),
+      )
+      setMachineModels(Array.from(new Set(quotesData.map((q) => q.machine_model).filter(Boolean))))
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -93,6 +116,7 @@ export function WarrantyClaimsTable() {
 
   useEffect(() => {
     fetchData()
+    fetchDropdownData()
   }, [])
 
   const handleOpenModal = (mode: ModalMode, claim?: any) => {
@@ -101,20 +125,46 @@ export function WarrantyClaimsTable() {
   }
 
   const handleSave = async () => {
-    if (modalMode === 'create') {
-      const { error } = await supabase
-        .from('warranty_claims')
-        .insert({ ...formData, created_by: user?.id })
-      if (error) throw error
-    } else if (modalMode === 'edit' && formData.id) {
-      const { id, created_at, updated_at, created_by, ...updateData } = formData as any
-      const { error } = await supabase.from('warranty_claims').update(updateData).eq('id', id)
-      if (error) throw error
+    if (
+      !formData.date ||
+      !formData.customer_name ||
+      !formData.product_family ||
+      !formData.machine_model ||
+      !formData.occurrence_description
+    ) {
+      toast({
+        title: 'Validation Error',
+        description:
+          'Please fill in all required fields (Date, Customer, Product Family, Machine Model, Occurrence Description).',
+        variant: 'destructive',
+      })
+      return
     }
 
-    toast({ title: modalMode === 'create' ? 'Claim created' : 'Claim updated' })
-    setModalMode(null)
-    fetchData()
+    try {
+      if (modalMode === 'create') {
+        const { error } = await supabase
+          .from('warranty_claims')
+          .insert({ ...formData, created_by: user?.id })
+        if (error) throw error
+      } else if (modalMode === 'edit' && formData.id) {
+        const { id, created_at, updated_at, created_by, ...updateData } = formData as any
+        const { error } = await supabase.from('warranty_claims').update(updateData).eq('id', id)
+        if (error) throw error
+      }
+
+      toast({
+        title: modalMode === 'create' ? 'Claim created successfully' : 'Claim updated successfully',
+      })
+      setModalMode(null)
+      fetchData()
+    } catch (error: any) {
+      toast({
+        title: 'Error saving claim',
+        description: error.message,
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleDelete = async () => {
@@ -302,7 +352,7 @@ export function WarrantyClaimsTable() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">Date</Label>
                 <Input
                   type="date"
                   value={formData.date || ''}
@@ -311,28 +361,83 @@ export function WarrantyClaimsTable() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Customer</Label>
-                <Input
+                <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+                  Customer
+                </Label>
+                <Select
+                  disabled={isReadOnly}
                   value={formData.customer_name || ''}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                  disabled={isReadOnly}
-                />
+                  onValueChange={(v) => setFormData({ ...formData, customer_name: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                    {formData.customer_name && !customers.includes(formData.customer_name) && (
+                      <SelectItem value={formData.customer_name}>
+                        {formData.customer_name}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Product Family</Label>
-                <Input
+                <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+                  Product Family
+                </Label>
+                <Select
+                  disabled={isReadOnly}
                   value={formData.product_family || ''}
-                  onChange={(e) => setFormData({ ...formData, product_family: e.target.value })}
-                  disabled={isReadOnly}
-                />
+                  onValueChange={(v) => setFormData({ ...formData, product_family: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select family" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {productFamilies.map((f) => (
+                      <SelectItem key={f} value={f}>
+                        {f}
+                      </SelectItem>
+                    ))}
+                    {formData.product_family &&
+                      !productFamilies.includes(formData.product_family) && (
+                        <SelectItem value={formData.product_family}>
+                          {formData.product_family}
+                        </SelectItem>
+                      )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Machine Model</Label>
-                <Input
-                  value={formData.machine_model || ''}
-                  onChange={(e) => setFormData({ ...formData, machine_model: e.target.value })}
+                <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+                  Machine Model
+                </Label>
+                <Select
                   disabled={isReadOnly}
-                />
+                  value={formData.machine_model || ''}
+                  onValueChange={(v) => setFormData({ ...formData, machine_model: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {machineModels.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                    {formData.machine_model && !machineModels.includes(formData.machine_model) && (
+                      <SelectItem value={formData.machine_model}>
+                        {formData.machine_model}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Serial Number (S/N)</Label>
@@ -360,7 +465,9 @@ export function WarrantyClaimsTable() {
                 </Select>
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>Occurrence Description</Label>
+                <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+                  Occurrence Description
+                </Label>
                 <Textarea
                   value={formData.occurrence_description || ''}
                   onChange={(e) =>
@@ -368,6 +475,7 @@ export function WarrantyClaimsTable() {
                   }
                   disabled={isReadOnly}
                   rows={4}
+                  placeholder="Describe the occurrence..."
                 />
               </div>
             </div>
