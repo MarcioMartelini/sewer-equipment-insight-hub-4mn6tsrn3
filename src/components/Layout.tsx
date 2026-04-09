@@ -15,7 +15,10 @@ import {
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { useNotifications } from '@/hooks/use-notifications'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,6 +105,24 @@ export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const [profile, setProfile] = useState<{
+    full_name?: string
+    role?: string
+    avatar_url?: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (user?.id) {
+      supabase
+        .from('users')
+        .select('full_name, role, avatar_url')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setProfile(data)
+        })
+    }
+  }, [user?.id])
 
   const handleSignOut = async () => {
     await signOut()
@@ -172,20 +193,44 @@ export default function Layout() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 outline-none"
+                    className="flex items-center gap-2 p-1 pr-3 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 outline-none"
                     title="Account Menu"
                   >
-                    <User className="w-5 h-5" />
+                    <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
+                      <AvatarImage
+                        src={profile?.avatar_url || ''}
+                        alt={profile?.full_name || 'User avatar'}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                        {profile?.full_name
+                          ? profile.full_name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .substring(0, 2)
+                              .toUpperCase()
+                          : user?.email?.substring(0, 2).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start hidden sm:flex text-left">
+                      <span className="text-sm font-medium leading-none text-slate-900 dark:text-slate-100">
+                        {profile?.full_name || user?.email?.split('@')[0]}
+                      </span>
+                      <span className="text-xs text-muted-foreground mt-1 capitalize">
+                        {profile?.role || 'User'}
+                      </span>
+                    </div>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-auto min-w-[14rem] max-w-[24rem]">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-normal break-all">
-                        {user?.email || 'Account'}
+                        {profile?.full_name || 'Account'}
                       </p>
-                      <p className="text-xs leading-none text-muted-foreground pt-1">
-                        Manage your session
+                      <p className="text-xs leading-none text-muted-foreground pt-1 break-all">
+                        {user?.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
