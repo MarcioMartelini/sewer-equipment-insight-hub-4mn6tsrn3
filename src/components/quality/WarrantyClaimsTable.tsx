@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit2 } from 'lucide-react'
+import { Edit2, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -29,20 +30,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useAuth } from '@/hooks/use-auth'
 
 export function WarrantyClaimsTable() {
   const [claims, setClaims] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<any>(null)
+  const [creating, setCreating] = useState(false)
   const [status, setStatus] = useState('')
-  const [notes, setNotes] = useState('')
+  const [formData, setFormData] = useState({
+    date: '',
+    customer_name: '',
+    product_family: '',
+    machine_model: '',
+    serial_number: '',
+    occurrence_description: '',
+  })
+
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const fetchData = async () => {
     setLoading(true)
     const { data } = await supabase
-      .from('quality_warranty_claims')
-      .select('*, work_orders(wo_number)')
+      .from('warranty_claims' as any)
+      .select('*')
       .order('created_at', { ascending: false })
     if (data) setClaims(data)
     setLoading(false)
@@ -55,19 +67,13 @@ export function WarrantyClaimsTable() {
   const handleEdit = (claim: any) => {
     setEditing(claim)
     setStatus(claim.status || 'pending')
-    setNotes(claim.resolution_notes || '')
   }
 
-  const handleSave = async () => {
+  const handleSaveStatus = async () => {
     if (!editing) return
-    const resolvedDate =
-      status === 'resolved' && editing.status !== 'resolved'
-        ? new Date().toISOString().split('T')[0]
-        : editing.resolved_date
-
     const { error } = await supabase
-      .from('quality_warranty_claims')
-      .update({ status, resolution_notes: notes, resolved_date: resolvedDate })
+      .from('warranty_claims' as any)
+      .update({ status })
       .eq('id', editing.id)
 
     if (error) {
@@ -79,66 +85,86 @@ export function WarrantyClaimsTable() {
     }
   }
 
+  const handleCreate = async () => {
+    const { error } = await supabase.from('warranty_claims' as any).insert({
+      ...formData,
+      created_by: user?.id,
+    })
+
+    if (error) {
+      toast({ title: 'Erro ao criar', description: error.message, variant: 'destructive' })
+    } else {
+      toast({ title: 'Criado com sucesso' })
+      setCreating(false)
+      setFormData({
+        date: '',
+        customer_name: '',
+        product_family: '',
+        machine_model: '',
+        serial_number: '',
+        occurrence_description: '',
+      })
+      fetchData()
+    }
+  }
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Registro de Garantias</CardTitle>
+        <Button onClick={() => setCreating(true)} size="sm">
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Garantia
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>WO ID</TableHead>
-                <TableHead>S/N</TableHead>
+                <TableHead>Data</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Família de Produto</TableHead>
+                <TableHead>Modelo</TableHead>
+                <TableHead>S/N</TableHead>
                 <TableHead>Descrição</TableHead>
-                <TableHead>Categoria</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Reportado em</TableHead>
-                <TableHead>Resolvido em</TableHead>
                 <TableHead className="w-[80px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                     Carregando...
                   </TableCell>
                 </TableRow>
               ) : claims.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-slate-500">
-                    Nenhum sinistro registrado.
+                  <TableCell colSpan={8} className="text-center py-8 text-slate-500">
+                    Nenhum registro encontrado.
                   </TableCell>
                 </TableRow>
               ) : (
                 claims.map((claim) => (
                   <TableRow key={claim.id}>
-                    <TableCell className="font-medium">
-                      {claim.work_orders?.wo_number || '-'}
+                    <TableCell>
+                      {claim.date ? new Date(claim.date).toLocaleDateString() : '-'}
                     </TableCell>
-                    <TableCell>{claim.serial_number || '-'}</TableCell>
                     <TableCell>{claim.customer_name || '-'}</TableCell>
-                    <TableCell className="max-w-[200px] truncate" title={claim.issue_description}>
-                      {claim.issue_description || '-'}
+                    <TableCell>{claim.product_family || '-'}</TableCell>
+                    <TableCell>{claim.machine_model || '-'}</TableCell>
+                    <TableCell>{claim.serial_number || '-'}</TableCell>
+                    <TableCell
+                      className="max-w-[200px] truncate"
+                      title={claim.occurrence_description || claim.issue_description}
+                    >
+                      {claim.occurrence_description || claim.issue_description || '-'}
                     </TableCell>
-                    <TableCell>{claim.issue_category || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={claim.status === 'resolved' ? 'default' : 'secondary'}>
-                        {claim.status}
+                        {claim.status || 'pending'}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {claim.reported_date
-                        ? new Date(claim.reported_date).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {claim.resolved_date
-                        ? new Date(claim.resolved_date).toLocaleDateString()
-                        : '-'}
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(claim)}>
@@ -152,10 +178,71 @@ export function WarrantyClaimsTable() {
           </Table>
         </div>
 
+        <Dialog open={creating} onOpenChange={setCreating}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nova Garantia</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Data</Label>
+                <Input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Cliente</Label>
+                <Input
+                  value={formData.customer_name}
+                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Família de Produto</Label>
+                <Input
+                  value={formData.product_family}
+                  onChange={(e) => setFormData({ ...formData, product_family: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Modelo da Máquina</Label>
+                <Input
+                  value={formData.machine_model}
+                  onChange={(e) => setFormData({ ...formData, machine_model: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Número de Série (S/N)</Label>
+                <Input
+                  value={formData.serial_number}
+                  onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Descrição da Ocorrência</Label>
+                <Textarea
+                  value={formData.occurrence_description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, occurrence_description: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreating(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleCreate}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Garantia</DialogTitle>
+              <DialogTitle>Atualizar Status</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -172,20 +259,12 @@ export function WarrantyClaimsTable() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Notas de Resolução</Label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Detalhes da resolução..."
-                />
-              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditing(null)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSave}>Salvar</Button>
+              <Button onClick={handleSaveStatus}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
