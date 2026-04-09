@@ -38,6 +38,7 @@ export function DepartmentTasksList({ department }: { department: string }) {
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [taskFilter, setTaskFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
@@ -73,6 +74,10 @@ export function DepartmentTasksList({ department }: { department: string }) {
     fetchTasks()
   }, [department])
 
+  const uniqueTaskNames = useMemo(() => {
+    return Array.from(new Set(tasks.map((t) => t.task_name))).sort()
+  }, [tasks])
+
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
       const searchLower = search.toLowerCase()
@@ -85,12 +90,14 @@ export function DepartmentTasksList({ department }: { department: string }) {
       if (statusFilter === 'in_progress' && (t.is_completed || t.progress === 0)) return false
       if (statusFilter === 'completed' && !t.is_completed) return false
 
+      if (taskFilter !== 'all' && t.task_name !== taskFilter) return false
+
       if (dateFrom && t.finish_date && t.finish_date < dateFrom) return false
       if (dateTo && t.finish_date && t.finish_date > dateTo) return false
 
       return true
     })
-  }, [tasks, search, statusFilter, dateFrom, dateTo])
+  }, [tasks, search, statusFilter, taskFilter, dateFrom, dateTo])
 
   const stats = useMemo(() => {
     const total = filteredTasks.length
@@ -185,6 +192,22 @@ export function DepartmentTasksList({ department }: { department: string }) {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
           />
+        </div>
+
+        <div className="w-full md:w-48">
+          <Select value={taskFilter} onValueChange={setTaskFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Task Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tasks</SelectItem>
+              {uniqueTaskNames.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="w-full md:w-48">

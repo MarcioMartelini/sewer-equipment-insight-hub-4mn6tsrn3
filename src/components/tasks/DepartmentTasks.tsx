@@ -16,6 +16,7 @@ export function DepartmentTasks({ department }: { department: string }) {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [taskFilter, setTaskFilter] = useState('all')
 
   const fetchTasks = async () => {
     setLoading(true)
@@ -43,6 +44,8 @@ export function DepartmentTasks({ department }: { department: string }) {
     fetchTasks()
   }, [department])
 
+  const uniqueTaskNames = Array.from(new Set(tasks.map((t) => t.task_name))).sort()
+
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       task.task_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -53,6 +56,8 @@ export function DepartmentTasks({ department }: { department: string }) {
 
     if (statusFilter === 'pending') return !task.is_completed
     if (statusFilter === 'completed') return task.is_completed
+
+    if (taskFilter !== 'all' && task.task_name !== taskFilter) return false
 
     return true
   })
@@ -68,13 +73,26 @@ export function DepartmentTasks({ department }: { department: string }) {
             className="w-full sm:w-[350px]"
           />
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Select value={taskFilter} onValueChange={setTaskFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filtrar por tarefa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Tarefas</SelectItem>
+              {uniqueTaskNames.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filtrar status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as Tarefas</SelectItem>
+              <SelectItem value="all">Todos os Status</SelectItem>
               <SelectItem value="pending">Pendentes</SelectItem>
               <SelectItem value="completed">Concluídas</SelectItem>
             </SelectContent>
