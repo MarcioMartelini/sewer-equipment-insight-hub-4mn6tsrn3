@@ -579,12 +579,22 @@ export default function Sales() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-[800px] grid-cols-4 bg-slate-100 overflow-x-auto h-auto">
-          <TabsTrigger value="dashboard">Executive Dashboard</TabsTrigger>
-          <TabsTrigger value="quotes">Quotes</TabsTrigger>
-          <TabsTrigger value="work-orders">Work Orders</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="salespersons">Salespersons</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto bg-slate-100 h-auto p-1">
+          <TabsTrigger value="dashboard" className="flex-1 whitespace-nowrap min-w-max px-4">
+            Executive Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="quotes" className="flex-1 whitespace-nowrap min-w-max px-4">
+            Quotes
+          </TabsTrigger>
+          <TabsTrigger value="work-orders" className="flex-1 whitespace-nowrap min-w-max px-4">
+            Work Orders
+          </TabsTrigger>
+          <TabsTrigger value="customers" className="flex-1 whitespace-nowrap min-w-max px-4">
+            Customers
+          </TabsTrigger>
+          <TabsTrigger value="salespersons" className="flex-1 whitespace-nowrap min-w-max px-4">
+            Salespersons
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-6">
           <SalesDashboard />
