@@ -115,8 +115,8 @@ export default function SalesDashboard() {
   }, [period])
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
+    const loadData = async (showLoading = true) => {
+      if (showLoading) setLoading(true)
       try {
         const [{ data: qData }, { data: woData }, { data: spData }, { data: cData }] =
           await Promise.all([
@@ -124,14 +124,22 @@ export default function SalesDashboard() {
               .from('quotes')
               .select(
                 'id, quote_number, customer_name, salesperson, product_family, machine_model, quote_value, profit_margin_percentage, status, created_at, approval_date, wo_number_ref',
-              ),
+              )
+              .is('deleted_at', null),
             supabase
               .from('work_orders')
               .select(
                 'id, wo_number, customer_name, product_type, machine_model, price, profit_margin, status, created_at, quote_id',
-              ),
-            supabase.from('salespersons').select('id, name, department, region'),
-            supabase.from('customers').select('id, customer_name, state, city'),
+              )
+              .is('deleted_at', null),
+            supabase
+              .from('salespersons')
+              .select('id, name, department, region')
+              .is('deleted_at', null),
+            supabase
+              .from('customers')
+              .select('id, customer_name, state, city')
+              .is('deleted_at', null),
           ])
         setQuotes(qData || [])
         setWorkOrders(woData || [])
@@ -140,10 +148,31 @@ export default function SalesDashboard() {
       } catch (error) {
         console.error(error)
       } finally {
-        setLoading(false)
+        if (showLoading) setLoading(false)
       }
     }
+
     loadData()
+
+    const channel = supabase
+      .channel('sales-dashboard')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quotes' }, () =>
+        loadData(false),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'work_orders' }, () =>
+        loadData(false),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'salespersons' }, () =>
+        loadData(false),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () =>
+        loadData(false),
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const resetFilters = () => {
