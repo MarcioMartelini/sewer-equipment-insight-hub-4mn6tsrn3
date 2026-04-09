@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
-import logoUrl from '@/assets/design-sem-nome-689e7.png'
+import logoUrl from '@/assets/design-sem-nome-70de8.png'
 
 const loadImage = (url: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
