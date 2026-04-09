@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WarrantyClaimsTable } from '@/components/quality/WarrantyClaimsTable'
 import { LateCardPullsTable } from '@/components/quality/LateCardPullsTable'
 import { QualityDashboard } from '@/components/quality/QualityDashboard'
+import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
 
 export default function Quality() {
   return (
@@ -14,14 +15,19 @@ export default function Quality() {
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:w-[500px]">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 md:w-[700px]">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="tasks">Tasks List</TabsTrigger>
           <TabsTrigger value="warranty">Warranty Claims</TabsTrigger>
           <TabsTrigger value="late_card">Late Card Pulls</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-6">
           <QualityDashboard />
+        </TabsContent>
+
+        <TabsContent value="tasks" className="mt-6">
+          <DepartmentTasksList department="Quality" />
         </TabsContent>
 
         <TabsContent value="warranty" className="mt-6">

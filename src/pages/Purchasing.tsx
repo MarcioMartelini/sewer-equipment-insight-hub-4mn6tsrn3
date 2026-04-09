@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
-import { Search, LayoutDashboard, PackageSearch, AlertCircle } from 'lucide-react'
+import { Search, LayoutDashboard, PackageSearch, AlertCircle, ListTodo } from 'lucide-react'
 import ComponentsTab from '@/components/purchasing/ComponentsTab'
 import ExpeditesTab from '@/components/purchasing/ExpeditesTab'
 import PurchasingDashboard from '@/components/purchasing/PurchasingDashboard'
+import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
 
 export default function Purchasing() {
   const [woFilter, setWoFilter] = useState('')
@@ -22,6 +23,10 @@ export default function Purchasing() {
               <TabsTrigger value="dashboard" className="flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="flex items-center gap-2">
+                <ListTodo className="h-4 w-4" />
+                <span className="hidden sm:inline">Tasks List</span>
               </TabsTrigger>
               <TabsTrigger value="components" className="flex items-center gap-2">
                 <PackageSearch className="h-4 w-4" />
@@ -47,6 +52,10 @@ export default function Purchasing() {
 
           <TabsContent value="dashboard" className="mt-0">
             <PurchasingDashboard />
+          </TabsContent>
+
+          <TabsContent value="tasks" className="mt-0">
+            <DepartmentTasksList department="Purchasing" />
           </TabsContent>
 
           <TabsContent value="components" className="mt-0">

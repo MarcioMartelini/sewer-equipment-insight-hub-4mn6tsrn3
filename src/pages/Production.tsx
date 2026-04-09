@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ProductionDashboard } from '@/components/production-dashboard'
 import { ProductionSubDepartmentDashboard } from '@/components/production-sub-department-dashboard'
 import { ProductionKanban } from '@/components/production-kanban'
+import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ export default function Production() {
     'final-assembly': 'final_assembly',
     tests: 'tests',
     kanban: 'kanban',
+    tasks: 'tasks',
   }
 
   const reverseMapping: Record<string, string> = {
@@ -37,6 +39,7 @@ export default function Production() {
     final_assembly: 'final-assembly',
     tests: 'tests',
     kanban: 'kanban',
+    tasks: 'tasks',
   }
 
   const activeTab = subDepartment ? tabMapping[subDepartment] || 'dashboard' : 'dashboard'
@@ -88,6 +91,7 @@ export default function Production() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-2 p-1">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="tasks">Tasks List</TabsTrigger>
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
           <TabsTrigger value="weld_shop">Weld Shop</TabsTrigger>
           <TabsTrigger value="paint">Paint</TabsTrigger>
@@ -99,6 +103,10 @@ export default function Production() {
 
         <TabsContent value="dashboard" className="m-0">
           <ProductionDashboard />
+        </TabsContent>
+
+        <TabsContent value="tasks" className="m-0">
+          <DepartmentTasksList department="Production" />
         </TabsContent>
 
         <TabsContent value="kanban" className="m-0">

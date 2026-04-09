@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { EngineeringTable } from '@/components/engineering/EngineeringTable'
 import { EngineeringDashboard } from '@/components/engineering/EngineeringDashboard'
+import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
 
 export default function Engineering() {
   const [woFilter, setWoFilter] = useState('')
@@ -29,9 +30,12 @@ export default function Engineering() {
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 lg:w-[700px] mb-4 h-auto lg:h-10">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 lg:w-[850px] mb-4 h-auto lg:h-10">
           <TabsTrigger value="dashboard" className="py-2">
             Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="py-2">
+            Tasks List
           </TabsTrigger>
           <TabsTrigger value="layouts" className="py-2">
             Layouts
@@ -49,6 +53,9 @@ export default function Engineering() {
 
         <TabsContent value="dashboard" className="mt-0 outline-none">
           <EngineeringDashboard />
+        </TabsContent>
+        <TabsContent value="tasks" className="mt-0 outline-none">
+          <DepartmentTasksList department="Engineering" />
         </TabsContent>
         <TabsContent value="layouts" className="mt-0 outline-none">
           <EngineeringTable type="layouts" woFilter={woFilter} />
