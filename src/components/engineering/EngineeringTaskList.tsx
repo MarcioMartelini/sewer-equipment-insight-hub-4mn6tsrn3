@@ -27,9 +27,11 @@ import {
   AlertTriangle,
   TrendingUp,
   MessageSquare,
+  Edit2,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
+import { EditStatusModal } from './EditStatusModal'
 
 type Task = {
   id: string
@@ -41,12 +43,18 @@ type Task = {
   comments: string | null
   assigned_to: string | null
   assignee_name?: string
-  wo_number?: string
+  wo_number: string
   comments_count: number
+  department?: string | null
+  sub_department?: string | null
+  customer_name?: string | null
+  machine_model?: string | null
+  product_type?: string | null
 }
 
 export function EngineeringTaskList() {
   const [tasks, setTasks] = useState<Task[]>([])
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -72,7 +80,9 @@ export function EngineeringTaskList() {
             completion_date,
             comments,
             assigned_to,
-            work_orders ( wo_number ),
+            department,
+            sub_department,
+            work_orders ( wo_number, customer_name, machine_model, product_type ),
             wo_task_comments_history ( id )
           `)
           .eq('department', 'Engineering')
@@ -88,6 +98,9 @@ export function EngineeringTaskList() {
         const formattedTasks = tasksRes.data.map((t: any) => ({
           ...t,
           wo_number: t.work_orders?.wo_number || '-',
+          customer_name: t.work_orders?.customer_name,
+          machine_model: t.work_orders?.machine_model,
+          product_type: t.work_orders?.product_type,
           assignee_name:
             usersRes.data?.find((u) => u.id === t.assigned_to)?.full_name || 'Unassigned',
           comments_count: t.wo_task_comments_history?.length || (t.comments ? 1 : 0),
@@ -133,6 +146,40 @@ export function EngineeringTaskList() {
 
     return matchesSearch && matchesStatus && matchesAssignee
   })
+
+  const handleSave = async (id: string, newStatus: string, comment?: string) => {
+    try {
+      const updates: any = { status: newStatus }
+
+      if (newStatus === 'complete') {
+        updates.completion_date = new Date().toISOString()
+        updates.is_completed = true
+      } else {
+        updates.completion_date = null
+        updates.is_completed = false
+      }
+
+      await supabase.from('wo_tasks').update(updates).eq('id', id)
+
+      if (comment) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        await supabase.from('wo_task_comments_history').insert({
+          task_id: id,
+          comment: comment,
+          status: newStatus as any,
+          author_id: user?.id,
+        })
+        await supabase.from('wo_tasks').update({ comments: comment }).eq('id', id)
+      }
+
+      fetchData()
+      setSelectedTask(null)
+    } catch (error) {
+      console.error('Error updating task:', error)
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -279,6 +326,7 @@ export function EngineeringTaskList() {
               <TableHead>Completion Date</TableHead>
               <TableHead>Comments</TableHead>
               <TableHead>Assigned To</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -296,7 +344,11 @@ export function EngineeringTaskList() {
               </TableRow>
             ) : (
               filteredTasks.map((task) => (
-                <TableRow key={task.id}>
+                <TableRow
+                  key={task.id}
+                  className="cursor-pointer hover:bg-slate-50/50"
+                  onClick={() => setSelectedTask(task)}
+                >
                   <TableCell className="font-medium">{task.wo_number}</TableCell>
                   <TableCell>{task.task_name}</TableCell>
                   <TableCell>
@@ -320,12 +372,24 @@ export function EngineeringTaskList() {
                   <TableCell className={task.assigned_to ? '' : 'text-muted-foreground italic'}>
                     {task.assignee_name}
                   </TableCell>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedTask(task)}>
+                      <Edit2 className="h-4 w-4 mr-2" /> Edit
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </div>
+
+      <EditStatusModal
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onSave={handleSave}
+      />
     </div>
   )
 }
