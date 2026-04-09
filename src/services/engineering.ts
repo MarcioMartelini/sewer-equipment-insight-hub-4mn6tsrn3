@@ -13,19 +13,20 @@ export interface EngineeringTask {
 }
 
 export async function getEngineeringTasks(type: EngineeringType): Promise<EngineeringTask[]> {
-  const tableMap = {
-    layouts: { table: 'engineering_layouts', nameCol: 'layout_name' },
-    boms: { table: 'engineering_boms', nameCol: 'bom_name' },
-    travelers: { table: 'engineering_travelers', nameCol: 'traveler_name' },
-    accessories: { table: 'engineering_accessories', nameCol: 'accessories_list_name' },
+  const searchMap: Record<string, string> = {
+    layouts: 'layout',
+    boms: 'bom',
+    travelers: 'traveler',
+    accessories: 'accessor',
   }
+  const term = searchMap[type] || type
 
-  const { table, nameCol } = tableMap[type]
-
-  const { data, error } = await supabase.from(table).select(`
+  const { data, error } = await supabase
+    .from('wo_tasks')
+    .select(`
       id,
       wo_id,
-      ${nameCol},
+      task_name,
       status,
       created_at,
       updated_at,
@@ -33,6 +34,8 @@ export async function getEngineeringTasks(type: EngineeringType): Promise<Engine
         wo_number
       )
     `)
+    .eq('department', 'Engineering')
+    .or(`sub_department.ilike.%${term}%,task_name.ilike.%${term}%`)
 
   if (error) throw error
 
@@ -40,7 +43,7 @@ export async function getEngineeringTasks(type: EngineeringType): Promise<Engine
     id: item.id,
     wo_id: item.wo_id,
     wo_number: item.work_orders?.wo_number || 'Unknown',
-    task_name: item[nameCol],
+    task_name: item.task_name,
     status: item.status || 'not started',
     created_at: item.created_at,
     updated_at: item.updated_at,
@@ -48,17 +51,8 @@ export async function getEngineeringTasks(type: EngineeringType): Promise<Engine
 }
 
 export async function updateEngineeringStatus(type: EngineeringType, id: string, status: string) {
-  const tableMap = {
-    layouts: 'engineering_layouts',
-    boms: 'engineering_boms',
-    travelers: 'engineering_travelers',
-    accessories: 'engineering_accessories',
-  }
-
-  const table = tableMap[type]
-
   const { error } = await supabase
-    .from(table)
+    .from('wo_tasks')
     .update({ status, updated_at: new Date().toISOString() })
     .eq('id', id)
 
