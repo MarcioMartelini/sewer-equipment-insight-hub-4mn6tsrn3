@@ -71,10 +71,6 @@ const navigation = [
     ],
   },
   {
-    title: 'System',
-    items: [{ title: 'Settings', icon: SettingsIcon, url: '/configuracoes' }],
-  },
-  {
     title: 'Departments',
     items: [
       { title: 'Sales', icon: Briefcase, url: '/sales' },
@@ -95,6 +91,10 @@ const navigation = [
       { title: 'Final Assembly', icon: CheckSquare, url: '/production/final-assembly' },
       { title: 'Tests', icon: FlaskConical, url: '/production/tests' },
     ],
+  },
+  {
+    title: 'System',
+    items: [{ title: 'Settings', icon: SettingsIcon, url: '/configuracoes' }],
   },
 ]
 
@@ -178,11 +178,13 @@ export default function Layout() {
                     <User className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-auto min-w-[14rem] max-w-[24rem]">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.email || 'Account'}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
+                      <p className="text-sm font-medium leading-normal break-all">
+                        {user?.email || 'Account'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground pt-1">
                         Manage your session
                       </p>
                     </div>
