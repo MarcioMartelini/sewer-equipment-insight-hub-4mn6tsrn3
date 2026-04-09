@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   getEngineeringDashboardData,
-  PeriodFilter,
+  EngineeringFilters,
   DashboardData,
 } from '@/services/engineering-dashboard'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
@@ -25,9 +18,23 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { Loader2, CheckCircle2, Clock, ListTodo, AlertTriangle, TrendingUp } from 'lucide-react'
+import { EngineeringFiltersPanel } from './EngineeringFiltersPanel'
 
 export function EngineeringDashboard() {
-  const [period, setPeriod] = useState<PeriodFilter>('30d')
+  const [filters, setFilters] = useState<EngineeringFilters>({
+    period: '30d',
+    engineer: '',
+    designer: '',
+    productDivision: '',
+    customer: '',
+    machineFamily: '',
+    machineModel: '',
+    woNumber: '',
+    tasksCompleted: false,
+    tasksAtRisk: false,
+    tasksDelayed: false,
+  })
+
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -35,7 +42,7 @@ export function EngineeringDashboard() {
     async function fetchData() {
       setLoading(true)
       try {
-        const result = await getEngineeringDashboardData(period)
+        const result = await getEngineeringDashboardData(filters)
         setData(result)
       } catch (error) {
         console.error(error)
@@ -44,7 +51,27 @@ export function EngineeringDashboard() {
       }
     }
     fetchData()
-  }, [period])
+  }, [filters])
+
+  const updateFilter = (key: keyof EngineeringFilters, value: any) => {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const resetFilters = () => {
+    setFilters({
+      period: '30d',
+      engineer: '',
+      designer: '',
+      productDivision: '',
+      customer: '',
+      machineFamily: '',
+      machineModel: '',
+      woNumber: '',
+      tasksCompleted: false,
+      tasksAtRisk: false,
+      tasksDelayed: false,
+    })
+  }
 
   if (loading || !data) {
     return (
@@ -56,22 +83,15 @@ export function EngineeringDashboard() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold">Engineering Overview</h2>
-        </div>
-        <Select value={period} onValueChange={(v: any) => setPeriod(v)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7d">Last 7 days</SelectItem>
-            <SelectItem value="30d">Last 30 days</SelectItem>
-            <SelectItem value="90d">Last 90 days</SelectItem>
-            <SelectItem value="custom">Custom (All time)</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex items-center gap-4 mb-2">
+        <h2 className="text-xl font-semibold">Engineering Overview</h2>
       </div>
+
+      <EngineeringFiltersPanel
+        filters={filters}
+        updateFilter={updateFilter}
+        resetFilters={resetFilters}
+      />
 
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -206,7 +226,7 @@ export function EngineeringDashboard() {
                 {data.topDelayed.map((wo) => (
                   <TableRow key={wo.wo_id}>
                     <TableCell className="font-medium">{wo.wo_number}</TableCell>
-                    <TableCell>{wo.customer_name || 'N/A'}</TableCell>
+                    <TableCell>{wo.customer_name}</TableCell>
                     <TableCell>{format(new Date(wo.due_date), 'MMM dd, yyyy')}</TableCell>
                     <TableCell>
                       <Badge variant="destructive">{wo.delayDays} days</Badge>
