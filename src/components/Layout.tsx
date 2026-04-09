@@ -19,6 +19,10 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
+import { format, parseISO } from 'date-fns'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,16 +52,115 @@ import {
   User,
   UserCircle,
   LogOut,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Check,
 } from 'lucide-react'
 
-function NotificationsBadge() {
-  const { unreadCount } = useNotifications()
-  if (unreadCount === 0) return null
+function NotificationsDropdown() {
+  const { unreadCount, taskAlerts, notifications, markAsRead } = useNotifications()
+  const navigate = useNavigate()
+
   return (
-    <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-    </span>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 outline-none"
+          title="Notifications"
+        >
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <span className="font-semibold text-sm">Notifications</span>
+          <Link
+            to="/notifications"
+            className="text-xs text-blue-600 hover:underline dark:text-blue-400 font-medium"
+          >
+            View all
+          </Link>
+        </div>
+        <ScrollArea className="h-[320px]">
+          {taskAlerts.length === 0 && notifications.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-3">
+              <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-full">
+                <CheckCircle2 className="w-6 h-6 text-slate-400 dark:text-slate-500" />
+              </div>
+              <p>All caught up!</p>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {taskAlerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className="flex flex-col gap-1.5 p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/work-orders/${alert.wo_id}`)}
+                >
+                  <div className="flex items-center justify-between">
+                    <Badge
+                      variant="outline"
+                      className={
+                        alert.is_overdue
+                          ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800/50'
+                          : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50'
+                      }
+                    >
+                      {alert.is_overdue ? 'Overdue' : 'Due Soon'}
+                    </Badge>
+                    <span className="text-xs font-medium text-slate-500">{alert.wo_number}</span>
+                  </div>
+                  <p className="text-sm font-medium leading-snug mt-0.5 text-slate-900 dark:text-slate-100">
+                    {alert.task_name}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1">
+                    {alert.is_overdue ? (
+                      <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                    ) : (
+                      <Clock className="w-3.5 h-3.5 text-amber-500" />
+                    )}
+                    <span>Due: {format(parseISO(alert.finish_date), 'MMM dd, yyyy')}</span>
+                  </div>
+                </div>
+              ))}
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`flex flex-col gap-1 p-4 border-b border-slate-100 dark:border-slate-800 transition-colors ${!notification.is_read ? 'bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p
+                      className={`text-sm leading-snug ${!notification.is_read ? 'font-medium text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'}`}
+                    >
+                      {notification.message}
+                    </p>
+                    {!notification.is_read && (
+                      <button
+                        onClick={() => markAsRead(notification.id)}
+                        className="shrink-0 p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors"
+                        title="Mark as read"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">
+                    {format(new Date(notification.created_at), 'MMM dd, yyyy')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -254,13 +357,7 @@ export default function Layout() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Link
-                to="/notifications"
-                className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <Bell className="w-5 h-5" />
-                <NotificationsBadge />
-              </Link>
+              <NotificationsDropdown />
             </div>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
