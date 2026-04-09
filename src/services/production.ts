@@ -151,6 +151,16 @@ export async function updateProductionStatus(
       status: status as any,
       created_at: new Date().toISOString(),
     })
+
+    if (isCompleted) {
+      await supabase.from('production_task_comments_history').insert({
+        task_id: id,
+        comment: 'Task marked as completed',
+        author_id: user?.id,
+        status: status as any,
+        created_at: new Date().toISOString(),
+      })
+    }
   }
 }
 

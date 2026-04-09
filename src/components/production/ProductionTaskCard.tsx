@@ -43,26 +43,32 @@ export function ProductionTaskCard({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
 
+  const [localTask, setLocalTask] = useState<ProductionTask>(task)
+
+  useEffect(() => {
+    setLocalTask(task)
+  }, [task])
+
   const { user } = useAuth()
   const { toast } = useToast()
 
   const isDelayed =
-    !!task.finish_date &&
-    differenceInDays(startOfDay(new Date()), startOfDay(new Date(task.finish_date))) > 0 &&
-    !task.is_completed
+    !!localTask.finish_date &&
+    differenceInDays(startOfDay(new Date()), startOfDay(new Date(localTask.finish_date))) > 0 &&
+    !localTask.is_completed
 
   const loadComments = useCallback(async () => {
     const { data, error } = await supabase
       .from('production_task_comments_history')
       .select('*, author:users(full_name)')
-      .eq('task_id', task.id)
+      .eq('task_id', localTask.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
     if (!error && data) {
       setCommentsList(data)
     }
-  }, [task.id])
+  }, [localTask.id])
 
   useEffect(() => {
     loadComments()
@@ -91,7 +97,7 @@ export function ProductionTaskCard({
     setIsSaving(true)
     try {
       const { error } = await supabase.from('production_task_comments_history').insert({
-        task_id: task.id,
+        task_id: localTask.id,
         comment: newComment.trim(),
         author_id: user?.id,
       })
@@ -153,8 +159,8 @@ export function ProductionTaskCard({
   }
 
   const currentStatusValue = (() => {
-    if (!task.status) return 'not_started'
-    const s = task.status.toLowerCase()
+    if (!localTask.status) return 'not_started'
+    const s = localTask.status.toLowerCase()
     if (s === 'pending' || s === 'not started' || s === 'not_started') return 'not_started'
     if (s === 'in process' || s === 'in progress' || s === 'on track' || s === 'on_track')
       return 'on_track'
@@ -197,6 +203,17 @@ export function ProductionTaskCard({
     const isCompleted = newStatus === 'complete'
     const completionDate = isCompleted ? new Date().toISOString() : null
 
+    const oldStatusFormatted = formatStatus(currentStatusValue)
+    const newStatusFormatted = formatStatus(newStatus)
+
+    // Optimistic Update
+    setLocalTask((prev) => ({
+      ...prev,
+      status: newStatus,
+      is_completed: isCompleted,
+      completion_date: completionDate,
+    }))
+
     try {
       const { error } = await supabase
         .from('production_tasks')
@@ -206,20 +223,27 @@ export function ProductionTaskCard({
           completion_date: completionDate,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', task.id)
+        .eq('id', localTask.id)
 
       if (error) throw error
 
-      const oldStatusFormatted = formatStatus(currentStatusValue)
-      const newStatusFormatted = formatStatus(newStatus)
-
       await supabase.from('production_task_comments_history').insert({
-        task_id: task.id,
+        task_id: localTask.id,
         comment: `Status changed from ${oldStatusFormatted} to ${newStatusFormatted}`,
         author_id: user?.id,
         status: newStatus as any,
         created_at: new Date().toISOString(),
       })
+
+      if (isCompleted) {
+        await supabase.from('production_task_comments_history').insert({
+          task_id: localTask.id,
+          comment: 'Task marked as completed',
+          author_id: user?.id,
+          status: newStatus as any,
+          created_at: new Date().toISOString(),
+        })
+      }
 
       toast({ title: `Status atualizado para ${newStatusFormatted}` })
       if (onUpdate) onUpdate()
@@ -227,6 +251,8 @@ export function ProductionTaskCard({
     } catch (e: any) {
       console.error(e)
       toast({ title: 'Erro ao atualizar status', variant: 'destructive' })
+      // Revert optimistic update
+      setLocalTask(task)
     } finally {
       setIsSaving(false)
     }
@@ -235,29 +261,30 @@ export function ProductionTaskCard({
   return (
     <Card
       className={cn(
-        'flex flex-col shrink-0 h-fit min-h-min',
-        task.is_completed && 'opacity-80 bg-muted/30',
+        'flex flex-col shrink-0 h-fit min-h-min transition-all duration-300',
+        localTask.is_completed && 'opacity-80 bg-muted/30 border-emerald-500/20',
       )}
     >
       <CardHeader className="pb-3 border-b">
         <div className="flex justify-between items-start gap-2">
           <div>
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              {task.task_name}
+              {localTask.task_name}
             </CardTitle>
             <div className="text-sm text-muted-foreground mt-2 flex flex-col gap-1">
               <div className="flex items-center gap-1.5">
                 <Briefcase className="w-3.5 h-3.5" />
-                {task.department} {task.sub_department ? `> ${task.sub_department}` : ''}
+                {localTask.department}{' '}
+                {localTask.sub_department ? `> ${localTask.sub_department}` : ''}
               </div>
-              {task.assigned_to_name && (
+              {localTask.assigned_to_name && (
                 <div className="flex items-center gap-1.5 text-xs mt-0.5">
-                  Responsável: <span className="font-medium">{task.assigned_to_name}</span>
+                  Responsável: <span className="font-medium">{localTask.assigned_to_name}</span>
                 </div>
               )}
             </div>
           </div>
-          {task.is_completed && (
+          {localTask.is_completed && (
             <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 shrink-0">
               Concluída
             </Badge>
@@ -270,18 +297,18 @@ export function ProductionTaskCard({
         <div className="space-y-1.5 p-3 bg-muted/50 rounded-md text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground font-medium">WO Number:</span>
-            <span className="font-semibold">{task.wo_number || '-'}</span>
+            <span className="font-semibold">{localTask.wo_number || '-'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground font-medium">Customer:</span>
-            <span className="font-medium text-right line-clamp-1" title={task.customer_name}>
-              {task.customer_name || '-'}
+            <span className="font-medium text-right line-clamp-1" title={localTask.customer_name}>
+              {localTask.customer_name || '-'}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground font-medium">Family / Model:</span>
             <span className="font-medium text-right">
-              {task.product_type || '-'} / {task.machine_model || '-'}
+              {localTask.product_type || '-'} / {localTask.machine_model || '-'}
             </span>
           </div>
         </div>
@@ -296,7 +323,7 @@ export function ProductionTaskCard({
               <span className="text-xs text-muted-foreground">Start Date</span>
               <div className="flex items-center gap-1.5 text-sm font-medium">
                 <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                {task.start_date ? format(new Date(task.start_date), 'dd/MM/yyyy') : '-'}
+                {localTask.start_date ? format(new Date(localTask.start_date), 'dd/MM/yyyy') : '-'}
               </div>
             </div>
             <div className="flex flex-col gap-1">
@@ -304,11 +331,13 @@ export function ProductionTaskCard({
               <div
                 className={cn(
                   'flex items-center gap-1.5 text-sm font-medium px-2 py-0.5 rounded-md border w-fit',
-                  getDateColor(task.finish_date),
+                  getDateColor(localTask.finish_date),
                 )}
               >
                 <CalendarIcon className="w-3.5 h-3.5" />
-                {task.finish_date ? format(new Date(task.finish_date), 'dd/MM/yyyy') : '-'}
+                {localTask.finish_date
+                  ? format(new Date(localTask.finish_date), 'dd/MM/yyyy')
+                  : '-'}
               </div>
             </div>
           </div>
@@ -324,15 +353,19 @@ export function ProductionTaskCard({
               placeholder="Digite seu comentário..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="min-h-[80px] resize-none text-sm"
-              disabled={isSaving || !!task.is_completed}
+              className={cn(
+                'min-h-[80px] resize-none text-sm transition-colors',
+                localTask.is_completed && 'bg-muted/50 cursor-not-allowed',
+              )}
+              disabled={isSaving}
+              readOnly={!!localTask.is_completed}
             />
             <div className="flex justify-end">
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={handleAddComment}
-                disabled={isSaving || !newComment.trim() || !!task.is_completed}
+                disabled={isSaving || !newComment.trim() || !!localTask.is_completed}
               >
                 {isSaving ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
@@ -414,7 +447,7 @@ export function ProductionTaskCard({
 
                     <div className="flex items-center gap-1 shrink-0 pt-0.5">
                       {user?.id === comment.author_id &&
-                        !task.is_completed &&
+                        !localTask.is_completed &&
                         editingCommentId !== comment.id &&
                         comment.comment !== 'Task marked as completed' &&
                         !comment.comment.startsWith('Status changed from') && (
@@ -430,7 +463,7 @@ export function ProductionTaskCard({
                           </button>
                         )}
                       {isAdmin &&
-                        !task.is_completed &&
+                        !localTask.is_completed &&
                         comment.comment !== 'Task marked as completed' &&
                         !comment.comment.startsWith('Status changed from') && (
                           <button
@@ -519,10 +552,10 @@ export function ProductionTaskCard({
         </div>
 
         {/* 6. Completion Date */}
-        {task.is_completed && task.completion_date && (
-          <div className="flex items-center text-sm text-emerald-600 dark:text-emerald-400 font-bold animate-in fade-in slide-in-from-left-2 mt-1">
+        {localTask.is_completed && localTask.completion_date && (
+          <div className="flex items-center text-sm text-emerald-600 dark:text-emerald-400 font-bold animate-in fade-in slide-in-from-left-2 mt-1 p-2 bg-emerald-50 dark:bg-emerald-950/30 rounded-md border border-emerald-100 dark:border-emerald-900/50 w-full justify-center">
             <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
-            Completed on {format(new Date(task.completion_date), 'dd/MM/yyyy HH:mm')}
+            Completed on {format(new Date(localTask.completion_date), 'dd/MM/yyyy HH:mm')}
           </div>
         )}
       </CardFooter>
