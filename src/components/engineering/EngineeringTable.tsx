@@ -16,6 +16,7 @@ import { EngineeringType, EngineeringTask } from '@/services/engineering'
 import { EditStatusModal } from './EditStatusModal'
 import { Edit2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 interface EngineeringTableProps {
   type: EngineeringType
@@ -123,7 +124,21 @@ export function EngineeringTable({ type, woFilter }: EngineeringTableProps) {
           task={selectedTask}
           isOpen={!!selectedTask}
           onClose={() => setSelectedTask(null)}
-          onSave={handleUpdateStatus}
+          onSave={async (id, status, comment) => {
+            await handleUpdateStatus(id, status)
+            if (comment) {
+              const {
+                data: { user },
+              } = await supabase.auth.getUser()
+              await supabase.from('wo_task_comments_history').insert({
+                task_id: id,
+                comment: comment,
+                status: status as any,
+                author_id: user?.id,
+              })
+              await supabase.from('wo_tasks').update({ comments: comment }).eq('id', id)
+            }
+          }}
         />
       </div>
     </div>
