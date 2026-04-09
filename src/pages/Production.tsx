@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProductionDashboard } from '@/components/production/ProductionDashboard'
 import { ProductionTasks } from '@/components/production/ProductionTasks'
+import { ProductionKanban } from '@/components/production/ProductionKanban'
 
 export default function Production() {
   const { subDepartment } = useParams()
@@ -27,6 +28,7 @@ export default function Production() {
         <TabsList className="mb-4 flex flex-wrap h-auto">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="tasks">Task Lists</TabsTrigger>
+          <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
           <TabsTrigger value="weld_shop">Weld Shop</TabsTrigger>
           <TabsTrigger value="paint">Paint</TabsTrigger>
           <TabsTrigger value="sub_assembly">Sub Assembly</TabsTrigger>
@@ -39,7 +41,13 @@ export default function Production() {
           <ProductionDashboard />
         </TabsContent>
 
-        {currentTab !== 'dashboard' && (
+        {currentTab === 'kanban' && (
+          <TabsContent value="kanban" className="mt-0">
+            <ProductionKanban />
+          </TabsContent>
+        )}
+
+        {currentTab !== 'dashboard' && currentTab !== 'kanban' && (
           <TabsContent value={currentTab} className="mt-0">
             <ProductionTasks type={currentTab === 'tasks' ? 'all' : (currentTab as any)} />
           </TabsContent>
