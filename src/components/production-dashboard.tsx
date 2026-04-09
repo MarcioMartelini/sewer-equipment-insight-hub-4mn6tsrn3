@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { AlertCircle, CheckCircle2, Clock, ListTodo, TrendingDown } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 const DEPARTMENTS = [
   { t: 'production_weld_shop', n: 'Weld Shop' },
@@ -123,11 +125,17 @@ export function ProductionDashboard() {
   }, [data])
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Dashboard Executivo</h2>
-          <p className="text-muted-foreground">Métricas e acompanhamento do chão de fábrica.</p>
+    <Tabs defaultValue="overview" className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+        <div className="space-y-2">
+          <div>
+            <h2 className="text-2xl font-bold">Production Dashboard</h2>
+            <p className="text-muted-foreground">Métricas e acompanhamento do chão de fábrica.</p>
+          </div>
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="tasks">Task Schedule</TabsTrigger>
+          </TabsList>
         </div>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-[180px]">
@@ -145,7 +153,7 @@ export function ProductionDashboard() {
       {loading ? (
         <p className="text-muted-foreground">Carregando...</p>
       ) : (
-        <>
+        <TabsContent value="overview" className="space-y-6 mt-0">
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
             <MetricCard
               title="Tarefas"
@@ -268,9 +276,13 @@ export function ProductionDashboard() {
               )}
             </CardContent>
           </Card>
-        </>
+        </TabsContent>
       )}
-    </div>
+
+      <TabsContent value="tasks" className="mt-0">
+        <DepartmentTasks department="Production" />
+      </TabsContent>
+    </Tabs>
   )
 }
 

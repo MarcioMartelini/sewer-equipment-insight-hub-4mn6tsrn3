@@ -11,6 +11,8 @@ import { subDays, startOfDay, endOfDay } from 'date-fns'
 import PurchasingKPIs from './PurchasingKPIs'
 import PurchasingCharts from './PurchasingCharts'
 import PurchasingDelayedTable from './PurchasingDelayedTable'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 export default function PurchasingDashboard() {
   const [period, setPeriod] = useState('30')
@@ -50,13 +52,19 @@ export default function PurchasingDashboard() {
   }, [dateRange])
 
   return (
-    <div className="space-y-4 animate-in fade-in-50 duration-500">
+    <Tabs defaultValue="overview" className="space-y-4 animate-in fade-in-50 duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Executive Dashboard</h2>
-          <p className="text-muted-foreground">
-            Overview of supply chain and component delivery performance.
-          </p>
+        <div className="flex flex-col gap-2">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Purchasing Dashboard</h2>
+            <p className="text-muted-foreground">
+              Overview of supply chain and component delivery performance.
+            </p>
+          </div>
+          <TabsList className="w-fit">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="tasks">Task Schedule</TabsTrigger>
+          </TabsList>
         </div>
         <div className="flex items-center space-x-2">
           <Select value={period} onValueChange={setPeriod}>
@@ -73,9 +81,15 @@ export default function PurchasingDashboard() {
         </div>
       </div>
 
-      <PurchasingKPIs components={components} expedites={expedites} loading={loading} />
-      <PurchasingCharts components={components} loading={loading} />
-      <PurchasingDelayedTable components={components} loading={loading} />
-    </div>
+      <TabsContent value="overview" className="space-y-4 mt-0">
+        <PurchasingKPIs components={components} expedites={expedites} loading={loading} />
+        <PurchasingCharts components={components} loading={loading} />
+        <PurchasingDelayedTable components={components} loading={loading} />
+      </TabsContent>
+
+      <TabsContent value="tasks" className="mt-0">
+        <DepartmentTasks department="Purchasing" />
+      </TabsContent>
+    </Tabs>
   )
 }

@@ -1622,6 +1622,48 @@ export type Database = {
           },
         ]
       }
+      wo_task_comments_history: {
+        Row: {
+          author_id: string | null
+          comment: string
+          created_at: string | null
+          id: string
+          task_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          comment: string
+          created_at?: string | null
+          id?: string
+          task_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          comment?: string
+          created_at?: string | null
+          id?: string
+          task_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'wo_task_comments_history_author_id_fkey'
+            columns: ['author_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'wo_task_comments_history_task_id_fkey'
+            columns: ['task_id']
+            isOneToOne: false
+            referencedRelation: 'wo_tasks'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       wo_task_history: {
         Row: {
           action: string
@@ -1663,10 +1705,13 @@ export type Database = {
       wo_tasks: {
         Row: {
           assigned_to: string | null
+          comments: string | null
+          completion_date: string | null
           created_at: string
           department: string
           finish_date: string | null
           id: string
+          is_completed: boolean | null
           progress: number | null
           start_date: string | null
           status: string
@@ -1677,10 +1722,13 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          comments?: string | null
+          completion_date?: string | null
           created_at?: string
           department: string
           finish_date?: string | null
           id?: string
+          is_completed?: boolean | null
           progress?: number | null
           start_date?: string | null
           status?: string
@@ -1691,10 +1739,13 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          comments?: string | null
+          completion_date?: string | null
           created_at?: string
           department?: string
           finish_date?: string | null
           id?: string
+          is_completed?: boolean | null
           progress?: number | null
           start_date?: string | null
           status?: string
@@ -2318,6 +2369,13 @@ export const Constants = {
 //   field_changed: text (nullable)
 //   old_value: text (nullable)
 //   new_value: text (nullable)
+// Table: wo_task_comments_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   task_id: uuid (not null)
+//   comment: text (not null)
+//   author_id: uuid (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: wo_task_history
 //   id: uuid (not null, default: gen_random_uuid())
 //   task_id: uuid (not null)
@@ -2339,6 +2397,9 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   assigned_to: uuid (nullable)
 //   progress: integer (nullable, default: 0)
+//   comments: text (nullable)
+//   is_completed: boolean (nullable, default: false)
+//   completion_date: timestamp with time zone (nullable)
 // Table: work_orders
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_number: text (not null)
@@ -2492,6 +2553,10 @@ export const Constants = {
 //   PRIMARY KEY wo_history_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY wo_history_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 //   FOREIGN KEY wo_history_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: wo_task_comments_history
+//   FOREIGN KEY wo_task_comments_history_author_id_fkey: FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+//   PRIMARY KEY wo_task_comments_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY wo_task_comments_history_task_id_fkey: FOREIGN KEY (task_id) REFERENCES wo_tasks(id) ON DELETE CASCADE
 // Table: wo_task_history
 //   PRIMARY KEY wo_task_history_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY wo_task_history_task_id_fkey: FOREIGN KEY (task_id) REFERENCES wo_tasks(id) ON DELETE CASCADE
@@ -2793,6 +2858,16 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "Auth read wo_history" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: wo_task_comments_history
+//   Policy "Auth delete wo_task_comments_history" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert wo_task_comments_history" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read wo_task_comments_history" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update wo_task_comments_history" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: wo_task_history
 //   Policy "Auth insert wo_task_history" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -2963,6 +3038,8 @@ export const Constants = {
 //   CREATE UNIQUE INDEX quotes_quote_number_key ON public.quotes USING btree (quote_number)
 // Table: salespersons
 //   CREATE UNIQUE INDEX salespersons_salesperson_id_key ON public.salespersons USING btree (salesperson_id)
+// Table: wo_task_comments_history
+//   CREATE INDEX wo_task_comments_history_task_id_idx ON public.wo_task_comments_history USING btree (task_id)
 // Table: wo_tasks
 //   CREATE INDEX wo_tasks_wo_id_idx ON public.wo_tasks USING btree (wo_id)
 // Table: work_orders
