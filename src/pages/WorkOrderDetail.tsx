@@ -247,8 +247,14 @@ export default function WorkOrderDetail() {
   const fetchWorkOrder = async () => {
     setLoading(true)
     const { data } = await supabase.from('work_orders').select('*').eq('id', id).single()
-    if (data) setWo(data)
-    else toast.error('Work Order not found')
+    if (data) {
+      setWo(data)
+      if ((data as any).production_schedule) {
+        setTaskDates((data as any).production_schedule)
+      }
+    } else {
+      toast.error('Work Order not found')
+    }
 
     const { data: hData } = await supabase
       .from('wo_history')
@@ -500,6 +506,22 @@ export default function WorkOrderDetail() {
     }))
   }
 
+  const handleSaveSchedule = async () => {
+    const { error } = await supabase
+      .from('work_orders')
+      .update({ production_schedule: taskDates } as any)
+      .eq('id', id)
+
+    if (error) {
+      console.error(error)
+      return toast.error('Failed to save schedule')
+    }
+
+    toast.success('Task schedule saved successfully')
+    setReleaseOpen(false)
+    fetchWorkOrder()
+  }
+
   const handleRelease = async () => {
     const inserts = TASK_GROUPS.flatMap((group) =>
       group.tasks
@@ -527,6 +549,11 @@ export default function WorkOrderDetail() {
       console.error(error)
       return toast.error('Failed to release to production')
     }
+
+    await supabase
+      .from('work_orders')
+      .update({ production_schedule: taskDates } as any)
+      .eq('id', id)
 
     const { data: uData } = await supabase
       .from('users')
@@ -874,11 +901,24 @@ export default function WorkOrderDetail() {
               })}
             </Accordion>
           </div>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setReleaseOpen(false)}>
+          <DialogFooter className="mt-4 sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReleaseOpen(false)
+                setTaskDates(wo?.production_schedule || {})
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleRelease}>Save and Release</Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={handleSaveSchedule}>
+                Save
+              </Button>
+              <Button onClick={handleRelease} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Rocket className="mr-2 h-4 w-4" /> Release
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
