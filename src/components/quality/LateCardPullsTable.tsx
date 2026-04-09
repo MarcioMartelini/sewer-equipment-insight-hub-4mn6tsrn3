@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Download, Edit2, Plus, Eye, Trash2, X } from 'lucide-react'
+import { Download, Edit2, Plus, Eye, Trash2, X, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import html2canvas from 'html2canvas'
 import logoUrl from '@/assets/design-sem-nome-70de8.png'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -26,6 +26,7 @@ export function LateCardPullsTable() {
   const [dialogState, setDialogState] = useState<'create' | 'edit' | 'view' | null>(null)
   const [selectedPull, setSelectedPull] = useState<any>(null)
   const [filters, setFilters] = useState({ dateFrom: '', dateTo: '', pn: '', supervisor: '' })
+  const [isExporting, setIsExporting] = useState(false)
 
   const { toast } = useToast()
 
@@ -63,43 +64,89 @@ export function LateCardPullsTable() {
   }
 
   const handleExportPDF = async () => {
-    const doc = new jsPDF()
+    setIsExporting(true)
     try {
+      const element = document.getElementById('pdf-table-late-card')
+      if (!element) return
+
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false })
+      const imgData = canvas.toDataURL('image/png')
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+
+      const margin = 40
+      const headerHeight = 100
+      const footerHeight = 40
+      const usableHeight = pdfHeight - margin - headerHeight - footerHeight
+
+      const innerWidth = pdfWidth - margin * 2
+      const imgProps = pdf.getImageProperties(imgData)
+      const ratio = imgProps.width / imgProps.height
+      const scaledHeight = innerWidth / ratio
+
+      let heightLeft = scaledHeight
+      let position = margin + headerHeight
+      let pageNumber = 1
+
       const img = new Image()
       img.src = logoUrl
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve) => {
         img.onload = resolve
-        img.onerror = reject
+        img.onerror = resolve
       })
-      doc.addImage(img, 'PNG', 14, 10, 40, 15, undefined, 'FAST')
-    } catch (e) {
-      console.error('Failed to load image', e)
+
+      const addHeaderFooterWithLogo = (pageNum: number) => {
+        pdf.setFillColor(255, 255, 255)
+        pdf.rect(0, 0, pdfWidth, margin + headerHeight, 'F')
+
+        pdf.setFontSize(18)
+        pdf.setTextColor(0, 0, 0)
+        pdf.text('Late Card Pulls', margin, margin + 40)
+        pdf.setFontSize(10)
+        pdf.setTextColor(100, 100, 100)
+        pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, margin + 60)
+
+        try {
+          pdf.addImage(img, 'PNG', pdfWidth - margin - 80, margin, 80, 80)
+        } catch (e) {
+          console.error('Failed to add logo to PDF', e)
+        }
+
+        pdf.setFillColor(255, 255, 255)
+        pdf.rect(0, pdfHeight - footerHeight, pdfWidth, footerHeight, 'F')
+
+        pdf.setFontSize(10)
+        pdf.setTextColor(100, 100, 100)
+        pdf.text(`Page ${pageNum} - ${new Date().toLocaleDateString()}`, margin, pdfHeight - 20)
+      }
+
+      pdf.addImage(imgData, 'PNG', margin, position, innerWidth, scaledHeight)
+      addHeaderFooterWithLogo(pageNumber)
+      heightLeft -= usableHeight
+
+      while (heightLeft > 0) {
+        pdf.addPage()
+        pageNumber++
+        position -= usableHeight
+        pdf.addImage(imgData, 'PNG', margin, position, innerWidth, scaledHeight)
+        addHeaderFooterWithLogo(pageNumber)
+        heightLeft -= usableHeight
+      }
+
+      const timestamp = new Date().toISOString().split('T')[0]
+      pdf.save(`late_card_pulls_${timestamp}.pdf`)
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF report.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsExporting(false)
     }
-
-    doc.setFontSize(16)
-    doc.text('Late Card Pulls Report', 14, 35)
-    doc.setFontSize(10)
-    doc.setTextColor(100)
-    doc.text(`Generated on ${new Date().toLocaleString()}`, 14, 42)
-
-    const tableData = pulls.map((pull) => [
-      pull.date ? pull.date.split('-').reverse().join('/') : '-',
-      pull.part_number || '-',
-      pull.area_supervisor || '-',
-      pull.occurrence_description || '-',
-      pull.status || 'pending',
-    ])
-
-    autoTable(doc, {
-      head: [['Date', 'PN', 'Supervisor', 'Occurrence', 'Status']],
-      body: tableData,
-      startY: 48,
-      theme: 'grid',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 19, 255] },
-    })
-
-    doc.save(`late_card_pulls_${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
   return (
@@ -107,15 +154,20 @@ export function LateCardPullsTable() {
       <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
         <CardTitle className="text-xl">Late Card Pulls</CardTitle>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportPDF}>
-            <Download className="mr-2 h-4 w-4" /> Export PDF
+          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isExporting}>
+            {isExporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Export to PDF
           </Button>
           <Button
             className="bg-[#0013ff] hover:bg-[#0013ff]/90"
             onClick={() => openDialog('create')}
             size="sm"
           >
-            <Plus className="mr-2 h-4 w-4" /> Create Late Card Pull
+            <Plus className="mr-2 h-4 w-4" /> Create
           </Button>
         </div>
       </CardHeader>
@@ -249,6 +301,40 @@ export function LateCardPullsTable() {
           pull={selectedPull}
           onSaved={fetchData}
         />
+
+        {/* Hidden table for PDF export */}
+        <div className="fixed top-[200vh] left-[-9999px] z-[-1] pointer-events-none">
+          <div id="pdf-table-late-card" className="w-[1000px] bg-white text-black p-4">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">Date</th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">PN</th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">
+                    Area Supervisor
+                  </th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">
+                    Occurrence
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pulls.map((pull) => (
+                  <tr key={pull.id}>
+                    <td className="border-b border-slate-200 p-2">
+                      {pull.date ? pull.date.split('-').reverse().join('/') : '-'}
+                    </td>
+                    <td className="border-b border-slate-200 p-2">{pull.part_number || '-'}</td>
+                    <td className="border-b border-slate-200 p-2">{pull.area_supervisor || '-'}</td>
+                    <td className="border-b border-slate-200 p-2">
+                      {pull.occurrence_description || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

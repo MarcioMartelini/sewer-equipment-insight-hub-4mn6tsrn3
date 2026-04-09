@@ -37,12 +37,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Download, Edit2, Eye, Plus, Search, Trash2, X } from 'lucide-react'
+import { Download, Edit2, Eye, Plus, Search, Trash2, X, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import html2canvas from 'html2canvas'
 import logoUrl from '@/assets/design-sem-nome-70de8.png'
 
 type ModalMode = 'create' | 'edit' | 'view' | null
@@ -71,6 +71,7 @@ export function WarrantyClaimsTable() {
   const [modalMode, setModalMode] = useState<ModalMode>(null)
   const [formData, setFormData] = useState(DEFAULT_FORM)
   const [itemToDelete, setItemToDelete] = useState<any>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   const [customers, setCustomers] = useState<string[]>([])
   const [productFamilies, setProductFamilies] = useState<string[]>([])
@@ -197,45 +198,89 @@ export function WarrantyClaimsTable() {
   }
 
   const handleExportPDF = async () => {
-    const doc = new jsPDF()
+    setIsExporting(true)
     try {
+      const element = document.getElementById('pdf-table-warranty')
+      if (!element) return
+
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false })
+      const imgData = canvas.toDataURL('image/png')
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+
+      const margin = 40
+      const headerHeight = 100
+      const footerHeight = 40
+      const usableHeight = pdfHeight - margin - headerHeight - footerHeight
+
+      const innerWidth = pdfWidth - margin * 2
+      const imgProps = pdf.getImageProperties(imgData)
+      const ratio = imgProps.width / imgProps.height
+      const scaledHeight = innerWidth / ratio
+
+      let heightLeft = scaledHeight
+      let position = margin + headerHeight
+      let pageNumber = 1
+
       const img = new Image()
       img.src = logoUrl
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve) => {
         img.onload = resolve
-        img.onerror = reject
+        img.onerror = resolve
       })
-      doc.addImage(img, 'PNG', 14, 10, 40, 15, undefined, 'FAST')
-    } catch (e) {
-      console.error('Failed to load image', e)
+
+      const addHeaderFooterWithLogo = (pageNum: number) => {
+        pdf.setFillColor(255, 255, 255)
+        pdf.rect(0, 0, pdfWidth, margin + headerHeight, 'F')
+
+        pdf.setFontSize(18)
+        pdf.setTextColor(0, 0, 0)
+        pdf.text('Warranty Claims', margin, margin + 40)
+        pdf.setFontSize(10)
+        pdf.setTextColor(100, 100, 100)
+        pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, margin + 60)
+
+        try {
+          pdf.addImage(img, 'PNG', pdfWidth - margin - 80, margin, 80, 80)
+        } catch (e) {
+          console.error('Failed to add logo to PDF', e)
+        }
+
+        pdf.setFillColor(255, 255, 255)
+        pdf.rect(0, pdfHeight - footerHeight, pdfWidth, footerHeight, 'F')
+
+        pdf.setFontSize(10)
+        pdf.setTextColor(100, 100, 100)
+        pdf.text(`Page ${pageNum} - ${new Date().toLocaleDateString()}`, margin, pdfHeight - 20)
+      }
+
+      pdf.addImage(imgData, 'PNG', margin, position, innerWidth, scaledHeight)
+      addHeaderFooterWithLogo(pageNumber)
+      heightLeft -= usableHeight
+
+      while (heightLeft > 0) {
+        pdf.addPage()
+        pageNumber++
+        position -= usableHeight
+        pdf.addImage(imgData, 'PNG', margin, position, innerWidth, scaledHeight)
+        addHeaderFooterWithLogo(pageNumber)
+        heightLeft -= usableHeight
+      }
+
+      const timestamp = new Date().toISOString().split('T')[0]
+      pdf.save(`warranty_claims_${timestamp}.pdf`)
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF report.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsExporting(false)
     }
-
-    doc.setFontSize(16)
-    doc.text('Warranty Claims Report', 14, 35)
-    doc.setFontSize(10)
-    doc.setTextColor(100)
-    doc.text(`Generated on ${new Date().toLocaleString()}`, 14, 42)
-
-    const tableData = claims.map((c) => [
-      formatDate(c.date),
-      c.customer_name || '-',
-      c.product_family || '-',
-      c.machine_model || '-',
-      c.serial_number || '-',
-      c.occurrence_description || '-',
-      c.status || 'pending',
-    ])
-
-    autoTable(doc, {
-      head: [['Date', 'Customer', 'Family', 'Model', 'S/N', 'Occurrence', 'Status']],
-      body: tableData,
-      startY: 48,
-      theme: 'grid',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [21, 17, 242] },
-    })
-
-    doc.save(`warranty_claims_${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
   const isReadOnly = modalMode === 'view'
@@ -245,15 +290,20 @@ export function WarrantyClaimsTable() {
       <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
         <CardTitle className="text-xl">Warranty Claims Registry</CardTitle>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportPDF}>
-            <Download className="mr-2 h-4 w-4" /> Export PDF
+          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isExporting}>
+            {isExporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Export to PDF
           </Button>
           <Button
             className="bg-[#1511f2] hover:bg-[#1511f2]/90"
             onClick={() => handleOpenModal('create')}
             size="sm"
           >
-            <Plus className="mr-2 h-4 w-4" /> Create Warranty Claim
+            <Plus className="mr-2 h-4 w-4" /> Create
           </Button>
         </div>
       </CardHeader>
@@ -559,6 +609,45 @@ export function WarrantyClaimsTable() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {/* Hidden table for PDF export */}
+        <div className="fixed top-[200vh] left-[-9999px] z-[-1] pointer-events-none">
+          <div id="pdf-table-warranty" className="w-[1000px] bg-white text-black p-4">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">Date</th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">Customer</th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">
+                    Product Family
+                  </th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">
+                    Machine Model
+                  </th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">
+                    Serial Number
+                  </th>
+                  <th className="border-b-2 border-slate-800 p-2 text-left font-bold">
+                    Occurrence
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {claims.map((c) => (
+                  <tr key={c.id}>
+                    <td className="border-b border-slate-200 p-2">{formatDate(c.date)}</td>
+                    <td className="border-b border-slate-200 p-2">{c.customer_name || '-'}</td>
+                    <td className="border-b border-slate-200 p-2">{c.product_family || '-'}</td>
+                    <td className="border-b border-slate-200 p-2">{c.machine_model || '-'}</td>
+                    <td className="border-b border-slate-200 p-2">{c.serial_number || '-'}</td>
+                    <td className="border-b border-slate-200 p-2">
+                      {c.occurrence_description || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )
