@@ -584,10 +584,15 @@ export default function WorkOrderDetail() {
   if (!wo) return <div className="p-8 max-w-7xl mx-auto">Work Order not found.</div>
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto w-full animate-fade-in">
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto w-full animate-fade-in print:p-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="print:hidden"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h2 className="text-3xl font-bold tracking-tight">WO: {wo.wo_number}</h2>
@@ -604,7 +609,7 @@ export default function WorkOrderDetail() {
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap print:hidden">
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => setReleaseOpen(true)}

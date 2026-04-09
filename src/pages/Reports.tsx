@@ -218,8 +218,8 @@ export default function Reports() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in-up">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in-up print:p-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Reports & Export</h1>
           <p className="text-muted-foreground">
@@ -228,8 +228,8 @@ export default function Reports() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full md:w-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="print:block">
+        <TabsList className="w-full md:w-auto print:hidden">
           <TabsTrigger value="preview" className="flex-1 md:flex-none">
             Preview
           </TabsTrigger>
@@ -238,8 +238,8 @@ export default function Reports() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="preview" className="space-y-6 mt-6">
-          <Card>
+        <TabsContent value="preview" className="space-y-6 mt-6 print:mt-0 print:block">
+          <Card className="print:hidden">
             <CardHeader>
               <CardTitle>Report Configuration</CardTitle>
               <CardDescription>Select desired filters to compile data.</CardDescription>
@@ -460,7 +460,7 @@ export default function Reports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-6 mt-6">
+        <TabsContent value="history" className="space-y-6 mt-6 print:hidden">
           <Card>
             <CardHeader>
               <CardTitle>Export History</CardTitle>

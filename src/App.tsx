@@ -22,6 +22,50 @@ import QuoteDetail from './pages/QuoteDetail'
 import CustomerDetail from './pages/CustomerDetail'
 import SalespersonDetail from './pages/SalespersonDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
+import logoUrl from './assets/design-sem-nome-3d351.png'
+
+const GlobalPrintStyles = () => (
+  <style>
+    {`
+      @media print {
+        @page {
+          margin-top: 25mm;
+          margin-bottom: 15mm;
+        }
+        .global-print-header {
+          display: flex !important;
+          position: fixed;
+          top: -20mm;
+          left: 0;
+          width: 100%;
+          height: 15mm;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid #e2e8f0;
+          padding-bottom: 2mm;
+          z-index: 9999;
+        }
+        .global-print-header img {
+          max-height: 100%;
+          object-fit: contain;
+        }
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    `}
+  </style>
+)
+
+const PrintHeader = () => (
+  <div className="hidden global-print-header">
+    <img src={logoUrl} alt="Sewer Equipment Insight HUB" />
+    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>
+      Generated on {new Date().toLocaleDateString()}
+    </span>
+  </div>
+)
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth()
@@ -33,6 +77,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <AuthProvider>
     <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+      <GlobalPrintStyles />
+      <PrintHeader />
       <TooltipProvider delayDuration={300}>
         <Toaster />
         <Sonner />
