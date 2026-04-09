@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit2, Plus } from 'lucide-react'
+import { Edit2, Plus, Eye, Trash2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -35,14 +35,15 @@ import { useAuth } from '@/hooks/use-auth'
 export function LateCardPullsTable() {
   const [pulls, setPulls] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState<any>(null)
-  const [creating, setCreating] = useState(false)
-  const [status, setStatus] = useState('')
+  const [dialogState, setDialogState] = useState<'create' | 'edit' | 'view' | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [filters, setFilters] = useState({ dateFrom: '', dateTo: '', pn: '', supervisor: '' })
   const [formData, setFormData] = useState({
     date: '',
     part_number: '',
     area_supervisor: '',
     occurrence_description: '',
+    status: 'pending',
   })
 
   const { toast } = useToast()
@@ -50,51 +51,56 @@ export function LateCardPullsTable() {
 
   const fetchData = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('late_card_pulls' as any)
-      .select('*')
-      .order('created_at', { ascending: false })
+    let q = supabase.from('late_card_pulls').select('*').order('created_at', { ascending: false })
+    if (filters.dateFrom) q = q.gte('date', filters.dateFrom)
+    if (filters.dateTo) q = q.lte('date', filters.dateTo)
+    if (filters.pn) q = q.ilike('part_number', `%${filters.pn}%`)
+    if (filters.supervisor) q = q.ilike('area_supervisor', `%${filters.supervisor}%`)
+
+    const { data } = await q
     if (data) setPulls(data)
     setLoading(false)
   }
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    const t = setTimeout(fetchData, 500)
+    return () => clearTimeout(t)
+  }, [filters])
 
-  const handleEdit = (pull: any) => {
-    setEditing(pull)
-    setStatus(pull.status || 'pending')
+  const openDialog = (type: 'create' | 'edit' | 'view', pull?: any) => {
+    setSelectedId(pull?.id || null)
+    setFormData({
+      date: pull?.date || new Date().toISOString().split('T')[0],
+      part_number: pull?.part_number || '',
+      area_supervisor: pull?.area_supervisor || '',
+      occurrence_description: pull?.occurrence_description || '',
+      status: pull?.status || 'pending',
+    })
+    setDialogState(type)
   }
 
-  const handleSaveStatus = async () => {
-    if (!editing) return
-    const { error } = await supabase
-      .from('late_card_pulls' as any)
-      .update({ status })
-      .eq('id', editing.id)
-
-    if (error) {
-      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' })
-    } else {
-      toast({ title: 'Atualizado com sucesso' })
-      setEditing(null)
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este registro?')) return
+    const { error } = await supabase.from('late_card_pulls').delete().eq('id', id)
+    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    else {
+      toast({ title: 'Excluído com sucesso' })
       fetchData()
     }
   }
 
-  const handleCreate = async () => {
-    const { error } = await supabase.from('late_card_pulls' as any).insert({
-      ...formData,
-      created_by: user?.id,
-    })
+  const handleSave = async () => {
+    const dataToSave = dialogState === 'create' ? { ...formData, created_by: user?.id } : formData
+    const req =
+      dialogState === 'create'
+        ? supabase.from('late_card_pulls').insert(dataToSave)
+        : supabase.from('late_card_pulls').update(dataToSave).eq('id', selectedId)
 
-    if (error) {
-      toast({ title: 'Erro ao criar', description: error.message, variant: 'destructive' })
-    } else {
-      toast({ title: 'Criado com sucesso' })
-      setCreating(false)
-      setFormData({ date: '', part_number: '', area_supervisor: '', occurrence_description: '' })
+    const { error } = await req
+    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    else {
+      toast({ title: 'Salvo com sucesso' })
+      setDialogState(null)
       fetchData()
     }
   }
@@ -103,22 +109,66 @@ export function LateCardPullsTable() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Late Card Pulls</CardTitle>
-        <Button className="bg-[#0013ff]" onClick={() => setCreating(true)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Registro
+        <Button className="bg-[#0013ff]" onClick={() => openDialog('create')} size="sm">
+          <Plus className="mr-2 h-4 w-4" /> Create Late Card Pull
         </Button>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <Label className="text-xs">Data Inicial</Label>
+              <Input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Data Final</Label>
+              <Input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">PN</Label>
+              <Input
+                placeholder="Buscar PN..."
+                value={filters.pn}
+                onChange={(e) => setFilters({ ...filters, pn: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Supervisor</Label>
+              <Input
+                placeholder="Buscar Supervisor..."
+                value={filters.supervisor}
+                onChange={(e) => setFilters({ ...filters, supervisor: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              onClick={() => setFilters({ dateFrom: '', dateTo: '', pn: '', supervisor: '' })}
+            >
+              <X className="h-4 w-4 mr-2" /> Limpar
+            </Button>
+          </div>
+        </div>
+
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>
                 <TableHead>PN</TableHead>
-                <TableHead>Area Supervisor</TableHead>
-                <TableHead>Descrição da Ocorrência</TableHead>
+                <TableHead>Supervisor</TableHead>
+                <TableHead>Ocorrência</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Ações</TableHead>
+                <TableHead className="w-[140px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -138,24 +188,45 @@ export function LateCardPullsTable() {
                 pulls.map((pull) => (
                   <TableRow key={pull.id}>
                     <TableCell>
-                      {pull.date ? new Date(pull.date).toLocaleDateString() : '-'}
+                      {pull.date ? pull.date.split('-').reverse().join('/') : '-'}
                     </TableCell>
                     <TableCell className="font-medium">{pull.part_number || '-'}</TableCell>
                     <TableCell>{pull.area_supervisor || '-'}</TableCell>
                     <TableCell
-                      className="max-w-[250px] truncate"
+                      className="max-w-[200px] truncate"
                       title={pull.occurrence_description}
                     >
-                      {pull.occurrence_description || pull.pull_reason || '-'}
+                      {pull.occurrence_description || '-'}
                     </TableCell>
                     <TableCell>
                       <Badge variant={pull.status === 'resolved' ? 'default' : 'secondary'}>
                         {pull.status || 'pending'}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(pull)}>
-                        <Edit2 className="h-4 w-4" />
+                    <TableCell className="text-right space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => openDialog('view', pull)}
+                      >
+                        <Eye className="h-4 w-4 text-slate-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => openDialog('edit', pull)}
+                      >
+                        <Edit2 className="h-4 w-4 text-slate-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleDelete(pull.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -165,10 +236,16 @@ export function LateCardPullsTable() {
           </Table>
         </div>
 
-        <Dialog open={creating} onOpenChange={setCreating}>
+        <Dialog open={!!dialogState} onOpenChange={(o) => !o && setDialogState(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Novo Late Card Pull</DialogTitle>
+              <DialogTitle>
+                {dialogState === 'create'
+                  ? 'Novo Late Card Pull'
+                  : dialogState === 'edit'
+                    ? 'Editar Late Card Pull'
+                    : 'Detalhes do Late Card Pull'}
+              </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -177,6 +254,7 @@ export function LateCardPullsTable() {
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  disabled={dialogState === 'view'}
                 />
               </div>
               <div className="grid gap-2">
@@ -184,60 +262,53 @@ export function LateCardPullsTable() {
                 <Input
                   value={formData.part_number}
                   onChange={(e) => setFormData({ ...formData, part_number: e.target.value })}
+                  disabled={dialogState === 'view'}
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Area Supervisor</Label>
+                <Label>Supervisor</Label>
                 <Input
                   value={formData.area_supervisor}
                   onChange={(e) => setFormData({ ...formData, area_supervisor: e.target.value })}
+                  disabled={dialogState === 'view'}
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Descrição da Ocorrência</Label>
+                <Label>Ocorrência</Label>
                 <Textarea
                   value={formData.occurrence_description}
                   onChange={(e) =>
                     setFormData({ ...formData, occurrence_description: e.target.value })
                   }
+                  disabled={dialogState === 'view'}
                 />
               </div>
+              {dialogState !== 'create' && (
+                <div className="grid gap-2">
+                  <Label>Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(v) => setFormData({ ...formData, status: v })}
+                    disabled={dialogState === 'view'}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="N/A">N/A</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreating(false)}>
-                Cancelar
+              <Button variant="outline" onClick={() => setDialogState(null)}>
+                Fechar
               </Button>
-              <Button onClick={handleCreate}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Atualizar Status</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                    <SelectItem value="N/A">N/A</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditing(null)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSaveStatus}>Salvar</Button>
+              {dialogState !== 'view' && <Button onClick={handleSave}>Salvar</Button>}
             </DialogFooter>
           </DialogContent>
         </Dialog>
