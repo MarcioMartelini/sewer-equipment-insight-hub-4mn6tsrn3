@@ -217,11 +217,7 @@ export function QualityDashboard() {
           <p className="text-sm text-slate-500">Acompanhe os principais indicadores de qualidade</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={handlePrint}
-            className="bg-white border-slate-200 hover:bg-slate-50"
-          >
+          <Button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 text-white">
             <FileDown className="h-4 w-4 mr-2" />
             Export to PDF
           </Button>
@@ -317,8 +313,7 @@ export function QualityDashboard() {
 
         <div className="flex items-end">
           <Button
-            variant="ghost"
-            className="text-slate-500 hover:text-slate-700 h-10"
+            className="bg-blue-600 hover:bg-blue-700 text-white h-10"
             onClick={handleClearFilters}
           >
             <FilterX className="h-4 w-4 mr-2" />
