@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useProductionTasks } from '@/hooks/use-production-tasks'
-import { ProductionType } from '@/services/production'
+import { ProductionType, ProductionTask } from '@/services/production'
 import { LayoutGrid, List, Search, Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { ProductionTaskSheet } from './ProductionTaskSheet'
 
 const STATUS_OPTIONS = [
   { value: 'not_started', label: 'Not Started', color: 'bg-slate-100 text-slate-700' },
@@ -42,7 +43,7 @@ const STATUS_OPTIONS = [
 ]
 
 export function ProductionTasks({ type }: { type: ProductionType }) {
-  const { tasks, loading, handleUpdateStatus } = useProductionTasks(type)
+  const { tasks, loading, handleUpdateStatus, refetch } = useProductionTasks(type)
   const [view, setView] = useState<'table' | 'kanban'>('table')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -53,6 +54,7 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
     newStatus: string
   } | null>(null)
   const [statusComment, setStatusComment] = useState('')
+  const [selectedTask, setSelectedTask] = useState<ProductionTask | null>(null)
 
   const filteredTasks = tasks.filter((t) => {
     const matchesSearch =
@@ -165,7 +167,11 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
                   </TableRow>
                 ) : (
                   filteredTasks.map((task) => (
-                    <TableRow key={task.id}>
+                    <TableRow
+                      key={task.id}
+                      className="cursor-pointer hover:bg-slate-50 transition-colors"
+                      onClick={() => setSelectedTask(task)}
+                    >
                       <TableCell className="font-medium">{task.wo_number}</TableCell>
                       {type === 'all' && (
                         <TableCell>
@@ -176,7 +182,7 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
                       )}
                       <TableCell>{task.task_name}</TableCell>
                       <TableCell>{getStatusBadge(task.status)}</TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Select
                           value={task.status}
                           onValueChange={(v) => onStatusChange(task.id, v)}
@@ -219,7 +225,8 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
                   {colTasks.map((task) => (
                     <Card
                       key={task.id}
-                      className="border-slate-200 shadow-sm hover:border-slate-300 transition-colors"
+                      className="border-slate-200 shadow-sm hover:border-slate-300 transition-colors cursor-pointer"
+                      onClick={() => setSelectedTask(task)}
                     >
                       <CardContent className="p-4 space-y-3">
                         <div className="flex justify-between items-start mb-2">
@@ -236,21 +243,23 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
                             </Badge>
                           </div>
                         )}
-                        <Select
-                          value={task.status}
-                          onValueChange={(v) => onStatusChange(task.id, v)}
-                        >
-                          <SelectTrigger className="w-full h-8 text-xs">
-                            <SelectValue placeholder="Change Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Select
+                            value={task.status}
+                            onValueChange={(v) => onStatusChange(task.id, v)}
+                          >
+                            <SelectTrigger className="w-full h-8 text-xs">
+                              <SelectValue placeholder="Change Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -303,6 +312,14 @@ export function ProductionTasks({ type }: { type: ProductionType }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ProductionTaskSheet
+        task={tasks.find((t) => t.id === selectedTask?.id) || selectedTask}
+        open={!!selectedTask}
+        onOpenChange={(open) => !open && setSelectedTask(null)}
+        onUpdate={() => refetch()}
+        type={type}
+      />
     </div>
   )
 }

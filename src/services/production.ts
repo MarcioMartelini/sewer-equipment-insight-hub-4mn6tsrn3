@@ -13,9 +13,19 @@ export interface ProductionTask {
   id: string
   wo_id: string
   wo_number: string
+  customer_name?: string
+  product_type?: string
+  machine_model?: string
   task_name: string
+  department?: string
   sub_department?: string
+  start_date?: string | null
+  finish_date?: string | null
   status: string
+  assigned_to?: string | null
+  assigned_to_name?: string | null
+  is_completed?: boolean | null
+  completion_date?: string | null
   created_at: string
   updated_at: string
 }
@@ -34,20 +44,31 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
     .from('production_tasks')
     .select(
       `
-      id,
-      wo_id,
-      task_name,
-      sub_department,
-      status,
-      created_at,
-      updated_at,
-      work_orders (
-        wo_number
-      )
-    `,
+    id,
+    wo_id,
+    task_name,
+    department,
+    sub_department,
+    start_date,
+    finish_date,
+    status,
+    assigned_to,
+    is_completed,
+    completion_date,
+    created_at,
+    updated_at,
+    work_orders (
+      wo_number,
+      customer_name,
+      product_type,
+      machine_model
+    ),
+    users!production_tasks_assigned_to_fkey (
+      full_name
+    )
+  `,
     )
     .eq('department', 'Production')
-
   if (type !== 'all') {
     const term = searchMap[type] || type
     query = query.ilike('sub_department', `%${term}%`)
@@ -61,9 +82,19 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
     id: item.id,
     wo_id: item.wo_id,
     wo_number: item.work_orders?.wo_number || 'Unknown',
+    customer_name: item.work_orders?.customer_name,
+    product_type: item.work_orders?.product_type,
+    machine_model: item.work_orders?.machine_model,
     task_name: item.task_name,
+    department: item.department,
     sub_department: item.sub_department,
+    start_date: item.start_date,
+    finish_date: item.finish_date,
     status: item.status || 'not_started',
+    assigned_to: item.assigned_to,
+    assigned_to_name: item.users?.full_name,
+    is_completed: item.is_completed,
+    completion_date: item.completion_date,
     created_at: item.created_at,
     updated_at: item.updated_at,
   }))
@@ -121,4 +152,44 @@ export async function updateProductionStatus(
       created_at: new Date().toISOString(),
     })
   }
+}
+
+export async function getProductionTaskComments(taskId: string) {
+  const { data, error } = await supabase
+    .from('production_task_comments_history')
+    .select(`
+      id,
+      comment,
+      status,
+      created_at,
+      users!production_task_comments_history_author_id_fkey (
+        full_name
+      )
+    `)
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data || []).map((c: any) => ({
+    id: c.id,
+    comment: c.comment,
+    status: c.status,
+    created_at: c.created_at,
+    author_name: c.users?.full_name || 'Unknown User',
+  }))
+}
+
+export async function addProductionTaskComment(taskId: string, comment: string, status: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { error } = await supabase.from('production_task_comments_history').insert({
+    task_id: taskId,
+    comment,
+    author_id: user?.id,
+    status: status as any,
+    created_at: new Date().toISOString(),
+  })
+  if (error) throw error
 }

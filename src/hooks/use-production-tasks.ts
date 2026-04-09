@@ -46,5 +46,5 @@ export function useProductionTasks(type: ProductionType) {
     }
   }
 
-  return { tasks, loading, handleUpdateStatus }
+  return { tasks, loading, handleUpdateStatus, refetch: fetchTasks }
 }

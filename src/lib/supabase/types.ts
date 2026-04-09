@@ -899,6 +899,165 @@ export type Database = {
           },
         ]
       }
+      production_task_audit_log: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          field_changed: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          task_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          field_changed: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          task_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          field_changed?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_task_audit_log_changed_by_fkey'
+            columns: ['changed_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'production_task_audit_log_task_id_fkey'
+            columns: ['task_id']
+            isOneToOne: false
+            referencedRelation: 'production_tasks'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      production_task_comments_history: {
+        Row: {
+          author_id: string | null
+          comment: string
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          status: Database['public']['Enums']['production_task_status_enum'] | null
+          task_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          comment: string
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          task_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          comment?: string
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          task_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_task_comments_history_author_id_fkey'
+            columns: ['author_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'production_task_comments_history_task_id_fkey'
+            columns: ['task_id']
+            isOneToOne: false
+            referencedRelation: 'production_tasks'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      production_tasks: {
+        Row: {
+          assigned_to: string | null
+          comments: string | null
+          completion_date: string | null
+          created_at: string | null
+          department: string | null
+          finish_date: string | null
+          id: string
+          is_completed: boolean | null
+          start_date: string | null
+          status: Database['public']['Enums']['production_task_status_enum'] | null
+          sub_department: string | null
+          task_name: string
+          updated_at: string | null
+          wo_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          comments?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          department?: string | null
+          finish_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          start_date?: string | null
+          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          sub_department?: string | null
+          task_name: string
+          updated_at?: string | null
+          wo_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          comments?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          department?: string | null
+          finish_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          start_date?: string | null
+          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          sub_department?: string | null
+          task_name?: string
+          updated_at?: string | null
+          wo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'production_tasks_assigned_to_fkey'
+            columns: ['assigned_to']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'production_tasks_wo_id_fkey'
+            columns: ['wo_id']
+            isOneToOne: false
+            referencedRelation: 'work_orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       production_tests: {
         Row: {
           created_at: string | null
@@ -1879,6 +2038,13 @@ export type Database = {
       get_user_role: { Args: never; Returns: string }
     }
     Enums: {
+      production_task_status_enum:
+        | 'not_started'
+        | 'parked'
+        | 'on_track'
+        | 'at_risk'
+        | 'delayed'
+        | 'complete'
       task_status_enum: 'not_started' | 'parked' | 'on_track' | 'at_risk' | 'delayed' | 'complete'
     }
     CompositeTypes: {
@@ -2005,6 +2171,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      production_task_status_enum: [
+        'not_started',
+        'parked',
+        'on_track',
+        'at_risk',
+        'delayed',
+        'complete',
+      ],
       task_status_enum: ['not_started', 'parked', 'on_track', 'at_risk', 'delayed', 'complete'],
     },
   },
@@ -2206,6 +2380,38 @@ export const Constants = {
 //   wo_id: uuid (nullable)
 //   task_name: text (not null)
 //   status: text (nullable, default: 'pending'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+// Table: production_task_audit_log
+//   id: uuid (not null, default: gen_random_uuid())
+//   task_id: uuid (not null)
+//   field_changed: text (not null)
+//   old_value: text (nullable)
+//   new_value: text (nullable)
+//   changed_by: uuid (nullable)
+//   changed_at: timestamp with time zone (nullable, default: now())
+// Table: production_task_comments_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   task_id: uuid (not null)
+//   comment: text (not null)
+//   author_id: uuid (nullable)
+//   status: production_task_status_enum (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+//   deleted_at: timestamp with time zone (nullable)
+// Table: production_tasks
+//   id: uuid (not null, default: gen_random_uuid())
+//   wo_id: uuid (not null)
+//   department: text (nullable)
+//   sub_department: text (nullable)
+//   task_name: text (not null)
+//   start_date: date (nullable)
+//   finish_date: date (nullable)
+//   status: production_task_status_enum (nullable, default: 'not_started'::production_task_status_enum)
+//   assigned_to: uuid (nullable)
+//   comments: text (nullable)
+//   is_completed: boolean (nullable, default: false)
+//   completion_date: timestamp with time zone (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
 // Table: production_tests
@@ -2518,6 +2724,18 @@ export const Constants = {
 // Table: production_sub_assembly
 //   PRIMARY KEY production_sub_assembly_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY production_sub_assembly_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
+// Table: production_task_audit_log
+//   FOREIGN KEY production_task_audit_log_changed_by_fkey: FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL
+//   PRIMARY KEY production_task_audit_log_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_task_audit_log_task_id_fkey: FOREIGN KEY (task_id) REFERENCES production_tasks(id) ON DELETE CASCADE
+// Table: production_task_comments_history
+//   FOREIGN KEY production_task_comments_history_author_id_fkey: FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+//   PRIMARY KEY production_task_comments_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_task_comments_history_task_id_fkey: FOREIGN KEY (task_id) REFERENCES production_tasks(id) ON DELETE CASCADE
+// Table: production_tasks
+//   FOREIGN KEY production_tasks_assigned_to_fkey: FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
+//   PRIMARY KEY production_tasks_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY production_tasks_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
 // Table: production_tests
 //   PRIMARY KEY production_tests_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY production_tests_wo_id_fkey: FOREIGN KEY (wo_id) REFERENCES work_orders(id) ON DELETE CASCADE
@@ -2759,6 +2977,33 @@ export const Constants = {
 //     USING: true
 //   Policy "Auth update production_sub_assembly" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: production_task_audit_log
+//   Policy "Auth delete production_task_audit_log" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_task_audit_log" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_task_audit_log" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_task_audit_log" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_task_comments_history
+//   Policy "Auth delete production_task_comments_history" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_task_comments_history" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_task_comments_history" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_task_comments_history" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: production_tasks
+//   Policy "Auth delete production_tasks" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth insert production_tasks" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Auth read production_tasks" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Auth update production_tasks" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: production_tests
 //   Policy "Auth delete production_tests" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -2980,6 +3225,34 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION log_production_task_changes()
+//   CREATE OR REPLACE FUNCTION public.log_production_task_changes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_old_json JSONB := to_jsonb(OLD);
+//       v_new_json JSONB := to_jsonb(NEW);
+//       v_key TEXT;
+//       v_user_id UUID;
+//   BEGIN
+//       v_user_id := auth.uid();
+//
+//       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
+//       LOOP
+//           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
+//               IF v_old_json->>v_key IS DISTINCT FROM v_new_json->>v_key THEN
+//                   INSERT INTO public.production_task_audit_log (task_id, changed_by, field_changed, old_value, new_value)
+//                   VALUES (NEW.id, v_user_id, v_key, v_old_json->>v_key, v_new_json->>v_key);
+//               END IF;
+//           END IF;
+//       END LOOP;
+//
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION log_quote_changes()
 //   CREATE OR REPLACE FUNCTION public.log_quote_changes()
 //    RETURNS trigger
@@ -3060,10 +3333,25 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION update_production_task_updated_at()
+//   CREATE OR REPLACE FUNCTION public.update_production_task_updated_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//       NEW.updated_at = NOW();
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: customers
 //   on_customer_update: CREATE TRIGGER on_customer_update AFTER UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION log_customer_changes()
+// Table: production_tasks
+//   on_production_task_update: CREATE TRIGGER on_production_task_update AFTER UPDATE ON public.production_tasks FOR EACH ROW EXECUTE FUNCTION log_production_task_changes()
+//   on_production_task_updated_at: CREATE TRIGGER on_production_task_updated_at BEFORE UPDATE ON public.production_tasks FOR EACH ROW EXECUTE FUNCTION update_production_task_updated_at()
 // Table: quotes
 //   on_quote_update: CREATE TRIGGER on_quote_update AFTER UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION log_quote_changes()
 // Table: salespersons
