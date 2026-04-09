@@ -74,7 +74,12 @@ export async function assignEngineeringTask(id: string, userId: string | null) {
   if (error) throw error
 }
 
-export async function updateEngineeringStatus(type: EngineeringType, id: string, status: string) {
+export async function updateEngineeringStatus(
+  type: EngineeringType | string,
+  id: string,
+  status: string,
+  comment?: string,
+) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -100,16 +105,19 @@ export async function updateEngineeringStatus(type: EngineeringType, id: string,
     }
   }
 
-  const { error } = await supabase
-    .from('wo_tasks')
-    .update({
-      status: status as any,
-      is_completed: isCompleted,
-      completion_date: completionDate,
-      was_delayed: delayed,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id)
+  const updates: any = {
+    status: status as any,
+    is_completed: isCompleted,
+    completion_date: completionDate,
+    was_delayed: delayed,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (comment) {
+    updates.comments = comment
+  }
+
+  const { error } = await supabase.from('wo_tasks').update(updates).eq('id', id)
 
   if (error) throw error
 
@@ -123,7 +131,15 @@ export async function updateEngineeringStatus(type: EngineeringType, id: string,
 
     await supabase.from('wo_task_comments_history').insert({
       task_id: id,
-      comment: `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}`,
+      comment: `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}${comment ? ` - ${comment}` : ''}`,
+      author_id: user?.id,
+      status: status as any,
+      created_at: new Date().toISOString(),
+    })
+  } else if (comment) {
+    await supabase.from('wo_task_comments_history').insert({
+      task_id: id,
+      comment: comment,
       author_id: user?.id,
       status: status as any,
       created_at: new Date().toISOString(),

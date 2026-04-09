@@ -13,7 +13,11 @@ import { CalendarIcon, User2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
-type Task = {
+import { EditStatusModal } from './EditStatusModal'
+import { updateEngineeringStatus } from '@/services/engineering'
+import { useToast } from '@/hooks/use-toast'
+
+export type Task = {
   id: string
   task_name: string
   start_date: string | null
@@ -21,7 +25,12 @@ type Task = {
   status: string
   progress: number
   sub_department: string | null
+  department: string | null
+  comments: string | null
   wo_number: string
+  customer_name: string | null
+  machine_model: string | null
+  product_type: string | null
   assigned_to_name: string | null
   assigned_to_avatar: string | null
 }
@@ -33,6 +42,10 @@ export function EngineeringKanbanBoard() {
   const [subDeptFilter, setSubDeptFilter] = useState('all')
   const [woFilter, setWoFilter] = useState('')
   const [assigneeFilter, setAssigneeFilter] = useState('')
+
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     async function fetchTasks() {
@@ -47,7 +60,9 @@ export function EngineeringKanbanBoard() {
           status,
           progress,
           sub_department,
-          work_orders!inner(wo_number),
+          department,
+          comments,
+          work_orders!inner(wo_number, customer_name, machine_model, product_type),
           users!wo_tasks_assigned_to_fkey(full_name, avatar_url)
         `)
         .eq('department', 'Engineering')
@@ -61,7 +76,12 @@ export function EngineeringKanbanBoard() {
           status: t.status,
           progress: t.progress || 0,
           sub_department: t.sub_department,
+          department: t.department,
+          comments: t.comments,
           wo_number: t.work_orders?.wo_number || '',
+          customer_name: t.work_orders?.customer_name || null,
+          machine_model: t.work_orders?.machine_model || null,
+          product_type: t.work_orders?.product_type || null,
           assigned_to_name: t.users?.full_name || null,
           assigned_to_avatar: t.users?.avatar_url || null,
         }))
@@ -89,6 +109,29 @@ export function EngineeringKanbanBoard() {
       return true
     })
   }, [tasks, subDeptFilter, woFilter, assigneeFilter])
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task)
+    setIsModalOpen(true)
+  }
+
+  const handleSaveStatus = async (id: string, status: string, comment?: string) => {
+    try {
+      await updateEngineeringStatus('kanban', id, status, comment)
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status, comments: comment || t.comments } : t)),
+      )
+      if (selectedTask?.id === id) {
+        setSelectedTask((prev) =>
+          prev ? { ...prev, status, comments: comment || prev.comments } : null,
+        )
+      }
+      toast({ title: 'Success', description: 'Task status updated' })
+    } catch (error) {
+      console.error(error)
+      toast({ title: 'Error', description: 'Failed to update task status', variant: 'destructive' })
+    }
+  }
 
   const COLUMNS = [
     {
@@ -203,7 +246,8 @@ export function EngineeringKanbanBoard() {
                 {colTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+                    onClick={() => handleTaskClick(task)}
+                    className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-bold text-slate-900 text-sm">{task.wo_number}</span>
@@ -287,6 +331,13 @@ export function EngineeringKanbanBoard() {
           )
         })}
       </div>
+
+      <EditStatusModal
+        task={selectedTask}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveStatus}
+      />
     </div>
   )
 }
