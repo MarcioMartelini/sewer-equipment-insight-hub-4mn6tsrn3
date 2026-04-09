@@ -3309,6 +3309,30 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION notify_production_task_status_change()
+//   CREATE OR REPLACE FUNCTION public.notify_production_task_status_change()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NEW.status IS DISTINCT FROM OLD.status THEN
+//       IF NEW.status = 'delayed'::public.production_task_status_enum THEN
+//         IF NEW.assigned_to IS NOT NULL THEN
+//           INSERT INTO public.notifications (user_id, type, message, related_entity_id, related_entity_type)
+//           VALUES (NEW.assigned_to, 'System', 'A tarefa de produção "' || NEW.task_name || '" foi marcada como Delayed.', NEW.id, 'production_tasks');
+//         END IF;
+//       ELSIF NEW.status = 'at_risk'::public.production_task_status_enum THEN
+//         IF NEW.assigned_to IS NOT NULL THEN
+//           INSERT INTO public.notifications (user_id, type, message, related_entity_id, related_entity_type)
+//           VALUES (NEW.assigned_to, 'System', 'A tarefa de produção "' || NEW.task_name || '" foi marcada como At Risk.', NEW.id, 'production_tasks');
+//         END IF;
+//       END IF;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION notify_task_status_change()
 //   CREATE OR REPLACE FUNCTION public.notify_task_status_change()
 //    RETURNS trigger
@@ -3350,6 +3374,7 @@ export const Constants = {
 // Table: customers
 //   on_customer_update: CREATE TRIGGER on_customer_update AFTER UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION log_customer_changes()
 // Table: production_tasks
+//   on_production_task_status_change: CREATE TRIGGER on_production_task_status_change AFTER UPDATE ON public.production_tasks FOR EACH ROW EXECUTE FUNCTION notify_production_task_status_change()
 //   on_production_task_update: CREATE TRIGGER on_production_task_update AFTER UPDATE ON public.production_tasks FOR EACH ROW EXECUTE FUNCTION log_production_task_changes()
 //   on_production_task_updated_at: CREATE TRIGGER on_production_task_updated_at BEFORE UPDATE ON public.production_tasks FOR EACH ROW EXECUTE FUNCTION update_production_task_updated_at()
 // Table: quotes

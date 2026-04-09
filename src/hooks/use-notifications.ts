@@ -51,7 +51,9 @@ export function useNotifications() {
         .eq('id', user.id)
         .single()
 
-      let query = supabase
+      const today = startOfDay(new Date())
+
+      let woQuery = supabase
         .from('wo_tasks')
         .select(`
           id,
@@ -63,19 +65,40 @@ export function useNotifications() {
             wo_number
           )
         `)
-        .in('status', ['Pending', 'In Progress'])
+        .in('status', ['not_started', 'on_track', 'parked'])
         .not('finish_date', 'is', null)
 
       if (userData?.role !== 'admin' && userData?.department) {
-        query = query.eq('department', userData.department)
+        woQuery = woQuery.eq('department', userData.department)
       }
 
-      const { data } = await query
+      const { data: woData } = await woQuery
 
-      if (data) {
-        const today = startOfDay(new Date())
+      let prodQuery = supabase
+        .from('production_tasks')
+        .select(`
+          id,
+          task_name,
+          finish_date,
+          status,
+          wo_id,
+          work_orders (
+            wo_number
+          )
+        `)
+        .in('status', ['not_started', 'on_track', 'parked'])
+        .not('finish_date', 'is', null)
 
-        const alerts = data
+      if (userData?.role !== 'admin' && userData?.department) {
+        prodQuery = prodQuery.eq('department', userData.department)
+      }
+
+      const { data: prodData } = await prodQuery
+
+      const allTasks = [...(woData || []), ...(prodData || [])]
+
+      if (allTasks.length > 0) {
+        const alerts = allTasks
           .map((task: any) => {
             const finishDate = startOfDay(parseISO(task.finish_date))
             const isOverdue = isBefore(finishDate, today)
@@ -95,6 +118,8 @@ export function useNotifications() {
           .filter((t: TaskAlert) => t.is_overdue || t.is_due_soon)
 
         setTaskAlerts(alerts)
+      } else {
+        setTaskAlerts([])
       }
     }
 
@@ -122,6 +147,17 @@ export function useNotifications() {
           event: '*',
           schema: 'public',
           table: 'wo_tasks',
+        },
+        () => {
+          fetchTaskAlerts()
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'production_tasks',
         },
         () => {
           fetchTaskAlerts()

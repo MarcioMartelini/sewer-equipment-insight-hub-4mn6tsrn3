@@ -22,6 +22,7 @@ import QuoteDetail from './pages/QuoteDetail'
 import CustomerDetail from './pages/CustomerDetail'
 import SalespersonDetail from './pages/SalespersonDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
+import { GlobalNotificationWatcher } from './components/GlobalNotificationWatcher'
 import logoUrl from './assets/design-sem-nome-3d351.png'
 
 const GlobalPrintStyles = () => (
@@ -71,7 +72,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth()
   if (loading) return null
   if (!session) return <Navigate to="/login" replace />
-  return <>{children}</>
+  return (
+    <>
+      <GlobalNotificationWatcher />
+      {children}
+    </>
+  )
 }
 
 const App = () => (
