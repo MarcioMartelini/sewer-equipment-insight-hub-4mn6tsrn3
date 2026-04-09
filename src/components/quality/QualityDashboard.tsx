@@ -16,7 +16,8 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { ShieldAlert, AlertTriangle, Activity, Loader2 } from 'lucide-react'
+import { ShieldAlert, AlertTriangle, Activity, Loader2, FileDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { format, subDays, subMonths, isAfter, startOfMonth, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -158,14 +159,31 @@ export function QualityDashboard() {
     },
   }
 
+  const handlePrint = () => {
+    const originalTitle = document.title
+    document.title = `quality_dashboard_${format(new Date(), 'yyyy-MM-dd')}`
+    window.print()
+    setTimeout(() => {
+      document.title = originalTitle
+    }, 1000)
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="hidden print:block mb-6">
+        <h2 className="text-2xl font-bold text-slate-900">Quality Dashboard</h2>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div>
           <h3 className="text-lg font-medium text-slate-900">Visão Geral</h3>
           <p className="text-sm text-slate-500">Acompanhe os principais indicadores de qualidade</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handlePrint} className="bg-white">
+            <FileDown className="h-4 w-4 mr-2" />
+            Export to PDF
+          </Button>
           <Select value={period} onValueChange={(v: Period) => setPeriod(v)}>
             <SelectTrigger className="w-[180px] bg-white">
               <SelectValue placeholder="Selecione o período" />
