@@ -1627,6 +1627,7 @@ export type Database = {
           author_id: string | null
           comment: string
           created_at: string | null
+          deleted_at: string | null
           id: string
           task_id: string
           updated_at: string | null
@@ -1635,6 +1636,7 @@ export type Database = {
           author_id?: string | null
           comment: string
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           task_id: string
           updated_at?: string | null
@@ -1643,6 +1645,7 @@ export type Database = {
           author_id?: string | null
           comment?: string
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           task_id?: string
           updated_at?: string | null
@@ -2376,6 +2379,7 @@ export const Constants = {
 //   author_id: uuid (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   deleted_at: timestamp with time zone (nullable)
 // Table: wo_task_history
 //   id: uuid (not null, default: gen_random_uuid())
 //   task_id: uuid (not null)

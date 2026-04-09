@@ -57,7 +57,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
       .from('wo_task_comments_history')
       .select('*, author:users(full_name)')
       .eq('task_id', task.id)
-      .is('deleted_at' as any, null)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
     if (!error && data) {
@@ -115,7 +115,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
     try {
       const { error } = await supabase
         .from('wo_task_comments_history')
-        .update({ deleted_at: new Date().toISOString() } as any)
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', id)
 
       if (error) throw error
@@ -269,14 +269,14 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               className="min-h-[80px] resize-none text-sm"
-              disabled={isSaving || task.is_completed || false}
+              disabled={isSaving || !!task.is_completed}
             />
             <div className="flex justify-end">
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={handleAddComment}
-                disabled={isSaving || !newComment.trim() || task.is_completed || false}
+                disabled={isSaving || !newComment.trim() || !!task.is_completed}
               >
                 {isSaving ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
@@ -297,14 +297,64 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                   className="p-2 bg-muted/50 rounded-md text-sm border space-y-1"
                 >
                   <div className="flex justify-between items-start gap-2">
-                    <span className="font-medium text-xs text-muted-foreground">
-                      {comment.author?.full_name || 'Sistema'} -{' '}
-                      {comment.created_at
-                        ? format(new Date(comment.created_at), 'dd/MM/yyyy HH:mm')
-                        : ''}
-                      {comment.updated_at && ' (Editado)'}
-                    </span>
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex-1">
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2 mt-1">
+                          <Textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            className="min-h-[60px] text-sm"
+                            disabled={isSaving}
+                          />
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => setEditingCommentId(null)}
+                              disabled={isSaving}
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="default"
+                              className="h-6 w-6"
+                              onClick={() => handleEditComment(comment.id)}
+                              disabled={isSaving || !editContent.trim()}
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm">
+                          <span className="font-medium text-xs text-muted-foreground mr-1">
+                            {comment.author?.full_name || 'Sistema'} -{' '}
+                            {comment.created_at
+                              ? format(new Date(comment.created_at), 'dd/MM/yyyy HH:mm')
+                              : ''}
+                            :
+                          </span>
+                          <span
+                            className={cn(
+                              'text-foreground whitespace-pre-wrap',
+                              comment.comment === 'Task marked as completed' &&
+                                'text-emerald-600 font-medium italic',
+                            )}
+                          >
+                            {comment.comment}
+                          </span>
+                          {comment.updated_at && (
+                            <span className="text-[10px] text-muted-foreground ml-1">
+                              (Editado)
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0 pt-0.5">
                       {user?.id === comment.author_id &&
                         !task.is_completed &&
                         editingCommentId !== comment.id &&
@@ -314,9 +364,10 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                               setEditingCommentId(comment.id)
                               setEditContent(comment.comment)
                             }}
-                            className="text-muted-foreground hover:text-foreground"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            title="Editar comentário"
                           >
-                            <Pencil className="w-3 h-3" />
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                         )}
                       {isAdmin &&
@@ -324,54 +375,14 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                         comment.comment !== 'Task marked as completed' && (
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
-                            className="text-muted-foreground hover:text-destructive"
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                            title="Excluir comentário"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
                     </div>
                   </div>
-
-                  {editingCommentId === comment.id ? (
-                    <div className="space-y-2 mt-2">
-                      <Textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className="min-h-[60px] text-sm"
-                        disabled={isSaving}
-                      />
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => setEditingCommentId(null)}
-                          disabled={isSaving}
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="default"
-                          className="h-6 w-6"
-                          onClick={() => handleEditComment(comment.id)}
-                          disabled={isSaving || !editContent.trim()}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p
-                      className={cn(
-                        'text-foreground whitespace-pre-wrap',
-                        comment.comment === 'Task marked as completed' &&
-                          'text-emerald-600 font-medium italic',
-                      )}
-                    >
-                      {comment.comment}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
