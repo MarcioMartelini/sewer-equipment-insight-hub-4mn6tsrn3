@@ -16,91 +16,117 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { ShieldAlert, AlertTriangle, Activity, Loader2, FileDown } from 'lucide-react'
+import {
+  ShieldAlert,
+  AlertTriangle,
+  Activity,
+  Loader2,
+  FileDown,
+  FilterX,
+  CalendarIcon,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { format, subDays, subMonths, isAfter, startOfMonth, parseISO } from 'date-fns'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { format, subMonths, isAfter, startOfMonth, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { cn } from '@/lib/utils'
 
-type Period = '30d' | '3m' | '6m' | '1y' | 'all'
+type DateRange = {
+  from: Date | undefined
+  to?: Date | undefined
+}
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function QualityDashboard() {
-  const [period, setPeriod] = useState<Period>('6m')
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subMonths(new Date(), 6),
+    to: new Date(),
+  })
+  const [showWarranty, setShowWarranty] = useState(true)
+  const [showLateCard, setShowLateCard] = useState(true)
+  const [supervisors, setSupervisors] = useState<string[]>([])
+  const [selectedSupervisor, setSelectedSupervisor] = useState<string>('all')
+
   const [claims, setClaims] = useState<any[]>([])
   const [pulls, setPulls] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Fetch unique supervisors for the filter
+  useEffect(() => {
+    supabase
+      .from('late_card_pulls')
+      .select('area_supervisor')
+      .not('area_supervisor', 'is', null)
+      .then(({ data }) => {
+        if (data) {
+          const unique = Array.from(
+            new Set(data.map((d) => d.area_supervisor).filter(Boolean)),
+          ) as string[]
+          setSupervisors(unique.sort())
+        }
+      })
+  }, [])
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true)
-      let startDate = new Date(0)
-      const now = new Date()
 
-      switch (period) {
-        case '30d':
-          startDate = subDays(now, 30)
-          break
-        case '3m':
-          startDate = subMonths(now, 3)
-          break
-        case '6m':
-          startDate = subMonths(now, 6)
-          break
-        case '1y':
-          startDate = subMonths(now, 12)
-          break
+      let qClaims = supabase.from('warranty_claims').select('id, date, created_at')
+      let qPulls = supabase.from('late_card_pulls').select('id, date, created_at, area_supervisor')
+
+      if (date?.from) {
+        qClaims = qClaims.gte('created_at', date.from.toISOString())
+        qPulls = qPulls.gte('created_at', date.from.toISOString())
+      }
+      if (date?.to) {
+        const endOfDay = new Date(date.to)
+        endOfDay.setHours(23, 59, 59, 999)
+        qClaims = qClaims.lte('created_at', endOfDay.toISOString())
+        qPulls = qPulls.lte('created_at', endOfDay.toISOString())
       }
 
-      let claimsQuery = supabase.from('warranty_claims').select('id, date, created_at')
-      let pullsQuery = supabase.from('late_card_pulls').select('id, date, created_at')
-
-      if (period !== 'all') {
-        claimsQuery = claimsQuery.gte('created_at', startDate.toISOString())
-        pullsQuery = pullsQuery.gte('created_at', startDate.toISOString())
+      if (selectedSupervisor !== 'all') {
+        qPulls = qPulls.eq('area_supervisor', selectedSupervisor)
       }
 
-      const [claimsRes, pullsRes] = await Promise.all([claimsQuery, pullsQuery])
+      const promises = []
+      if (showWarranty) {
+        promises.push(qClaims.then((r) => ({ type: 'claims', data: r.data })))
+      }
+      if (showLateCard) {
+        promises.push(qPulls.then((r) => ({ type: 'pulls', data: r.data })))
+      }
 
-      setClaims(claimsRes.data || [])
-      setPulls(pullsRes.data || [])
+      const results = await Promise.all(promises)
+      let newClaims: any[] = []
+      let newPulls: any[] = []
+
+      results.forEach((res) => {
+        if (res.type === 'claims') newClaims = res.data || []
+        if (res.type === 'pulls') newPulls = res.data || []
+      })
+
+      setClaims(newClaims)
+      setPulls(newPulls)
       setLoading(false)
     }
 
     fetchData()
-  }, [period])
+  }, [date, showWarranty, showLateCard, selectedSupervisor])
 
   const chartData = useMemo(() => {
-    if (!claims && !pulls) return []
+    if (!claims.length && !pulls.length) return []
 
     const now = new Date()
-    let startDate = new Date()
+    let startDate = date?.from || subMonths(now, 6)
+    let endDate = date?.to || now
 
-    switch (period) {
-      case '30d':
-        startDate = subDays(now, 30)
-        break
-      case '3m':
-        startDate = subMonths(now, 3)
-        break
-      case '6m':
-        startDate = subMonths(now, 6)
-        break
-      case '1y':
-        startDate = subMonths(now, 12)
-        break
-      case 'all': {
-        const allDates = [...claims, ...pulls]
-          .map((i) => i.date || i.created_at)
-          .filter(Boolean)
-          .map((d) => parseISO(d).getTime())
-        if (allDates.length > 0) {
-          startDate = new Date(Math.min(...allDates))
-        } else {
-          startDate = subMonths(now, 6)
-        }
-        break
-      }
+    if (startDate > endDate) {
+      startDate = endDate
     }
 
     const dataMap = new Map<
@@ -109,7 +135,7 @@ export function QualityDashboard() {
     >()
 
     let currentMonth = startOfMonth(startDate)
-    const endMonth = startOfMonth(now)
+    const endMonth = startOfMonth(endDate)
 
     while (currentMonth <= endMonth) {
       const monthKey = format(currentMonth, 'yyyy-MM')
@@ -127,7 +153,7 @@ export function QualityDashboard() {
       const dateStr = item.date || item.created_at
       if (!dateStr) return
       const dateObj = parseISO(dateStr)
-      if (isAfter(dateObj, now) || dateObj < startDate) return
+      if (isAfter(dateObj, endDate) || dateObj < startDate) return
 
       const monthKey = format(startOfMonth(dateObj), 'yyyy-MM')
 
@@ -141,7 +167,7 @@ export function QualityDashboard() {
     pulls.forEach((p) => processItem(p, 'pulls'))
 
     return Array.from(dataMap.values()).sort((a, b) => a.timestamp - b.timestamp)
-  }, [claims, pulls, period])
+  }, [claims, pulls, date])
 
   const totalClaims = claims.length
   const totalPulls = pulls.length
@@ -159,6 +185,10 @@ export function QualityDashboard() {
     },
   }
 
+  const activeChartConfig = { ...chartConfig }
+  if (!showWarranty) delete (activeChartConfig as any).claims
+  if (!showLateCard) delete (activeChartConfig as any).pulls
+
   const handlePrint = () => {
     const originalTitle = document.title
     document.title = `quality_dashboard_${format(new Date(), 'yyyy-MM-dd')}`
@@ -168,34 +198,127 @@ export function QualityDashboard() {
     }, 1000)
   }
 
+  const handleClearFilters = () => {
+    setDate({ from: subMonths(new Date(), 6), to: new Date() })
+    setShowWarranty(true)
+    setShowLateCard(true)
+    setSelectedSupervisor('all')
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="hidden print:block mb-6">
         <h2 className="text-2xl font-bold text-slate-900">Quality Dashboard</h2>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden mb-2">
         <div>
           <h3 className="text-lg font-medium text-slate-900">Visão Geral</h3>
           <p className="text-sm text-slate-500">Acompanhe os principais indicadores de qualidade</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handlePrint} className="bg-white">
+          <Button
+            variant="outline"
+            onClick={handlePrint}
+            className="bg-white border-slate-200 hover:bg-slate-50"
+          >
             <FileDown className="h-4 w-4 mr-2" />
             Export to PDF
           </Button>
-          <Select value={period} onValueChange={(v: Period) => setPeriod(v)}>
-            <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue placeholder="Selecione o período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30d">Últimos 30 Dias</SelectItem>
-              <SelectItem value="3m">Últimos 3 Meses</SelectItem>
-              <SelectItem value="6m">Últimos 6 Meses</SelectItem>
-              <SelectItem value="1y">Último Ano</SelectItem>
-              <SelectItem value="all">Todo o Período</SelectItem>
-            </SelectContent>
-          </Select>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6 bg-slate-50/50 p-5 rounded-xl border border-slate-200 mb-6 print:hidden">
+        <div className="flex-1 flex flex-wrap items-end gap-6">
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Período de Análise
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={'outline'}
+                  className={cn(
+                    'w-[260px] justify-start text-left font-normal bg-white',
+                    !date && 'text-slate-500',
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                  {date?.from ? (
+                    date.to ? (
+                      <>
+                        {format(date.from, 'dd/MM/yyyy')} - {format(date.to, 'dd/MM/yyyy')}
+                      </>
+                    ) : (
+                      format(date.from, 'dd/MM/yyyy')
+                    )
+                  ) : (
+                    <span>Selecione um período</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={setDate}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Supervisor (Late Cards)
+            </Label>
+            <Select value={selectedSupervisor} onValueChange={setSelectedSupervisor}>
+              <SelectTrigger className="w-[220px] bg-white">
+                <SelectValue placeholder="Todos os Supervisores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Supervisores</SelectItem>
+                {supervisors.map((sup) => (
+                  <SelectItem key={sup} value={sup}>
+                    {sup}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-6 h-10 px-2">
+            <div className="flex items-center space-x-2">
+              <Switch id="show-warranty" checked={showWarranty} onCheckedChange={setShowWarranty} />
+              <Label htmlFor="show-warranty" className="text-sm font-medium cursor-pointer">
+                Warranty Claims
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-late-card"
+                checked={showLateCard}
+                onCheckedChange={setShowLateCard}
+              />
+              <Label htmlFor="show-late-card" className="text-sm font-medium cursor-pointer">
+                Late Card Pulls
+              </Label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-end">
+          <Button
+            variant="ghost"
+            className="text-slate-500 hover:text-slate-700 h-10"
+            onClick={handleClearFilters}
+          >
+            <FilterX className="h-4 w-4 mr-2" />
+            Limpar Filtros
+          </Button>
         </div>
       </div>
 
@@ -206,7 +329,12 @@ export function QualityDashboard() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="bg-white hover:shadow-md transition-shadow duration-200 border-slate-200">
+            <Card
+              className={cn(
+                'bg-white transition-all duration-200 border-slate-200',
+                showWarranty ? 'opacity-100' : 'opacity-50 grayscale',
+              )}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Warranty Claims
@@ -216,12 +344,19 @@ export function QualityDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{totalClaims}</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {showWarranty ? totalClaims : '-'}
+                </div>
                 <p className="text-xs text-slate-500 mt-1">Registros no período</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white hover:shadow-md transition-shadow duration-200 border-slate-200">
+            <Card
+              className={cn(
+                'bg-white transition-all duration-200 border-slate-200',
+                showLateCard ? 'opacity-100' : 'opacity-50 grayscale',
+              )}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">
                   Total Late Card Pulls
@@ -231,12 +366,14 @@ export function QualityDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{totalPulls}</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {showLateCard ? totalPulls : '-'}
+                </div>
                 <p className="text-xs text-slate-500 mt-1">Ocorrências no período</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white hover:shadow-md transition-shadow duration-200 border-slate-200">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">Taxa Mensal</CardTitle>
                 <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
@@ -258,7 +395,7 @@ export function QualityDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig} className="h-[350px] w-full">
+              <ChartContainer config={activeChartConfig} className="h-[350px] w-full">
                 <BarChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis
@@ -282,18 +419,22 @@ export function QualityDashboard() {
                     cursor={{ fill: 'rgba(226, 232, 240, 0.4)' }}
                   />
                   <ChartLegend content={<ChartLegendContent />} />
-                  <Bar
-                    dataKey="claims"
-                    fill="var(--color-claims)"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={40}
-                  />
-                  <Bar
-                    dataKey="pulls"
-                    fill="var(--color-pulls)"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={40}
-                  />
+                  {showWarranty && (
+                    <Bar
+                      dataKey="claims"
+                      fill="var(--color-claims)"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={40}
+                    />
+                  )}
+                  {showLateCard && (
+                    <Bar
+                      dataKey="pulls"
+                      fill="var(--color-pulls)"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={40}
+                    />
+                  )}
                 </BarChart>
               </ChartContainer>
             </CardContent>
