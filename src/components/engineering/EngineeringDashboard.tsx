@@ -25,8 +25,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { Loader2, CheckCircle2, Clock, ListTodo, AlertTriangle, TrendingUp } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { DepartmentTasks } from '@/components/shared/DepartmentTasks'
 
 export function EngineeringDashboard() {
   const [period, setPeriod] = useState<PeriodFilter>('30d')
@@ -57,14 +55,10 @@ export function EngineeringDashboard() {
   }
 
   return (
-    <Tabs defaultValue="overview" className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold">Engineering</h2>
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="tasks">Task Schedule</TabsTrigger>
-          </TabsList>
+          <h2 className="text-xl font-semibold">Engineering Overview</h2>
         </div>
         <Select value={period} onValueChange={(v: any) => setPeriod(v)}>
           <SelectTrigger className="w-[180px]">
@@ -79,7 +73,7 @@ export function EngineeringDashboard() {
         </Select>
       </div>
 
-      <TabsContent value="overview" className="space-y-6">
+      <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -224,11 +218,7 @@ export function EngineeringDashboard() {
             </Table>
           </CardContent>
         </Card>
-      </TabsContent>
-
-      <TabsContent value="tasks" className="mt-0">
-        <DepartmentTasks department="Engineering" />
-      </TabsContent>
-    </Tabs>
+      </div>
+    </div>
   )
 }
