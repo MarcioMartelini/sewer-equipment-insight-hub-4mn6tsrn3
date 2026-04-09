@@ -25,6 +25,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { Loader2, CheckCircle2, Clock, ListTodo, AlertTriangle, TrendingUp } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export function EngineeringDashboard() {
   const [period, setPeriod] = useState<PeriodFilter>('30d')
