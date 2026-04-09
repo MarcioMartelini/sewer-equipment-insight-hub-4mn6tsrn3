@@ -234,7 +234,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
   const wo = task.work_orders || ({} as any)
 
   return (
-    <Card className={cn('flex flex-col h-full', task.is_completed && 'opacity-80 bg-muted/30')}>
+    <Card className={cn('flex flex-col shrink-0', task.is_completed && 'opacity-80 bg-muted/30')}>
       <CardHeader className="pb-3 border-b">
         <div className="flex justify-between items-start gap-2">
           <div>

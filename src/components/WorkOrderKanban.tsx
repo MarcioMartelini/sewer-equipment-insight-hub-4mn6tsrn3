@@ -76,7 +76,7 @@ export function WorkOrderKanban({ data }: WorkOrderKanbanProps) {
                 <div
                   key={wo.id}
                   className={cn(
-                    'bg-white rounded-lg p-4 border border-slate-200 shadow-sm transition-all duration-200 hover:shadow-elevation hover:-translate-y-1 hover:border-indigo-200 cursor-pointer border-l-4 group',
+                    'bg-white rounded-lg p-4 border border-slate-200 shadow-sm transition-all duration-200 hover:shadow-elevation hover:-translate-y-1 hover:border-indigo-200 cursor-pointer border-l-4 group shrink-0',
                     getBorderColor(wo.status),
                   )}
                   style={{ animationDelay: `${i * 50}ms` }}
