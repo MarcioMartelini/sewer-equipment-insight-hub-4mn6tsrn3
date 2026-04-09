@@ -30,12 +30,15 @@ export default function Engineering() {
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 lg:w-[850px] mb-4 h-auto lg:h-10">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 lg:w-[950px] mb-4 h-auto lg:h-10">
           <TabsTrigger value="dashboard" className="py-2">
             Dashboard
           </TabsTrigger>
           <TabsTrigger value="tasks" className="py-2">
-            Tasks List
+            Task Lists
+          </TabsTrigger>
+          <TabsTrigger value="kanban" className="py-2">
+            Kanban Board
           </TabsTrigger>
           <TabsTrigger value="layouts" className="py-2">
             Layouts
@@ -55,7 +58,16 @@ export default function Engineering() {
           <EngineeringDashboard />
         </TabsContent>
         <TabsContent value="tasks" className="mt-0 outline-none">
-          <DepartmentTasks department="Engineering" />
+          <DepartmentTasks
+            department="Engineering"
+            {...({ view: 'list', defaultView: 'list' } as any)}
+          />
+        </TabsContent>
+        <TabsContent value="kanban" className="mt-0 outline-none">
+          <DepartmentTasks
+            department="Engineering"
+            {...({ view: 'kanban', defaultView: 'kanban' } as any)}
+          />
         </TabsContent>
         <TabsContent value="layouts" className="mt-0 outline-none">
           <EngineeringTable type="layouts" woFilter={woFilter} />
