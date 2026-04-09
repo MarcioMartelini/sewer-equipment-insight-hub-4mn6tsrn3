@@ -8,10 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, LayoutGrid, List as ListIcon } from 'lucide-react'
+import { Search, LayoutGrid, List as ListIcon, X } from 'lucide-react'
 import { Department, Status, PrazoFilter } from '@/types/work-order'
+import { Button } from '@/components/ui/button'
 
-interface WorkOrderFiltersProps {
+export interface WorkOrderFiltersProps {
   search: string
   setSearch: (val: string) => void
   selectedDepts: Department[]
@@ -22,6 +23,11 @@ interface WorkOrderFiltersProps {
   setPrazo: (val: PrazoFilter) => void
   view: 'table' | 'kanban'
   setView: (val: 'table' | 'kanban') => void
+  totalCount?: number
+  filteredCount?: number
+  onClearFilters?: () => void
+  salesperson?: string
+  setSalesperson?: (val: string) => void
 }
 
 const DEPARTMENTS: Department[] = [
@@ -47,11 +53,28 @@ export function WorkOrderFilters({
   setPrazo,
   view,
   setView,
+  totalCount,
+  filteredCount,
+  onClearFilters,
+  salesperson,
+  setSalesperson
 }: WorkOrderFiltersProps) {
+  const hasActiveFilters = search !== '' || selectedDepts.length > 0 || selectedStatuses.length > 0 || prazo !== 'Todos' || (salesperson && salesperson !== '')
+
+  const handleClearAll = () => {
+    setSearch('')
+    setSelectedDepts([])
+    setSelectedStatuses([])
+    setPrazo('Todos')
+    if (setSalesperson) setSalesperson('')
+    if (onClearFilters) onClearFilters()
+  }
+
   return (
-    <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between animate-fade-in-up">
-      <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative w-full md:max-w-xs">
+    <div className="flex flex-col gap-4 mb-6 animate-fade-in-up">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center w-full">
+          <div className="relative w-full md:max-w-xs">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             type="text"
@@ -62,7 +85,7 @@ export function WorkOrderFilters({
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 w-full md:w-auto">
           <div className="w-full sm:w-[160px]">
             <MultiSelect
               options={DEPARTMENTS}
@@ -93,10 +116,34 @@ export function WorkOrderFilters({
               </SelectContent>
             </Select>
           </div>
+          <div className="w-full sm:w-[160px]">
+            <Input
+              type="text"
+              placeholder="Salesperson..."
+              className="bg-white border-slate-200 text-sm focus-visible:ring-indigo-500"
+              value={salesperson || ''}
+              onChange={(e) => setSalesperson?.(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
-      <Tabs
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full mt-2">
+        <div className="flex items-center gap-4">
+          {(totalCount !== undefined && filteredCount !== undefined) && (
+            <div className="text-sm font-medium text-slate-500">
+              Showing <span className="font-bold text-slate-700">{filteredCount}</span> of <span className="font-bold text-slate-700">{totalCount}</span> tasks
+            </div>
+          )}
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={handleClearAll} className="text-slate-500 hover:text-slate-700 h-8">
+              <X className="w-4 h-4 mr-2" />
+              Clear All Filters
+            </Button>
+          )}
+        </div>
+
+        <Tabs
         value={view}
         onValueChange={(v) => setView(v as 'table' | 'kanban')}
         className="w-full md:w-auto self-end md:self-auto"
@@ -117,7 +164,8 @@ export function WorkOrderFilters({
             Board
           </TabsTrigger>
         </TabsList>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   )
 }
