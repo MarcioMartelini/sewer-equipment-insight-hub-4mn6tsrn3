@@ -103,7 +103,7 @@ export function LateCardPullsTable() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Late Card Pulls</CardTitle>
-        <Button onClick={() => setCreating(true)} size="sm">
+        <Button className="bg-[#0013ff]" onClick={() => setCreating(true)} size="sm">
           <Plus className="mr-2 h-4 w-4" />
           Novo Registro
         </Button>
