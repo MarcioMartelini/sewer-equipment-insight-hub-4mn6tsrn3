@@ -49,10 +49,17 @@ Deno.serve(async (req: Request) => {
       .neq('status', 'delayed') // Avoid updating already delayed tasks
       .select('id')
 
-    if (delayedError) {
-      console.error('Error updating delayed tasks:', delayedError)
-      throw delayedError
-    }
+    if (delayedError) throw delayedError
+
+    const { data: delayedProdTasks, error: delayedProdError } = await supabase
+      .from('production_tasks')
+      .update({ status: 'delayed' })
+      .lt('finish_date', today)
+      .neq('status', 'complete')
+      .neq('status', 'delayed')
+      .select('id')
+
+    if (delayedProdError) throw delayedProdError
 
     // Rule 2: If finish_date is within 2 days and status is 'not_started' -> change to 'at_risk'
     const { data: atRiskTasks, error: atRiskError } = await supabase
@@ -63,10 +70,17 @@ Deno.serve(async (req: Request) => {
       .eq('status', 'not_started')
       .select('id')
 
-    if (atRiskError) {
-      console.error('Error updating at_risk tasks:', atRiskError)
-      throw atRiskError
-    }
+    if (atRiskError) throw atRiskError
+
+    const { data: atRiskProdTasks, error: atRiskProdError } = await supabase
+      .from('production_tasks')
+      .update({ status: 'at_risk' })
+      .gte('finish_date', today)
+      .lte('finish_date', inTwoDays)
+      .eq('status', 'not_started')
+      .select('id')
+
+    if (atRiskProdError) throw atRiskProdError
 
     // Rule 3: If task is 'parked' for more than 3 days, notify assigned user
     const threeDaysAgo = new Date(now)
@@ -80,14 +94,26 @@ Deno.serve(async (req: Request) => {
       .lt('updated_at', parkedDateStr)
       .not('assigned_to', 'is', null)
 
-    if (parkedError) {
-      console.error('Error fetching parked tasks:', parkedError)
-      throw parkedError
-    }
+    if (parkedError) throw parkedError
+
+    const { data: parkedProdTasks, error: parkedProdError } = await supabase
+      .from('production_tasks')
+      .select('id, assigned_to, task_name')
+      .eq('status', 'parked')
+      .lt('updated_at', parkedDateStr)
+      .not('assigned_to', 'is', null)
+
+    if (parkedProdError) throw parkedProdError
 
     let parkedNotificationsCount = 0
-    if (parkedTasks && parkedTasks.length > 0) {
-      const taskIds = parkedTasks.map((t) => t.id)
+
+    const allParkedTasks = [
+      ...(parkedTasks || []).map((t) => ({ ...t, type: 'wo_tasks' })),
+      ...(parkedProdTasks || []).map((t) => ({ ...t, type: 'production_tasks' })),
+    ]
+
+    if (allParkedTasks.length > 0) {
+      const taskIds = allParkedTasks.map((t) => t.id)
       const { data: existingNotifs } = await supabase
         .from('notifications')
         .select('related_entity_id')
@@ -96,14 +122,14 @@ Deno.serve(async (req: Request) => {
 
       const notifiedTaskIds = new Set(existingNotifs?.map((n) => n.related_entity_id) || [])
 
-      const notificationsToInsert = parkedTasks
+      const notificationsToInsert = allParkedTasks
         .filter((task) => !notifiedTaskIds.has(task.id))
         .map((task) => ({
           user_id: task.assigned_to,
           type: 'System',
           message: `A tarefa "${task.task_name}" está em status Parked por mais de 3 dias.`,
           related_entity_id: task.id,
-          related_entity_type: 'wo_tasks',
+          related_entity_type: task.type,
           is_read: false,
         }))
 
@@ -112,10 +138,7 @@ Deno.serve(async (req: Request) => {
           .from('notifications')
           .insert(notificationsToInsert)
 
-        if (notifyError) {
-          console.error('Error inserting parked notifications:', notifyError)
-          throw notifyError
-        }
+        if (notifyError) throw notifyError
         parkedNotificationsCount = notificationsToInsert.length
       }
     }
@@ -123,8 +146,8 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         message: 'Tasks updated successfully',
-        delayedCount: delayedTasks?.length || 0,
-        atRiskCount: atRiskTasks?.length || 0,
+        delayedCount: (delayedTasks?.length || 0) + (delayedProdTasks?.length || 0),
+        atRiskCount: (atRiskTasks?.length || 0) + (atRiskProdTasks?.length || 0),
         parkedNotificationsCount,
         timestamp: new Date().toISOString(),
       }),

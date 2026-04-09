@@ -31,7 +31,7 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
   }
 
   let query = supabase
-    .from('wo_tasks')
+    .from('production_tasks')
     .select(
       `
       id,
@@ -68,6 +68,7 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
     updated_at: item.updated_at,
   }))
 }
+
 export async function updateProductionStatus(
   type: ProductionType,
   id: string,
@@ -79,8 +80,8 @@ export async function updateProductionStatus(
   } = await supabase.auth.getUser()
 
   const { data: oldTask } = await supabase
-    .from('wo_tasks')
-    .select('status, was_delayed, finish_date')
+    .from('production_tasks')
+    .select('status, finish_date')
     .eq('id', id)
     .single()
 
@@ -88,24 +89,12 @@ export async function updateProductionStatus(
   const isCompleted = status === 'complete'
   const completionDate = isCompleted ? new Date().toISOString() : null
 
-  let delayed = oldTask?.was_delayed || false
-  if (!delayed && oldTask?.finish_date) {
-    const finish = new Date(oldTask.finish_date)
-    const today = new Date()
-    finish.setHours(0, 0, 0, 0)
-    today.setHours(0, 0, 0, 0)
-    if (today > finish) {
-      delayed = true
-    }
-  }
-
   const { error } = await supabase
-    .from('wo_tasks')
+    .from('production_tasks')
     .update({
       status: status as any,
       is_completed: isCompleted,
       completion_date: completionDate,
-      was_delayed: delayed,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
@@ -124,7 +113,7 @@ export async function updateProductionStatus(
       ? `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}. Reason: ${comment}`
       : `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}`
 
-    await supabase.from('wo_task_comments_history').insert({
+    await supabase.from('production_task_comments_history').insert({
       task_id: id,
       comment: finalComment,
       author_id: user?.id,
