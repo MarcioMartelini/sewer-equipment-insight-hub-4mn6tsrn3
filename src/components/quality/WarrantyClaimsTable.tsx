@@ -37,10 +37,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Edit2, Eye, Plus, Search, Trash2, X } from 'lucide-react'
+import { Download, Edit2, Eye, Plus, Search, Trash2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import logoUrl from '@/assets/design-sem-nome-70de8.png'
 
 type ModalMode = 'create' | 'edit' | 'view' | null
 
@@ -115,9 +118,13 @@ export function WarrantyClaimsTable() {
   }
 
   useEffect(() => {
-    fetchData()
     fetchDropdownData()
   }, [])
+
+  useEffect(() => {
+    const t = setTimeout(fetchData, 500)
+    return () => clearTimeout(t)
+  }, [filters])
 
   const handleOpenModal = (mode: ModalMode, claim?: any) => {
     setModalMode(mode)
@@ -181,7 +188,6 @@ export function WarrantyClaimsTable() {
 
   const clearFilters = () => {
     setFilters({ customer: '', family: '', model: '', start: '', end: '' })
-    setTimeout(fetchData, 100)
   }
 
   const formatDate = (d: string) => {
@@ -190,19 +196,66 @@ export function WarrantyClaimsTable() {
     return `${day}/${m}/${y}`
   }
 
+  const handleExportPDF = async () => {
+    const doc = new jsPDF()
+    try {
+      const img = new Image()
+      img.src = logoUrl
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+      })
+      doc.addImage(img, 'PNG', 14, 10, 40, 15, undefined, 'FAST')
+    } catch (e) {
+      console.error('Failed to load image', e)
+    }
+
+    doc.setFontSize(16)
+    doc.text('Warranty Claims Report', 14, 35)
+    doc.setFontSize(10)
+    doc.setTextColor(100)
+    doc.text(`Generated on ${new Date().toLocaleString()}`, 14, 42)
+
+    const tableData = claims.map((c) => [
+      formatDate(c.date),
+      c.customer_name || '-',
+      c.product_family || '-',
+      c.machine_model || '-',
+      c.serial_number || '-',
+      c.occurrence_description || '-',
+      c.status || 'pending',
+    ])
+
+    autoTable(doc, {
+      head: [['Date', 'Customer', 'Family', 'Model', 'S/N', 'Occurrence', 'Status']],
+      body: tableData,
+      startY: 48,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [21, 17, 242] },
+    })
+
+    doc.save(`warranty_claims_${new Date().toISOString().split('T')[0]}.pdf`)
+  }
+
   const isReadOnly = modalMode === 'view'
 
   return (
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
         <CardTitle className="text-xl">Warranty Claims Registry</CardTitle>
-        <Button
-          className="bg-[#1511f2] hover:bg-[#1511f2]/90"
-          onClick={() => handleOpenModal('create')}
-          size="sm"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Create Warranty Claim
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportPDF}>
+            <Download className="mr-2 h-4 w-4" /> Export PDF
+          </Button>
+          <Button
+            className="bg-[#1511f2] hover:bg-[#1511f2]/90"
+            onClick={() => handleOpenModal('create')}
+            size="sm"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Create Warranty Claim
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         {/* Filters */}
@@ -250,11 +303,8 @@ export function WarrantyClaimsTable() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={fetchData} className="w-full xl:w-auto">
-              <Search className="w-4 h-4 mr-2" /> Search
-            </Button>
             <Button variant="outline" onClick={clearFilters} className="w-full xl:w-auto">
-              <X className="w-4 h-4 mr-2" /> Clear
+              <X className="w-4 h-4 mr-2" /> Clear Filters
             </Button>
           </div>
         </div>

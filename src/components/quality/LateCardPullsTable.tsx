@@ -10,9 +10,12 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Edit2, Plus, Eye, Trash2, X } from 'lucide-react'
+import { Download, Edit2, Plus, Eye, Trash2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import logoUrl from '@/assets/design-sem-nome-70de8.png'
 import {
   Dialog,
   DialogContent,
@@ -89,6 +92,46 @@ export function LateCardPullsTable() {
     }
   }
 
+  const handleExportPDF = async () => {
+    const doc = new jsPDF()
+    try {
+      const img = new Image()
+      img.src = logoUrl
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+      })
+      doc.addImage(img, 'PNG', 14, 10, 40, 15, undefined, 'FAST')
+    } catch (e) {
+      console.error('Failed to load image', e)
+    }
+
+    doc.setFontSize(16)
+    doc.text('Late Card Pulls Report', 14, 35)
+    doc.setFontSize(10)
+    doc.setTextColor(100)
+    doc.text(`Generated on ${new Date().toLocaleString()}`, 14, 42)
+
+    const tableData = pulls.map((pull) => [
+      pull.date ? pull.date.split('-').reverse().join('/') : '-',
+      pull.part_number || '-',
+      pull.area_supervisor || '-',
+      pull.occurrence_description || '-',
+      pull.status || 'pending',
+    ])
+
+    autoTable(doc, {
+      head: [['Date', 'PN', 'Supervisor', 'Occurrence', 'Status']],
+      body: tableData,
+      startY: 48,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 19, 255] },
+    })
+
+    doc.save(`late_card_pulls_${new Date().toISOString().split('T')[0]}.pdf`)
+  }
+
   const handleSave = async () => {
     const dataToSave = dialogState === 'create' ? { ...formData, created_by: user?.id } : formData
     const req =
@@ -106,42 +149,51 @@ export function LateCardPullsTable() {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Late Card Pulls</CardTitle>
-        <Button className="bg-[#0013ff]" onClick={() => openDialog('create')} size="sm">
-          <Plus className="mr-2 h-4 w-4" /> Create Late Card Pull
-        </Button>
+    <Card className="shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
+        <CardTitle className="text-xl">Late Card Pulls</CardTitle>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportPDF}>
+            <Download className="mr-2 h-4 w-4" /> Export PDF
+          </Button>
+          <Button
+            className="bg-[#0013ff] hover:bg-[#0013ff]/90"
+            onClick={() => openDialog('create')}
+            size="sm"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Create Late Card Pull
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <Label className="text-xs">Data Inicial</Label>
+      <CardContent className="pt-6">
+        <div className="bg-slate-50 border rounded-lg p-4 mb-6 flex flex-col xl:flex-row gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 w-full">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-slate-500">Data Inicial</Label>
               <Input
                 type="date"
                 value={filters.dateFrom}
                 onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Data Final</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-slate-500">Data Final</Label>
               <Input
                 type="date"
                 value={filters.dateTo}
                 onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">PN</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-slate-500">PN</Label>
               <Input
                 placeholder="Buscar PN..."
                 value={filters.pn}
                 onChange={(e) => setFilters({ ...filters, pn: e.target.value })}
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Supervisor</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-slate-500">Supervisor</Label>
               <Input
                 placeholder="Buscar Supervisor..."
                 value={filters.supervisor}
@@ -149,12 +201,13 @@ export function LateCardPullsTable() {
               />
             </div>
           </div>
-          <div className="flex items-end">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => setFilters({ dateFrom: '', dateTo: '', pn: '', supervisor: '' })}
+              className="w-full xl:w-auto"
             >
-              <X className="h-4 w-4 mr-2" /> Limpar
+              <X className="w-4 h-4 mr-2" /> Limpar Filtros
             </Button>
           </div>
         </div>
