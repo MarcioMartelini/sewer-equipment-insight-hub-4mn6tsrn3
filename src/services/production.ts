@@ -28,6 +28,7 @@ export interface ProductionTask {
   completion_date?: string | null
   created_at: string
   updated_at: string
+  comments_count?: number
 }
 
 export async function getProductionTasks(type: ProductionType): Promise<ProductionTask[]> {
@@ -65,10 +66,12 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
     ),
     users!production_tasks_assigned_to_fkey (
       full_name
-    )
+    ),
+    production_task_comments_history ( id )
   `,
     )
     .eq('department', 'Production')
+
   if (type !== 'all') {
     const term = searchMap[type] || type
     query = query.ilike('sub_department', `%${term}%`)
@@ -97,6 +100,7 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
     completion_date: item.completion_date,
     created_at: item.created_at,
     updated_at: item.updated_at,
+    comments_count: item.production_task_comments_history?.length || 0,
   }))
 }
 
@@ -132,7 +136,7 @@ export async function updateProductionStatus(
 
   if (error) throw error
 
-  if (oldStatus !== status) {
+  if (oldStatus !== status || comment) {
     const formatStatus = (s: string) => {
       if (s === 'not_started') return 'Not Started'
       if (s === 'on_track') return 'On Track'
@@ -140,19 +144,26 @@ export async function updateProductionStatus(
       return s.charAt(0).toUpperCase() + s.slice(1)
     }
 
-    const finalComment = comment
-      ? `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}. Reason: ${comment}`
-      : `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}`
+    let finalComment = ''
+    if (oldStatus !== status) {
+      finalComment = comment
+        ? `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}. Reason: ${comment}`
+        : `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}`
+    } else if (comment) {
+      finalComment = comment
+    }
 
-    await supabase.from('production_task_comments_history').insert({
-      task_id: id,
-      comment: finalComment,
-      author_id: user?.id,
-      status: status as any,
-      created_at: new Date().toISOString(),
-    })
+    if (finalComment) {
+      await supabase.from('production_task_comments_history').insert({
+        task_id: id,
+        comment: finalComment,
+        author_id: user?.id,
+        status: status as any,
+        created_at: new Date().toISOString(),
+      })
+    }
 
-    if (isCompleted) {
+    if (isCompleted && oldStatus !== 'complete') {
       await supabase.from('production_task_comments_history').insert({
         task_id: id,
         comment: 'Task marked as completed',
