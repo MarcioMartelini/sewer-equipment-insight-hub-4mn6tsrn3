@@ -8,6 +8,12 @@ export interface EngineeringTask {
   wo_number: string
   task_name: string
   status: string
+  assigned_to: string | null
+  assignee_name: string | null
+  start_date: string | null
+  finish_date: string | null
+  completion_date: string | null
+  comments: string | null
   created_at: string
   updated_at: string
 }
@@ -28,11 +34,15 @@ export async function getEngineeringTasks(type: EngineeringType): Promise<Engine
       wo_id,
       task_name,
       status,
+      assigned_to,
+      start_date,
+      finish_date,
+      completion_date,
+      comments,
       created_at,
       updated_at,
-      work_orders (
-        wo_number
-      )
+      work_orders ( wo_number ),
+      users!wo_tasks_assigned_to_fkey ( full_name )
     `)
     .eq('department', 'Engineering')
     .or(`sub_department.ilike.%${term}%,task_name.ilike.%${term}%`)
@@ -44,10 +54,24 @@ export async function getEngineeringTasks(type: EngineeringType): Promise<Engine
     wo_id: item.wo_id,
     wo_number: item.work_orders?.wo_number || 'Unknown',
     task_name: item.task_name,
-    status: item.status || 'not started',
+    status: item.status || 'not_started',
+    assigned_to: item.assigned_to,
+    assignee_name: item.users?.full_name || null,
+    start_date: item.start_date,
+    finish_date: item.finish_date,
+    completion_date: item.completion_date,
+    comments: item.comments,
     created_at: item.created_at,
     updated_at: item.updated_at,
   }))
+}
+
+export async function assignEngineeringTask(id: string, userId: string | null) {
+  const { error } = await supabase
+    .from('wo_tasks')
+    .update({ assigned_to: userId, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
 }
 
 export async function updateEngineeringStatus(type: EngineeringType, id: string, status: string) {
