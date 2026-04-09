@@ -42,6 +42,7 @@ import {
   Activity,
   Trash2,
   Rocket,
+  Calendar,
 } from 'lucide-react'
 import {
   Select,
@@ -765,7 +766,23 @@ export default function WorkOrderDetail() {
       <Dialog open={releaseOpen} onOpenChange={setReleaseOpen}>
         <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Release to Production - Task Schedule</DialogTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pr-6">
+              <DialogTitle>Release to Production - Task Schedule</DialogTitle>
+              {(wo.expected_completion_date || wo.due_date) && (
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-md border">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span>
+                    Expected Completion:{' '}
+                    <strong className="text-foreground">
+                      {format(
+                        new Date(`${wo.expected_completion_date || wo.due_date}T00:00:00`),
+                        'MMM dd, yyyy',
+                      )}
+                    </strong>
+                  </span>
+                </div>
+              )}
+            </div>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto py-4">
             <Accordion type="multiple" className="w-full space-y-4">
