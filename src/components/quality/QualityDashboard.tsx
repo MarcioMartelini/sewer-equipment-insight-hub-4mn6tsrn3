@@ -88,7 +88,7 @@ export function QualityDashboard() {
       case '1y':
         startDate = subMonths(now, 12)
         break
-      case 'all':
+      case 'all': {
         const allDates = [...claims, ...pulls]
           .map((i) => i.date || i.created_at)
           .filter(Boolean)
@@ -99,6 +99,7 @@ export function QualityDashboard() {
           startDate = subMonths(now, 6)
         }
         break
+      }
     }
 
     const dataMap = new Map<
