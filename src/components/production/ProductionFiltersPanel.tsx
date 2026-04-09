@@ -16,8 +16,8 @@ import { Filter, ChevronDown, RotateCcw } from 'lucide-react'
 import { ProductionFilters } from '@/services/production-dashboard'
 
 interface Props {
-  filters: ProductionFilters
-  updateFilter: (key: keyof ProductionFilters, value: any) => void
+  filters: ProductionFilters & { subDepartment?: string }
+  updateFilter: (key: string, value: any) => void
   resetFilters: () => void
 }
 
@@ -70,6 +70,26 @@ export function ProductionFiltersPanel({ filters, updateFilter, resetFilters }: 
                 <SelectItem value="30d">Last 30 days</SelectItem>
                 <SelectItem value="90d">Last 90 days</SelectItem>
                 <SelectItem value="custom">Custom (All time)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-500">Sub Department</Label>
+            <Select
+              value={filters.subDepartment || 'all'}
+              onValueChange={(v) => updateFilter('subDepartment', v)}
+            >
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="All Sub Departments" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sub Departments</SelectItem>
+                <SelectItem value="weld_shop">Weld Shop</SelectItem>
+                <SelectItem value="paint">Paint</SelectItem>
+                <SelectItem value="sub_assembly">Sub Assembly</SelectItem>
+                <SelectItem value="warehouse">Warehouse</SelectItem>
+                <SelectItem value="final_assembly">Final Assembly</SelectItem>
+                <SelectItem value="tests">Tests</SelectItem>
               </SelectContent>
             </Select>
           </div>

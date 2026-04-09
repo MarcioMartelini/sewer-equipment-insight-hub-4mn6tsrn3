@@ -66,7 +66,12 @@ export async function getProductionTasks(type: ProductionType): Promise<Producti
   }))
 }
 
-export async function updateProductionStatus(type: ProductionType, id: string, status: string) {
+export async function updateProductionStatus(
+  type: ProductionType,
+  id: string,
+  status: string,
+  comment?: string,
+) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -113,9 +118,13 @@ export async function updateProductionStatus(type: ProductionType, id: string, s
       return s.charAt(0).toUpperCase() + s.slice(1)
     }
 
+    const finalComment = comment
+      ? `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}. Reason: ${comment}`
+      : `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}`
+
     await supabase.from('wo_task_comments_history').insert({
       task_id: id,
-      comment: `Status changed from ${formatStatus(oldStatus)} to ${formatStatus(status)}`,
+      comment: finalComment,
       author_id: user?.id,
       status: status as any,
       created_at: new Date().toISOString(),

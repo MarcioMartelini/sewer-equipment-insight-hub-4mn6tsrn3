@@ -21,8 +21,9 @@ import { Loader2, CheckCircle2, Clock, ListTodo, AlertTriangle, TrendingUp } fro
 import { ProductionFiltersPanel } from './ProductionFiltersPanel'
 
 export function ProductionDashboard() {
-  const [filters, setFilters] = useState<ProductionFilters>({
+  const [filters, setFilters] = useState<ProductionFilters & { subDepartment?: string }>({
     period: '30d',
+    subDepartment: 'all',
     operator: '',
     productDivision: '',
     customer: '',
@@ -52,13 +53,14 @@ export function ProductionDashboard() {
     fetchData()
   }, [filters])
 
-  const updateFilter = (key: keyof ProductionFilters, value: any) => {
+  const updateFilter = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
   const resetFilters = () => {
     setFilters({
       period: '30d',
+      subDepartment: 'all',
       operator: '',
       productDivision: '',
       customer: '',

@@ -32,9 +32,9 @@ export function useProductionTasks(type: ProductionType) {
     fetchTasks()
   }, [fetchTasks])
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const handleUpdateStatus = async (id: string, status: string, comment?: string) => {
     try {
-      await updateProductionStatus(type, id, status)
+      await updateProductionStatus(type, id, status, comment)
       toast({ title: 'Status updated successfully' })
       await fetchTasks()
     } catch (error: any) {

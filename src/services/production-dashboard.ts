@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase/client'
-import { subDays, format } from 'date-fns'
 
 export interface ProductionFilters {
   period: string
@@ -12,6 +11,7 @@ export interface ProductionFilters {
   tasksCompleted: boolean
   tasksAtRisk: boolean
   tasksDelayed: boolean
+  subDepartment?: string
 }
 
 export interface DashboardData {
@@ -39,26 +39,35 @@ export async function getProductionDashboardData(
 ): Promise<DashboardData> {
   let query = supabase
     .from('wo_tasks')
-    .select(
-      `
+    .select(`
       id,
       status,
+      is_completed,
+      completion_date,
+      was_delayed,
       sub_department,
       created_at,
-      updated_at,
-      assigned_to,
-      wo_id,
       work_orders!inner (
-        id,
         wo_number,
         customer_name,
-        due_date,
-        product_type,
-        machine_model
+        machine_model,
+        due_date
       )
-    `,
-    )
+    `)
     .eq('department', 'Production')
+
+  if (filters.subDepartment && filters.subDepartment !== 'all') {
+    const searchMap: Record<string, string> = {
+      weld_shop: 'Weld Shop',
+      paint: 'Paint',
+      sub_assembly: 'Sub Assembly',
+      warehouse: 'Warehouse',
+      final_assembly: 'Final Assembly',
+      tests: 'Tests',
+    }
+    const term = searchMap[filters.subDepartment] || filters.subDepartment
+    query = query.ilike('sub_department', `%${term}%`)
+  }
 
   if (filters.woNumber) {
     query = query.ilike('work_orders.wo_number', `%${filters.woNumber}%`)
@@ -70,97 +79,112 @@ export async function getProductionDashboardData(
     query = query.ilike('work_orders.machine_model', `%${filters.machineModel}%`)
   }
 
+  if (filters.tasksCompleted) {
+    query = query.eq('is_completed', true)
+  }
+  if (filters.tasksDelayed) {
+    query = query.eq('status', 'delayed')
+  }
+  if (filters.tasksAtRisk) {
+    query = query.eq('status', 'at_risk')
+  }
+
   if (filters.period && filters.period !== 'custom') {
     const days = parseInt(filters.period.replace('d', ''))
     if (!isNaN(days)) {
-      const date = subDays(new Date(), days).toISOString()
-      query = query.gte('created_at', date)
+      const date = new Date()
+      date.setDate(date.getDate() - days)
+      query = query.gte('created_at', date.toISOString())
     }
   }
 
   const { data, error } = await query
 
-  if (error) throw error
-
-  let tasks = data || []
-
-  if (filters.tasksCompleted || filters.tasksAtRisk || filters.tasksDelayed) {
-    tasks = tasks.filter((t) => {
-      const s = t.status?.toLowerCase()
-      if (filters.tasksCompleted && s === 'complete') return true
-      if (filters.tasksAtRisk && s === 'at_risk') return true
-      if (filters.tasksDelayed && s === 'delayed') return true
-      return false
-    })
+  if (error) {
+    console.error('Dashboard error:', error)
+    throw error
   }
 
+  const tasks = data || []
+
   const totalTasks = tasks.length
-  const completedTasks = tasks.filter((t) => t.status === 'complete').length
-  const delayedTasks = tasks.filter((t) => t.status === 'delayed').length
+  const completedTasks = tasks.filter((t) => t.is_completed || t.status === 'complete').length
+  const completionRate = totalTasks ? (completedTasks / totalTasks) * 100 : 0
+  const delayedTasks = tasks.filter((t) => t.status === 'delayed' || t.was_delayed).length
   const atRiskTasks = tasks.filter((t) => t.status === 'at_risk').length
-  const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
   const types = ['Weld Shop', 'Paint', 'Sub Assembly', 'Warehouse', 'Final Assembly', 'Tests']
   const progressByType = types.map((type) => {
     const typeTasks = tasks.filter((t) =>
       t.sub_department?.toLowerCase().includes(type.toLowerCase()),
     )
-    const typeTotal = typeTasks.length
-    const typeCompleted = typeTasks.filter((t) => t.status === 'complete').length
+    const total = typeTasks.length
+    const comp = typeTasks.filter((t) => t.is_completed || t.status === 'complete').length
     return {
       type,
-      completionRate: typeTotal > 0 ? (typeCompleted / typeTotal) * 100 : 0,
+      completionRate: total ? (comp / total) * 100 : 0,
     }
   })
 
-  const trendMap = new Map<string, number>()
+  const trendMap: Record<string, number> = {}
   for (let i = 29; i >= 0; i--) {
-    trendMap.set(format(subDays(new Date(), i), 'yyyy-MM-dd'), 0)
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    trendMap[d.toISOString().split('T')[0]] = 0
   }
 
-  tasks
-    .filter((t) => t.status === 'complete' && t.updated_at)
-    .forEach((t) => {
-      const dateStr = t.updated_at!.split('T')[0]
-      if (trendMap.has(dateStr)) {
-        trendMap.set(dateStr, trendMap.get(dateStr)! + 1)
+  tasks.forEach((t) => {
+    if ((t.is_completed || t.status === 'complete') && t.completion_date) {
+      const dateStr = t.completion_date.split('T')[0]
+      if (trendMap[dateStr] !== undefined) {
+        trendMap[dateStr]++
       }
-    })
+    }
+  })
 
-  const trend = Array.from(trendMap.entries()).map(([date, completed]) => ({ date, completed }))
+  const trend = Object.entries(trendMap)
+    .map(([date, completed]) => ({ date, completed }))
+    .slice(-30)
 
-  const delayedWOs = new Map<string, any>()
+  const delayedWOsMap = new Map<string, any>()
   tasks
-    .filter((t) => t.status === 'delayed' && t.work_orders)
+    .filter((t) => t.status === 'delayed' || t.was_delayed)
     .forEach((t) => {
       const wo = Array.isArray(t.work_orders) ? t.work_orders[0] : t.work_orders
       if (!wo) return
-      if (!delayedWOs.has(wo.id)) {
+
+      if (!delayedWOsMap.has(wo.wo_number)) {
         let delayDays = 0
         if (wo.due_date) {
-          delayDays = Math.max(
-            0,
-            Math.floor((new Date().getTime() - new Date(wo.due_date).getTime()) / 86400000),
-          )
+          const diff = new Date().getTime() - new Date(wo.due_date).getTime()
+          delayDays = Math.max(0, Math.floor(diff / (1000 * 3600 * 24)))
         }
-        delayedWOs.set(wo.id, {
-          wo_id: wo.id,
+        delayedWOsMap.set(wo.wo_number, {
+          wo_id: wo.wo_number,
           wo_number: wo.wo_number,
-          customer_name: wo.customer_name,
+          customer_name: wo.customer_name || 'Unknown',
           due_date: wo.due_date || '-',
           delayDays,
           pendingTasks: 0,
         })
       }
-      delayedWOs.get(wo.id)!.pendingTasks += 1
+      if (!t.is_completed && t.status !== 'complete') {
+        delayedWOsMap.get(wo.wo_number).pendingTasks++
+      }
     })
 
-  const topDelayed = Array.from(delayedWOs.values())
-    .sort((a, b) => b.delayDays - a.delayDays || b.pendingTasks - a.pendingTasks)
+  const topDelayed = Array.from(delayedWOsMap.values())
+    .sort((a, b) => b.delayDays - a.delayDays)
     .slice(0, 10)
 
   return {
-    kpis: { totalTasks, completedTasks, completionRate, delayedTasks, atRiskTasks },
+    kpis: {
+      totalTasks,
+      completedTasks,
+      completionRate,
+      delayedTasks,
+      atRiskTasks,
+    },
     progressByType,
     trend,
     topDelayed,
