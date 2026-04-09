@@ -29,7 +29,10 @@ export function EditStatusModal({ task, isOpen, onClose, onSave }: EditStatusMod
 
   useEffect(() => {
     if (task) {
-      setStatus(task.status)
+      let s = task.status.toLowerCase()
+      if (s === 'pending') s = 'not started'
+      if (s === 'completed') s = 'complete'
+      setStatus(s)
     }
   }, [task])
 

@@ -9,6 +9,12 @@ export type Department =
   | 'High Management'
 
 export type Status =
+  | 'not started'
+  | 'parked'
+  | 'on track'
+  | 'at risk'
+  | 'delayed'
+  | 'complete'
   | 'Not started'
   | 'Parked'
   | 'On track'

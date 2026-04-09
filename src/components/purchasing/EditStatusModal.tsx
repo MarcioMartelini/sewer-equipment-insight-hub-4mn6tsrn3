@@ -35,12 +35,20 @@ export default function EditStatusModal({
   currentStatus: string
   onSave: (status: string) => Promise<void>
 }) {
-  const [status, setStatus] = useState(currentStatus?.toLowerCase() || 'not started')
+  const [status, setStatus] = useState(() => {
+    let s = currentStatus?.toLowerCase() || 'not started'
+    if (s === 'pending') s = 'not started'
+    if (s === 'completed') s = 'complete'
+    return s
+  })
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      setStatus(currentStatus?.toLowerCase() || 'not started')
+      let s = currentStatus?.toLowerCase() || 'not started'
+      if (s === 'pending') s = 'not started'
+      if (s === 'completed') s = 'complete'
+      setStatus(s)
     }
   }, [isOpen, currentStatus])
 
