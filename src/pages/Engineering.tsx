@@ -5,7 +5,7 @@ import { Search } from 'lucide-react'
 import { EngineeringTable } from '@/components/engineering/EngineeringTable'
 import { EngineeringDashboard } from '@/components/engineering/EngineeringDashboard'
 import { EngineeringTaskList } from '@/components/engineering/EngineeringTaskList'
-import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
+import { EngineeringKanbanBoard } from '@/components/engineering/EngineeringKanbanBoard'
 
 export default function Engineering() {
   const [woFilter, setWoFilter] = useState('')
@@ -62,10 +62,7 @@ export default function Engineering() {
           <EngineeringTaskList />
         </TabsContent>
         <TabsContent value="kanban" className="mt-0 outline-none">
-          <DepartmentTasks
-            department="Engineering"
-            {...({ view: 'kanban', defaultView: 'kanban' } as any)}
-          />
+          <EngineeringKanbanBoard />
         </TabsContent>
         <TabsContent value="layouts" className="mt-0 outline-none">
           <EngineeringTable type="layouts" woFilter={woFilter} />
