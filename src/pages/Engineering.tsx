@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { EngineeringTable } from '@/components/engineering/EngineeringTable'
 import { EngineeringDashboard } from '@/components/engineering/EngineeringDashboard'
+import { EngineeringTaskList } from '@/components/engineering/EngineeringTaskList'
 import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 export default function Engineering() {
@@ -58,10 +59,7 @@ export default function Engineering() {
           <EngineeringDashboard />
         </TabsContent>
         <TabsContent value="tasks" className="mt-0 outline-none">
-          <DepartmentTasks
-            department="Engineering"
-            {...({ view: 'list', defaultView: 'list' } as any)}
-          />
+          <EngineeringTaskList />
         </TabsContent>
         <TabsContent value="kanban" className="mt-0 outline-none">
           <DepartmentTasks
