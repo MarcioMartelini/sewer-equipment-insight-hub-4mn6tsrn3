@@ -12,7 +12,12 @@ BEGIN
   project_url := 'https://mfujajfcebsbkovbtvqh.supabase.co/functions/v1/update-task-status';
   
   -- Unschedule existing job if any to ensure idempotency
-  PERFORM cron.unschedule('update-task-status-daily');
+  BEGIN
+    PERFORM cron.unschedule('update-task-status-daily');
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- Ignore error if job doesn't exist
+  END;
   
   -- Schedule the edge function to run daily at 00:00 (midnight UTC)
   PERFORM cron.schedule(
