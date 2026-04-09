@@ -45,7 +45,14 @@ export function ProductionKanban() {
         ),
         users!wo_tasks_assigned_to_fkey ( full_name )
       `)
-      .in('status', ['Pending', 'In Progress', 'Completed'])
+      .in('status', [
+        'Pending',
+        'Not Started',
+        'In Process',
+        'In Progress',
+        'Complete',
+        'Completed',
+      ])
 
     if (error) {
       console.error(error)
@@ -87,7 +94,17 @@ export function ProductionKanban() {
     if (!taskId) return
 
     const task = tasks.find((t) => t.id === taskId)
-    if (!task || task.status === newStatus) return
+    if (!task) return
+
+    const currentNorm =
+      task.status === 'Pending'
+        ? 'Not Started'
+        : task.status === 'In Progress'
+          ? 'In Process'
+          : task.status === 'Completed'
+            ? 'Complete'
+            : task.status
+    if (currentNorm === newStatus) return
 
     const oldStatus = task.status
 
@@ -133,16 +150,21 @@ export function ProductionKanban() {
   })
 
   const columns = [
-    { id: 'Pending', title: 'Pending', color: 'bg-slate-50', borderColor: 'border-slate-200' },
     {
-      id: 'In Progress',
-      title: 'In Progress',
+      id: 'Not Started',
+      title: 'Not Started',
+      color: 'bg-slate-50',
+      borderColor: 'border-slate-200',
+    },
+    {
+      id: 'In Process',
+      title: 'In Process',
       color: 'bg-blue-50',
       borderColor: 'border-blue-200',
     },
     {
-      id: 'Completed',
-      title: 'Completed',
+      id: 'Complete',
+      title: 'Complete',
       color: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
     },
@@ -240,13 +262,27 @@ export function ProductionKanban() {
               <div className="p-4 border-b border-inherit bg-white/50 backdrop-blur-sm rounded-t-xl font-semibold flex justify-between items-center text-slate-800">
                 {col.title}
                 <Badge variant="outline" className="bg-white/80">
-                  {filteredTasks.filter((t) => t.status === col.id).length}
+                  {
+                    filteredTasks.filter(
+                      (t) =>
+                        t.status === col.id ||
+                        (col.id === 'Not Started' && t.status === 'Pending') ||
+                        (col.id === 'In Process' && t.status === 'In Progress') ||
+                        (col.id === 'Complete' && t.status === 'Completed'),
+                    ).length
+                  }
                 </Badge>
               </div>
               <ScrollArea className="flex-1 p-3">
                 <div className="flex flex-col gap-3 min-h-[100px]">
                   {filteredTasks
-                    .filter((t) => t.status === col.id)
+                    .filter(
+                      (t) =>
+                        t.status === col.id ||
+                        (col.id === 'Not Started' && t.status === 'Pending') ||
+                        (col.id === 'In Process' && t.status === 'In Progress') ||
+                        (col.id === 'Complete' && t.status === 'Completed'),
+                    )
                     .map((task) => (
                       <Card
                         key={task.id}
@@ -297,7 +333,13 @@ export function ProductionKanban() {
                         </CardContent>
                       </Card>
                     ))}
-                  {filteredTasks.filter((t) => t.status === col.id).length === 0 && (
+                  {filteredTasks.filter(
+                    (t) =>
+                      t.status === col.id ||
+                      (col.id === 'Not Started' && t.status === 'Pending') ||
+                      (col.id === 'In Process' && t.status === 'In Progress') ||
+                      (col.id === 'Complete' && t.status === 'Completed'),
+                  ).length === 0 && (
                     <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-300/50 rounded-lg text-slate-400 text-xs font-medium">
                       Drop tasks here
                     </div>

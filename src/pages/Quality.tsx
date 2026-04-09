@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WarrantyClaimsTable } from '@/components/quality/WarrantyClaimsTable'
 import { LateCardPullsTable } from '@/components/quality/LateCardPullsTable'
 import { QualityDashboard } from '@/components/quality/QualityDashboard'
-import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
+import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 export default function Quality() {
   return (
@@ -27,7 +27,7 @@ export default function Quality() {
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
-          <DepartmentTasksList department="Quality" />
+          <DepartmentTasks department="Quality" />
         </TabsContent>
 
         <TabsContent value="warranty" className="mt-6">

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { EngineeringTable } from '@/components/engineering/EngineeringTable'
 import { EngineeringDashboard } from '@/components/engineering/EngineeringDashboard'
-import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
+import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 export default function Engineering() {
   const [woFilter, setWoFilter] = useState('')
@@ -55,7 +55,7 @@ export default function Engineering() {
           <EngineeringDashboard />
         </TabsContent>
         <TabsContent value="tasks" className="mt-0 outline-none">
-          <DepartmentTasksList department="Engineering" />
+          <DepartmentTasks department="Engineering" />
         </TabsContent>
         <TabsContent value="layouts" className="mt-0 outline-none">
           <EngineeringTable type="layouts" woFilter={woFilter} />

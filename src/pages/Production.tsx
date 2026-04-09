@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ProductionDashboard } from '@/components/production-dashboard'
 import { ProductionSubDepartmentDashboard } from '@/components/production-sub-department-dashboard'
 import { ProductionKanban } from '@/components/production-kanban'
-import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
+import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 import {
   Select,
   SelectContent,
@@ -106,63 +106,69 @@ export default function Production() {
         </TabsContent>
 
         <TabsContent value="tasks" className="m-0">
-          <DepartmentTasksList department="Production" />
+          <DepartmentTasks department="Production" />
         </TabsContent>
 
         <TabsContent value="kanban" className="m-0">
           <ProductionKanban />
         </TabsContent>
 
-        <TabsContent value="weld_shop" className="m-0">
+        <TabsContent value="weld_shop" className="m-0 space-y-6">
+          <DepartmentTasks department="Production" subDepartment="Weld Shop" />
           <ProductionSubDepartmentDashboard
             department="weld_shop"
             tableName="production_weld_shop"
-            title="Weld Shop"
+            title="Weld Shop Dashboard"
             selectedWoId={selectedWoId}
           />
         </TabsContent>
 
-        <TabsContent value="paint" className="m-0">
+        <TabsContent value="paint" className="m-0 space-y-6">
+          <DepartmentTasks department="Production" subDepartment="Paint" />
           <ProductionSubDepartmentDashboard
             department="paint"
             tableName="production_paint"
-            title="Paint"
+            title="Paint Dashboard"
             selectedWoId={selectedWoId}
           />
         </TabsContent>
 
-        <TabsContent value="sub_assembly" className="m-0">
+        <TabsContent value="sub_assembly" className="m-0 space-y-6">
+          <DepartmentTasks department="Production" subDepartment="Sub Assembly" />
           <ProductionSubDepartmentDashboard
             department="sub_assembly"
             tableName="production_sub_assembly"
-            title="Sub Assembly"
+            title="Sub Assembly Dashboard"
             selectedWoId={selectedWoId}
           />
         </TabsContent>
 
-        <TabsContent value="warehouse" className="m-0">
+        <TabsContent value="warehouse" className="m-0 space-y-6">
+          <DepartmentTasks department="Production" subDepartment="Warehouse" />
           <ProductionSubDepartmentDashboard
             department="warehouse"
             tableName="production_warehouse"
-            title="Warehouse"
+            title="Warehouse Dashboard"
             selectedWoId={selectedWoId}
           />
         </TabsContent>
 
-        <TabsContent value="final_assembly" className="m-0">
+        <TabsContent value="final_assembly" className="m-0 space-y-6">
+          <DepartmentTasks department="Production" subDepartment="Final Assembly" />
           <ProductionSubDepartmentDashboard
             department="final_assembly"
             tableName="production_final_assembly"
-            title="Final Assembly"
+            title="Final Assembly Dashboard"
             selectedWoId={selectedWoId}
           />
         </TabsContent>
 
-        <TabsContent value="tests" className="m-0">
+        <TabsContent value="tests" className="m-0 space-y-6">
+          <DepartmentTasks department="Production" subDepartment="Tests" />
           <ProductionSubDepartmentDashboard
             department="tests"
             tableName="production_tests"
-            title="Tests"
+            title="Tests Dashboard"
             selectedWoId={selectedWoId}
           />
         </TabsContent>

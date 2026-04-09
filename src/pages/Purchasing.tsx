@@ -5,7 +5,7 @@ import { Search, LayoutDashboard, PackageSearch, AlertCircle, ListTodo } from 'l
 import ComponentsTab from '@/components/purchasing/ComponentsTab'
 import ExpeditesTab from '@/components/purchasing/ExpeditesTab'
 import PurchasingDashboard from '@/components/purchasing/PurchasingDashboard'
-import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
+import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 export default function Purchasing() {
   const [woFilter, setWoFilter] = useState('')
@@ -55,7 +55,7 @@ export default function Purchasing() {
           </TabsContent>
 
           <TabsContent value="tasks" className="mt-0">
-            <DepartmentTasksList department="Purchasing" />
+            <DepartmentTasks department="Purchasing" />
           </TabsContent>
 
           <TabsContent value="components" className="mt-0">

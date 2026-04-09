@@ -3,7 +3,7 @@ import ProductivityTab from '@/components/hr/ProductivityTab'
 import AbsencesTab from '@/components/hr/AbsencesTab'
 import InjuriesTab from '@/components/hr/InjuriesTab'
 import DashboardTab from '@/components/hr/DashboardTab'
-import { DepartmentTasksList } from '@/components/tasks/DepartmentTasksList'
+import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 export default function HR() {
   return (
@@ -29,7 +29,7 @@ export default function HR() {
           <DashboardTab />
         </TabsContent>
         <TabsContent value="tasks">
-          <DepartmentTasksList department="HR" />
+          <DepartmentTasks department="HR" />
         </TabsContent>
         <TabsContent value="productivity">
           <ProductivityTab />

@@ -1721,6 +1721,7 @@ export type Database = {
           sub_department: string | null
           task_name: string
           updated_at: string
+          was_delayed: boolean | null
           wo_id: string
         }
         Insert: {
@@ -1738,6 +1739,7 @@ export type Database = {
           sub_department?: string | null
           task_name: string
           updated_at?: string
+          was_delayed?: boolean | null
           wo_id: string
         }
         Update: {
@@ -1755,6 +1757,7 @@ export type Database = {
           sub_department?: string | null
           task_name?: string
           updated_at?: string
+          was_delayed?: boolean | null
           wo_id?: string
         }
         Relationships: [
@@ -2407,6 +2410,7 @@ export const Constants = {
 //   comments: text (nullable)
 //   is_completed: boolean (nullable, default: false)
 //   completion_date: timestamp with time zone (nullable)
+//   was_delayed: boolean (nullable, default: false)
 // Table: work_orders
 //   id: uuid (not null, default: gen_random_uuid())
 //   wo_number: text (not null)
