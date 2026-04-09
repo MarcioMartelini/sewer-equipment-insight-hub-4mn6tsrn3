@@ -27,7 +27,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         return 'bg-red-100 text-red-700 hover:bg-red-200 border-red-200'
       case 'complete':
       case 'completed':
-        return 'bg-green-200 text-green-900 hover:bg-green-300 border-green-300'
+        return 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600'
       default:
         return 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'
     }

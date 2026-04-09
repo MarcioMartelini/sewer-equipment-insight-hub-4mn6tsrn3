@@ -19,6 +19,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { StatusBadge } from '@/components/StatusBadge'
 import { TaskCard, TaskWithWO } from './TaskCard'
 import {
   Loader2,
@@ -86,9 +87,7 @@ export function DepartmentTasksList({ department }: { department: string }) {
         t.work_orders?.wo_number?.toLowerCase().includes(searchLower)
       if (!matchSearch) return false
 
-      if (statusFilter === 'pending' && (t.is_completed || t.progress > 0)) return false
-      if (statusFilter === 'in_progress' && (t.is_completed || t.progress === 0)) return false
-      if (statusFilter === 'completed' && !t.is_completed) return false
+      if (statusFilter !== 'all' && t.status !== statusFilter) return false
 
       if (taskFilter !== 'all' && t.task_name !== taskFilter) return false
 
@@ -101,15 +100,28 @@ export function DepartmentTasksList({ department }: { department: string }) {
 
   const stats = useMemo(() => {
     const total = filteredTasks.length
-    const completed = filteredTasks.filter((t) => t.is_completed).length
+    const completed = filteredTasks.filter((t) => t.is_completed || t.status === 'complete').length
 
     let onTimeCount = 0
     let overdueCount = 0
 
+    const statusCounts = {
+      not_started: 0,
+      parked: 0,
+      on_track: 0,
+      at_risk: 0,
+      delayed: 0,
+      complete: 0,
+    }
+
     const today = startOfDay(new Date())
 
     filteredTasks.forEach((t) => {
-      if (t.is_completed) {
+      if (t.status && t.status in statusCounts) {
+        statusCounts[t.status as keyof typeof statusCounts]++
+      }
+
+      if (t.is_completed || t.status === 'complete') {
         if (t.completion_date && t.finish_date) {
           const compDate = startOfDay(parseISO(t.completion_date))
           const finDate = startOfDay(parseISO(t.finish_date))
@@ -128,7 +140,7 @@ export function DepartmentTasksList({ department }: { department: string }) {
 
     const onTimePercent = total > 0 ? Math.round((onTimeCount / total) * 100) : 0
 
-    return { total, completed, onTimePercent, overdueCount }
+    return { total, completed, onTimePercent, overdueCount, statusCounts }
   }, [filteredTasks])
 
   const openTask = (task: any) => {
@@ -136,52 +148,42 @@ export function DepartmentTasksList({ department }: { department: string }) {
     setIsSheetOpen(true)
   }
 
-  const getStatusBadge = (task: any) => {
-    if (task.is_completed) return <Badge className="bg-emerald-500">Completed</Badge>
-    if (task.progress > 0) return <Badge className="bg-blue-500">In Progress</Badge>
-    return <Badge variant="secondary">Pending</Badge>
-  }
-
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Tasks</CardTitle>
-            <ListTodo className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completed}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">On Time %</CardTitle>
-            <Clock className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.onTimePercent}%</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Overdue</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.overdueCount}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="bg-slate-50 border-slate-200">
+        <CardContent className="p-4 flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-slate-400" />
+            <span className="font-medium text-slate-700">
+              {stats.statusCounts.not_started} Not Started
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-400" />
+            <span className="font-medium text-blue-700">{stats.statusCounts.parked} Parked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="font-medium text-emerald-700">
+              {stats.statusCounts.on_track} On Track
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-amber-400" />
+            <span className="font-medium text-amber-700">{stats.statusCounts.at_risk} At Risk</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-400" />
+            <span className="font-medium text-red-700">{stats.statusCounts.delayed} Delayed</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-600" />
+            <span className="font-medium text-emerald-800">
+              {stats.statusCounts.complete} Complete
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex flex-col md:flex-row gap-4 items-end md:items-center bg-card p-4 rounded-lg border shadow-sm">
         <div className="relative w-full md:w-64">
@@ -217,9 +219,12 @@ export function DepartmentTasksList({ department }: { department: string }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="not_started">Not Started</SelectItem>
+              <SelectItem value="parked">Parked</SelectItem>
+              <SelectItem value="on_track">On Track</SelectItem>
+              <SelectItem value="at_risk">At Risk</SelectItem>
+              <SelectItem value="delayed">Delayed</SelectItem>
+              <SelectItem value="complete">Complete</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -292,7 +297,9 @@ export function DepartmentTasksList({ department }: { department: string }) {
                       {task.finish_date ? format(parseISO(task.finish_date), 'dd/MM/yyyy') : '-'}
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(task)}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={task.status} />
+                  </TableCell>
                   <TableCell>
                     {task.completion_date
                       ? format(parseISO(task.completion_date), 'dd/MM/yyyy')

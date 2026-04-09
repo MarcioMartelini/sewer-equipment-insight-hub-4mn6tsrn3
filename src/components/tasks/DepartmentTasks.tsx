@@ -70,17 +70,7 @@ export function DepartmentTasks({
 
     if (!matchesSearch) return false
 
-    if (statusFilter !== 'all') {
-      const normStatus =
-        task.status === 'Pending'
-          ? 'Not Started'
-          : task.status === 'In Progress'
-            ? 'In Process'
-            : task.status === 'Completed'
-              ? 'Complete'
-              : task.status
-      if (normStatus !== statusFilter) return false
-    }
+    if (statusFilter !== 'all' && task.status !== statusFilter) return false
 
     if (taskFilter !== 'all' && task.task_name !== taskFilter) return false
 
@@ -89,14 +79,22 @@ export function DepartmentTasks({
 
   const columns = [
     {
-      id: 'Not Started',
+      id: 'not_started',
       title: 'Not Started',
       color: 'bg-slate-50',
       borderColor: 'border-slate-200',
     },
-    { id: 'In Process', title: 'In Process', color: 'bg-blue-50', borderColor: 'border-blue-200' },
+    { id: 'parked', title: 'Parked', color: 'bg-blue-50', borderColor: 'border-blue-200' },
     {
-      id: 'Complete',
+      id: 'on_track',
+      title: 'On Track',
+      color: 'bg-emerald-50',
+      borderColor: 'border-emerald-200',
+    },
+    { id: 'at_risk', title: 'At Risk', color: 'bg-amber-50', borderColor: 'border-amber-200' },
+    { id: 'delayed', title: 'Delayed', color: 'bg-red-50', borderColor: 'border-red-200' },
+    {
+      id: 'complete',
       title: 'Complete',
       color: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
@@ -111,19 +109,27 @@ export function DepartmentTasks({
     const task = tasks.find((t) => t.id === taskId)
     if (!task) return
 
-    const currentNorm =
-      task.status === 'Pending'
-        ? 'Not Started'
-        : task.status === 'In Progress'
-          ? 'In Process'
-          : task.status === 'Completed'
-            ? 'Complete'
-            : task.status
-    if (currentNorm === newStatus) return
+    if (task.status === newStatus) return
 
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)))
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: newStatus as any } : t)))
 
-    const { error } = await supabase.from('wo_tasks').update({ status: newStatus }).eq('id', taskId)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    const { error } = await supabase
+      .from('wo_tasks')
+      .update({ status: newStatus as any })
+      .eq('id', taskId)
+
+    if (!error && user) {
+      await supabase.from('wo_task_comments_history').insert({
+        task_id: taskId,
+        author_id: user.id,
+        comment: `Status changed from ${task.status || 'not_started'} to ${newStatus}`,
+        status: newStatus as any,
+      })
+    }
 
     if (error) {
       fetchTasks()
@@ -166,9 +172,12 @@ export function DepartmentTasks({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os Status</SelectItem>
-              <SelectItem value="Not Started">Not Started</SelectItem>
-              <SelectItem value="In Process">In Process</SelectItem>
-              <SelectItem value="Complete">Complete</SelectItem>
+              <SelectItem value="not_started">Not Started</SelectItem>
+              <SelectItem value="parked">Parked</SelectItem>
+              <SelectItem value="on_track">On Track</SelectItem>
+              <SelectItem value="at_risk">At Risk</SelectItem>
+              <SelectItem value="delayed">Delayed</SelectItem>
+              <SelectItem value="complete">Complete</SelectItem>
             </SelectContent>
           </Select>
           <Tabs value={viewMode} onValueChange={setViewMode} className="w-full sm:w-auto">
@@ -207,13 +216,7 @@ export function DepartmentTasks({
       ) : (
         <div className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] h-[calc(100vh-280px)] custom-scrollbar items-start">
           {columns.map((col) => {
-            const colTasks = filteredTasks.filter(
-              (t) =>
-                t.status === col.id ||
-                (col.id === 'Not Started' && t.status === 'Pending') ||
-                (col.id === 'In Process' && t.status === 'In Progress') ||
-                (col.id === 'Complete' && t.status === 'Completed'),
-            )
+            const colTasks = filteredTasks.filter((t) => t.status === col.id)
             return (
               <div
                 key={col.id}
