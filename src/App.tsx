@@ -23,7 +23,7 @@ import CustomerDetail from './pages/CustomerDetail'
 import SalespersonDetail from './pages/SalespersonDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 import { GlobalNotificationWatcher } from './components/GlobalNotificationWatcher'
-import logoUrl from './assets/design-sem-nome-3d351.png'
+import logoUrl from './assets/design-sem-nome-689e7.png'
 
 const GlobalPrintStyles = () => (
   <style>
@@ -40,15 +40,16 @@ const GlobalPrintStyles = () => (
           left: 0;
           width: 100%;
           height: 15mm;
-          align-items: center;
+          align-items: flex-start;
           justify-content: space-between;
           border-bottom: 1px solid #e2e8f0;
           padding-bottom: 2mm;
           z-index: 9999;
         }
         .global-print-header img {
-          max-height: 100%;
+          max-height: 15mm;
           object-fit: contain;
+          margin-left: auto;
         }
         body {
           -webkit-print-color-adjust: exact;
@@ -61,10 +62,10 @@ const GlobalPrintStyles = () => (
 
 const PrintHeader = () => (
   <div className="hidden global-print-header">
-    <img src={logoUrl} alt="Sewer Equipment Insight HUB" />
-    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>
+    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginTop: 'auto' }}>
       Generated on {new Date().toLocaleDateString()}
     </span>
+    <img src={logoUrl} alt="Sewer Equipment Insight HUB" />
   </div>
 )
 

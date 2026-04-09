@@ -31,6 +31,17 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import logoUrl from '@/assets/design-sem-nome-689e7.png'
+
+const loadImage = (url: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'Anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = url
+  })
+}
 
 export function EngineeringDashboard() {
   const { toast } = useToast()
@@ -130,6 +141,17 @@ export function EngineeringDashboard() {
       pdf.text('Engineering Dashboard Report', 14, 15)
       pdf.setFontSize(10)
       pdf.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 22)
+
+      try {
+        const logoImg = await loadImage(logoUrl)
+        const logoHeight = 15
+        const logoWidth = (logoImg.width * logoHeight) / logoImg.height
+        const logoX = pdfWidth - logoWidth - 14
+        const logoY = 7
+        pdf.addImage(logoImg, 'PNG', logoX, logoY, logoWidth, logoHeight)
+      } catch (err) {
+        console.error('Could not load logo for PDF:', err)
+      }
 
       pdf.addImage(imgData, 'PNG', startX, startY, imgWidth, imgHeight)
       pdf.save(`engineering-dashboard-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
