@@ -30,8 +30,10 @@ export function EditStatusModal({ task, isOpen, onClose, onSave }: EditStatusMod
   useEffect(() => {
     if (task) {
       let s = task.status.toLowerCase()
-      if (s === 'pending') s = 'not started'
+      if (s === 'pending' || s === 'not started') s = 'not_started'
       if (s === 'completed') s = 'complete'
+      if (s === 'on track') s = 'on_track'
+      if (s === 'at risk') s = 'at_risk'
       setStatus(s)
     }
   }, [task])
@@ -58,10 +60,10 @@ export function EditStatusModal({ task, isOpen, onClose, onSave }: EditStatusMod
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="not started">Not Started</SelectItem>
+                <SelectItem value="not_started">Not Started</SelectItem>
                 <SelectItem value="parked">Parked</SelectItem>
-                <SelectItem value="on track">On Track</SelectItem>
-                <SelectItem value="at risk">At Risk</SelectItem>
+                <SelectItem value="on_track">On Track</SelectItem>
+                <SelectItem value="at_risk">At Risk</SelectItem>
                 <SelectItem value="delayed">Delayed</SelectItem>
                 <SelectItem value="complete">Complete</SelectItem>
               </SelectContent>

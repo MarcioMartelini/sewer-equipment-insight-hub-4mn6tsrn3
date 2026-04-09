@@ -12,13 +12,16 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     const s = (status || '').toLowerCase()
     switch (s) {
       case 'not started':
+      case 'not_started':
       case 'pending':
         return 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
       case 'parked':
         return 'bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200'
       case 'on track':
+      case 'on_track':
         return 'bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200'
       case 'at risk':
+      case 'at_risk':
         return 'bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200'
       case 'delayed':
         return 'bg-red-100 text-red-700 hover:bg-red-200 border-red-200'
@@ -33,8 +36,10 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const formatStatus = (s: string) => {
     if (!s) return 'Not started'
     if (s.toLowerCase() === 'n/a') return 'N/A'
-    if (s.toLowerCase() === 'pending') return 'Not started'
-    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+    if (s.toLowerCase() === 'pending' || s.toLowerCase() === 'not_started') return 'Not Started'
+    if (s.toLowerCase() === 'on_track') return 'On Track'
+    if (s.toLowerCase() === 'at_risk') return 'At Risk'
+    return s.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
   }
 
   return (
