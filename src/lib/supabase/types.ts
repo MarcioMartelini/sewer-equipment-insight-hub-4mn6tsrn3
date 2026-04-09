@@ -1629,6 +1629,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           id: string
+          status: Database['public']['Enums']['task_status_enum'] | null
           task_id: string
           updated_at: string | null
         }
@@ -1638,6 +1639,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
+          status?: Database['public']['Enums']['task_status_enum'] | null
           task_id: string
           updated_at?: string | null
         }
@@ -1647,6 +1649,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
+          status?: Database['public']['Enums']['task_status_enum'] | null
           task_id?: string
           updated_at?: string | null
         }
@@ -1717,7 +1720,7 @@ export type Database = {
           is_completed: boolean | null
           progress: number | null
           start_date: string | null
-          status: string
+          status: Database['public']['Enums']['task_status_enum']
           sub_department: string | null
           task_name: string
           updated_at: string
@@ -1735,7 +1738,7 @@ export type Database = {
           is_completed?: boolean | null
           progress?: number | null
           start_date?: string | null
-          status?: string
+          status?: Database['public']['Enums']['task_status_enum']
           sub_department?: string | null
           task_name: string
           updated_at?: string
@@ -1753,7 +1756,7 @@ export type Database = {
           is_completed?: boolean | null
           progress?: number | null
           start_date?: string | null
-          status?: string
+          status?: Database['public']['Enums']['task_status_enum']
           sub_department?: string | null
           task_name?: string
           updated_at?: string
@@ -1876,7 +1879,7 @@ export type Database = {
       get_user_role: { Args: never; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      task_status_enum: 'not_started' | 'parked' | 'on_track' | 'at_risk' | 'delayed' | 'complete'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2001,7 +2004,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      task_status_enum: ['not_started', 'parked', 'on_track', 'at_risk', 'delayed', 'complete'],
+    },
   },
 } as const
 
@@ -2386,6 +2391,7 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   deleted_at: timestamp with time zone (nullable)
+//   status: task_status_enum (nullable)
 // Table: wo_task_history
 //   id: uuid (not null, default: gen_random_uuid())
 //   task_id: uuid (not null)
@@ -2402,7 +2408,7 @@ export const Constants = {
 //   task_name: text (not null)
 //   start_date: date (nullable)
 //   finish_date: date (nullable)
-//   status: text (not null, default: 'Pending'::text)
+//   status: task_status_enum (not null, default: 'not_started'::task_status_enum)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
 //   assigned_to: uuid (nullable)

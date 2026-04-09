@@ -179,9 +179,49 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
     }
   }
 
+  const currentStatusValue = (() => {
+    if (!task.status) return 'not_started'
+    const s = task.status.toLowerCase()
+    if (s === 'pending' || s === 'not started' || s === 'not_started') return 'not_started'
+    if (s === 'in process' || s === 'in progress' || s === 'on track' || s === 'on_track')
+      return 'on_track'
+    if (s === 'completed' || s === 'complete') return 'complete'
+    if (s === 'at risk' || s === 'at_risk') return 'at_risk'
+    if (['parked', 'delayed'].includes(s)) return s
+    return 'not_started'
+  })()
+
+  const formatStatus = (s: string) => {
+    if (s === 'not_started') return 'Not Started'
+    if (s === 'on_track') return 'On Track'
+    if (s === 'at_risk') return 'At Risk'
+    return s.charAt(0).toUpperCase() + s.slice(1)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'not_started':
+        return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300'
+      case 'parked':
+        return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300'
+      case 'on_track':
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300'
+      case 'at_risk':
+        return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300'
+      case 'delayed':
+        return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300'
+      case 'complete':
+        return 'bg-green-200 text-green-900 border-green-300 dark:bg-green-900/70 dark:text-green-300'
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200'
+    }
+  }
+
   const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === currentStatusValue) return
+
     setIsSaving(true)
-    const isCompleted = newStatus.toLowerCase() === 'complete'
+    const isCompleted = newStatus === 'complete'
     const completionDate = isCompleted ? new Date().toISOString() : null
 
     let delayed = task.was_delayed
@@ -197,7 +237,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
       const { error } = await supabase
         .from('wo_tasks')
         .update({
-          status: newStatus,
+          status: newStatus as any,
           is_completed: isCompleted,
           completion_date: completionDate,
           was_delayed: delayed,
@@ -206,21 +246,16 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
 
       if (error) throw error
 
-      if (isCompleted && !task.is_completed) {
-        await supabase.from('wo_task_comments_history').insert({
-          task_id: task.id,
-          comment: 'Task marked as completed',
-          author_id: user?.id,
-        })
-      } else if (!isCompleted && task.is_completed) {
-        await supabase.from('wo_task_comments_history').insert({
-          task_id: task.id,
-          comment: `Task reopened and status changed to ${newStatus}`,
-          author_id: user?.id,
-        })
-      }
+      const oldStatusFormatted = formatStatus(currentStatusValue)
+      const newStatusFormatted = formatStatus(newStatus)
 
-      toast({ title: `Status atualizado para ${newStatus}` })
+      await supabase.from('wo_task_comments_history').insert({
+        task_id: task.id,
+        comment: `Status changed from ${oldStatusFormatted} to ${newStatusFormatted}`,
+        author_id: user?.id,
+      })
+
+      toast({ title: `Status atualizado para ${newStatusFormatted}` })
       if (onUpdate) onUpdate()
       loadComments()
     } catch (e: any) {
@@ -232,16 +267,6 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
   }
 
   const wo = task.work_orders || ({} as any)
-
-  const currentStatusValue = (() => {
-    if (!task.status) return 'not started'
-    const s = task.status.toLowerCase()
-    if (s === 'pending' || s === 'not started') return 'not started'
-    if (s === 'in process' || s === 'in progress' || s === 'on track') return 'on track'
-    if (s === 'completed' || s === 'complete') return 'complete'
-    if (['parked', 'at risk', 'delayed'].includes(s)) return s
-    return 'not started'
-  })()
 
   return (
     <Card
@@ -401,6 +426,8 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                               'text-foreground whitespace-pre-wrap',
                               comment.comment === 'Task marked as completed' &&
                                 'text-emerald-600 font-medium italic',
+                              comment.comment.startsWith('Status changed from') &&
+                                'text-muted-foreground font-medium italic',
                             )}
                           >
                             {comment.comment}
@@ -418,7 +445,8 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                       {user?.id === comment.author_id &&
                         !task.is_completed &&
                         editingCommentId !== comment.id &&
-                        comment.comment !== 'Task marked as completed' && (
+                        comment.comment !== 'Task marked as completed' &&
+                        !comment.comment.startsWith('Status changed from') && (
                           <button
                             onClick={() => {
                               setEditingCommentId(comment.id)
@@ -432,7 +460,8 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                         )}
                       {isAdmin &&
                         !task.is_completed &&
-                        comment.comment !== 'Task marked as completed' && (
+                        comment.comment !== 'Task marked as completed' &&
+                        !comment.comment.startsWith('Status changed from') && (
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
                             className="text-muted-foreground hover:text-destructive transition-colors"
@@ -460,16 +489,51 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
               onValueChange={handleStatusChange}
               disabled={isSaving}
             >
-              <SelectTrigger className="w-[140px] h-8 text-sm bg-background">
+              <SelectTrigger
+                className={cn(
+                  'w-[150px] h-8 text-sm font-medium transition-colors',
+                  getStatusColor(currentStatusValue),
+                )}
+              >
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="not started">Not Started</SelectItem>
-                <SelectItem value="parked">Parked</SelectItem>
-                <SelectItem value="on track">On Track</SelectItem>
-                <SelectItem value="at risk">At Risk</SelectItem>
-                <SelectItem value="delayed">Delayed</SelectItem>
-                <SelectItem value="complete">Complete</SelectItem>
+                <SelectItem value="not_started">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-slate-400" />
+                    Not Started
+                  </div>
+                </SelectItem>
+                <SelectItem value="parked">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    Parked
+                  </div>
+                </SelectItem>
+                <SelectItem value="on_track">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    On Track
+                  </div>
+                </SelectItem>
+                <SelectItem value="at_risk">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    At Risk
+                  </div>
+                </SelectItem>
+                <SelectItem value="delayed">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    Delayed
+                  </div>
+                </SelectItem>
+                <SelectItem value="complete">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-600" />
+                    Complete
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

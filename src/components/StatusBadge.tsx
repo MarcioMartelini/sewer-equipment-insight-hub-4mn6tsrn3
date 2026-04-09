@@ -14,22 +14,22 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       case 'not started':
       case 'not_started':
       case 'pending':
-        return 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200'
+        return 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'
       case 'parked':
-        return 'bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200'
+        return 'bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200'
       case 'on track':
       case 'on_track':
-        return 'bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200'
+        return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200'
       case 'at risk':
       case 'at_risk':
-        return 'bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200'
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200'
       case 'delayed':
         return 'bg-red-100 text-red-700 hover:bg-red-200 border-red-200'
       case 'complete':
       case 'completed':
-        return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200'
+        return 'bg-green-200 text-green-900 hover:bg-green-300 border-green-300'
       default:
-        return 'bg-slate-100 text-slate-600'
+        return 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'
     }
   }
 

@@ -30,20 +30,20 @@ export const formatDate = (date: string | null) =>
 export const getStatusBadge = (status: string | null) => {
   const s = (status || '').toLowerCase()
   const map: Record<string, string> = {
-    complete: 'border-green-500 text-green-700 bg-green-50',
-    completed: 'border-green-500 text-green-700 bg-green-50',
-    on_track: 'border-blue-500 text-blue-700 bg-blue-50',
-    'on track': 'border-blue-500 text-blue-700 bg-blue-50',
-    at_risk: 'border-yellow-500 text-yellow-700 bg-yellow-50',
-    'at risk': 'border-yellow-500 text-yellow-700 bg-yellow-50',
-    delayed: 'border-red-500 text-red-700 bg-red-50',
-    parked: 'border-slate-500 text-slate-700 bg-slate-50',
-    'n/a': 'border-slate-400 text-slate-600 bg-slate-100',
-    not_started: 'border-slate-400 text-slate-600 bg-slate-100',
-    'not started': 'border-slate-400 text-slate-600 bg-slate-100',
-    pending: 'border-slate-400 text-slate-600 bg-slate-100',
+    complete: 'border-green-300 text-green-900 bg-green-200',
+    completed: 'border-green-300 text-green-900 bg-green-200',
+    on_track: 'border-emerald-200 text-emerald-700 bg-emerald-100',
+    'on track': 'border-emerald-200 text-emerald-700 bg-emerald-100',
+    at_risk: 'border-amber-200 text-amber-800 bg-amber-100',
+    'at risk': 'border-amber-200 text-amber-800 bg-amber-100',
+    delayed: 'border-red-200 text-red-700 bg-red-100',
+    parked: 'border-blue-200 text-blue-700 bg-blue-100',
+    'n/a': 'border-slate-200 text-slate-700 bg-slate-100',
+    not_started: 'border-slate-200 text-slate-700 bg-slate-100',
+    'not started': 'border-slate-200 text-slate-700 bg-slate-100',
+    pending: 'border-slate-200 text-slate-700 bg-slate-100',
   }
-  return map[s] || 'border-slate-300 text-slate-700 bg-slate-50'
+  return map[s] || 'border-slate-200 text-slate-700 bg-slate-100'
 }
 
 export const formatStatusText = (status: string | null) => {
@@ -95,12 +95,42 @@ export function EditStatusDialog({
               <SelectValue placeholder="Selecione o status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="not_started">Not Started</SelectItem>
-              <SelectItem value="parked">Parked</SelectItem>
-              <SelectItem value="on_track">On Track</SelectItem>
-              <SelectItem value="at_risk">At Risk</SelectItem>
-              <SelectItem value="delayed">Delayed</SelectItem>
-              <SelectItem value="complete">Complete</SelectItem>
+              <SelectItem value="not_started">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-slate-400" />
+                  Not Started
+                </div>
+              </SelectItem>
+              <SelectItem value="parked">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  Parked
+                </div>
+              </SelectItem>
+              <SelectItem value="on_track">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  On Track
+                </div>
+              </SelectItem>
+              <SelectItem value="at_risk">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  At Risk
+                </div>
+              </SelectItem>
+              <SelectItem value="delayed">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  Delayed
+                </div>
+              </SelectItem>
+              <SelectItem value="complete">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-600" />
+                  Complete
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
