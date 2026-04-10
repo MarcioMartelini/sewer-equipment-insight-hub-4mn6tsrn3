@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -76,11 +77,14 @@ export default function AbsencesTab() {
       })
     }
 
+    const isExcused = formData.get('is_excused') === 'on'
+    const absenceType = isExcused ? 'excused' : 'unexcused'
+
     const { error } = await supabase.from('hr_absences').insert({
       employee_id: employeeId,
       employee_name: employee.full_name,
       absence_date: formData.get('absence_date') as string,
-      absence_type: formData.get('absence_type') as string,
+      absence_type: absenceType,
       reason: formData.get('reason') as string,
     })
 
@@ -118,7 +122,7 @@ export default function AbsencesTab() {
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="employee_id">Employee</Label>
+                <Label htmlFor="employee_id">Employee Name</Label>
                 <Select name="employee_id" required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select..." />
@@ -137,20 +141,14 @@ export default function AbsencesTab() {
                 <Input id="absence_date" name="absence_date" type="date" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="absence_type">Type</Label>
-                <Select name="absence_type" required defaultValue="excused">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="excused">Excused</SelectItem>
-                    <SelectItem value="unexcused">Unexcused</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reason">Reason</Label>
+                <Label htmlFor="reason">Reason / Motivo</Label>
                 <Input id="reason" name="reason" required />
+              </div>
+              <div className="flex items-center space-x-2 pt-2 pb-4">
+                <Checkbox id="is_excused" name="is_excused" defaultChecked={false} />
+                <Label htmlFor="is_excused" className="font-normal cursor-pointer">
+                  Justifiable / Excused Absence
+                </Label>
               </div>
               <div className="flex justify-end pt-4">
                 <Button type="submit">Save</Button>

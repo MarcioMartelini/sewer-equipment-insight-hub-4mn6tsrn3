@@ -3,7 +3,6 @@ import ProductivityTab from '@/components/hr/ProductivityTab'
 import AbsencesTab from '@/components/hr/AbsencesTab'
 import InjuriesTab from '@/components/hr/InjuriesTab'
 import DashboardTab from '@/components/hr/DashboardTab'
-import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
 export default function HR() {
   return (
@@ -18,18 +17,14 @@ export default function HR() {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 md:w-[700px]">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 md:w-[600px]">
           <TabsTrigger value="dashboard">Overview</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks List</TabsTrigger>
           <TabsTrigger value="productivity">Productivity</TabsTrigger>
           <TabsTrigger value="absences">Absences</TabsTrigger>
           <TabsTrigger value="injuries">Injuries</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard">
           <DashboardTab />
-        </TabsContent>
-        <TabsContent value="tasks">
-          <DepartmentTasks department="HR" />
         </TabsContent>
         <TabsContent value="productivity">
           <ProductivityTab />
