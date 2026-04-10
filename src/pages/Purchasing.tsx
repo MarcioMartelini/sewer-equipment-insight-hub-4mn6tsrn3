@@ -14,6 +14,7 @@ import ComponentsTab from '@/components/purchasing/ComponentsTab'
 import ExpeditesTab from '@/components/purchasing/ExpeditesTab'
 import PurchasingDashboard from '@/components/purchasing/PurchasingDashboard'
 import PurchasingTasksTab from '@/components/purchasing/PurchasingTasksTab'
+import PurchasingKanbanTab from '@/components/purchasing/PurchasingKanbanTab'
 
 const MENU_ITEMS = [
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
@@ -80,11 +81,7 @@ export default function Purchasing() {
         <div className="flex-1 overflow-y-auto rounded-md">
           {activeTab === 'dashboard' && <PurchasingDashboard />}
           {activeTab === 'tasks' && <PurchasingTasksTab woFilter={woFilter} />}
-          {activeTab === 'kanban' && (
-            <div className="flex h-64 items-center justify-center rounded-md border border-dashed text-muted-foreground">
-              Kanban Board View - Em construção
-            </div>
-          )}
+          {activeTab === 'kanban' && <PurchasingKanbanTab woFilter={woFilter} />}
           {activeTab === 'components' && <ComponentsTab woFilter={woFilter} />}
           {activeTab === 'expedites' && <ExpeditesTab woFilter={woFilter} />}
           {activeTab === 'performance' && (
