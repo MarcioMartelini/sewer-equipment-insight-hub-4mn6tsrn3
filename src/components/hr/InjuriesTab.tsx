@@ -126,7 +126,11 @@ export default function InjuriesTab() {
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => setEditingItem(null)} className="print:hidden">
+            <Button
+              size="sm"
+              onClick={() => setEditingItem(null)}
+              className="print:hidden bg-[#0c00ef]"
+            >
               <Plus className="mr-2 h-4 w-4" /> Add Injury
             </Button>
           </DialogTrigger>
