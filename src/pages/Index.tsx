@@ -27,8 +27,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { DateRange } from 'react-day-picker'
-import { format } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Index() {
   const [department, setDepartment] = useState<string>('All')
@@ -39,6 +40,10 @@ export default function Index() {
 
   const [definitions, setDefinitions] = useState<MetricDefinition[]>([])
   const [tracking, setTracking] = useState<MetricTracking[]>([])
+  const [salesData, setSalesData] = useState<{ quotes: any[]; workOrders: any[] }>({
+    quotes: [],
+    workOrders: [],
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -49,8 +54,45 @@ export default function Index() {
           getMetricsDefinitions(department),
           getMetricsTracking(department, date?.from, date?.to),
         ])
-        setDefinitions(defs)
-        setTracking(tracks)
+
+        const filteredDefs = defs.filter(
+          (d) => d.department !== 'Sales' && d.department !== 'Vendas',
+        )
+        const filteredTracks = tracks.filter(
+          (t) => t.department !== 'Sales' && t.department !== 'Vendas',
+        )
+
+        setDefinitions(filteredDefs)
+        setTracking(filteredTracks)
+
+        if (department === 'Sales' || department === 'All') {
+          let qQuery = supabase
+            .from('quotes')
+            .select(
+              'id, quote_value, profit_margin_percentage, status, created_at, approval_date, customer_name',
+            )
+            .is('deleted_at', null)
+          let wQuery = supabase
+            .from('work_orders')
+            .select('id, price, profit_margin, created_at, customer_name')
+            .is('deleted_at', null)
+
+          if (date?.from) {
+            qQuery = qQuery.gte('created_at', date.from.toISOString())
+            wQuery = wQuery.gte('created_at', date.from.toISOString())
+          }
+          if (date?.to) {
+            const nextDay = new Date(date.to)
+            nextDay.setDate(nextDay.getDate() + 1)
+            qQuery = qQuery.lt('created_at', nextDay.toISOString())
+            wQuery = wQuery.lt('created_at', nextDay.toISOString())
+          }
+
+          const [qRes, wRes] = await Promise.all([qQuery, wQuery])
+          setSalesData({ quotes: qRes.data || [], workOrders: wRes.data || [] })
+        } else {
+          setSalesData({ quotes: [], workOrders: [] })
+        }
       } catch (error) {
         console.error(error)
       } finally {
@@ -69,7 +111,7 @@ export default function Index() {
     const grouped: Record<
       string,
       {
-        definition: MetricDefinition
+        definition: any
         data: any[]
         latestValue: number
         previousValue: number
@@ -95,9 +137,10 @@ export default function Index() {
         const previousValue = metricTracks.length > 1 ? metricTracks[0].metric_value : latestValue
 
         let change = 0
-        if (previousValue !== 0) {
+        if (previousValue && previousValue !== 0) {
           change = ((latestValue - previousValue) / previousValue) * 100
         }
+        if (!isFinite(change) || isNaN(change)) change = 0
 
         let trend: 'up' | 'down' | 'neutral' = 'neutral'
         if (change > 0) trend = 'up'
@@ -113,8 +156,131 @@ export default function Index() {
         }
       }
     })
+
+    if (department === 'Sales' || department === 'All') {
+      const { quotes, workOrders } = salesData
+
+      const revenueByDay: Record<string, number> = {}
+      const wosByDay: Record<string, number> = {}
+      let totalRevenue = 0
+      let totalMargin = 0
+      let marginCount = 0
+
+      workOrders.forEach((wo) => {
+        const val = Number(wo.price || 0)
+        totalRevenue += val
+
+        const day = format(new Date(wo.created_at), 'MM/dd')
+        revenueByDay[day] = (revenueByDay[day] || 0) + val
+        wosByDay[day] = (wosByDay[day] || 0) + 1
+
+        const m = Number(wo.profit_margin || 0)
+        if (m > 0) {
+          totalMargin += m
+          marginCount++
+        }
+      })
+
+      const revChart = Object.entries(revenueByDay)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, value]) => ({ date, value }))
+
+      const wosChart = Object.entries(wosByDay)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, value]) => ({ date, value }))
+
+      const addSalesMetric = (
+        name: string,
+        val: number,
+        type: string,
+        unit: string,
+        data: any[],
+      ) => {
+        let change = 0
+        let trend: 'up' | 'down' | 'neutral' = 'neutral'
+        if (data.length > 1) {
+          const first = data[0].value
+          const last = data[data.length - 1].value
+          if (first && first !== 0) {
+            change = ((last - first) / first) * 100
+            if (!isFinite(change) || isNaN(change)) change = 0
+            if (change > 0) trend = 'up'
+            if (change < 0) trend = 'down'
+          }
+        }
+
+        grouped[name] = {
+          definition: {
+            id: `sales-${name}`,
+            department: 'Sales',
+            metric_name: name,
+            metric_type: type,
+            unit,
+          },
+          data,
+          latestValue: val,
+          previousValue: 0,
+          change,
+          trend,
+        }
+      }
+
+      addSalesMetric('Gross Revenue', totalRevenue, 'financial', '$', revChart)
+      addSalesMetric(
+        'Average Profit Margin',
+        marginCount > 0 ? totalMargin / marginCount : 0,
+        'percentage',
+        '%',
+        [],
+      )
+
+      const approvedQuotes = quotes.filter(
+        (q) => q.status === 'approved' || q.status === 'converted',
+      ).length
+      const conversionRate = quotes.length > 0 ? (approvedQuotes / quotes.length) * 100 : 0
+      addSalesMetric('Sales Conversion Rate', conversionRate, 'percentage', '%', [])
+
+      let totalDays = 0
+      let cycleCount = 0
+      quotes
+        .filter((q) => q.status === 'approved' || q.status === 'converted')
+        .forEach((q) => {
+          if (q.created_at && q.approval_date) {
+            const diff = differenceInDays(new Date(q.approval_date), new Date(q.created_at))
+            if (diff >= 0) {
+              totalDays += diff
+              cycleCount++
+            }
+          }
+        })
+      addSalesMetric(
+        'Average Sales Cycle',
+        cycleCount > 0 ? totalDays / cycleCount : 0,
+        'number',
+        'days',
+        [],
+      )
+
+      const uniqueCustomers = new Set(workOrders.map((wo) => wo.customer_name).filter(Boolean)).size
+      addSalesMetric(
+        'Customer Lifetime Value',
+        uniqueCustomers > 0 ? totalRevenue / uniqueCustomers : 0,
+        'financial',
+        '$',
+        [],
+      )
+      addSalesMetric(
+        'Average Purchase Value',
+        workOrders.length > 0 ? totalRevenue / workOrders.length : 0,
+        'financial',
+        '$',
+        [],
+      )
+      addSalesMetric('Number of Purchases', workOrders.length, 'number', '', wosChart)
+    }
+
     return grouped
-  }, [definitions, tracking])
+  }, [definitions, tracking, salesData, department])
 
   const formatValue = (value: number, type: string | null, unit: string | null) => {
     let formatted = value.toLocaleString('en-US', { maximumFractionDigits: 2 })
@@ -240,31 +406,37 @@ export default function Index() {
                 </div>
 
                 <div className="h-[100px] w-full mt-4 -ml-2">
-                  <ChartContainer
-                    config={{ value: { label: metric.definition.metric_name, color: '#4f46e5' } }}
-                    className="h-full w-full"
-                  >
-                    <LineChart data={metric.data}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="date" hide />
-                      <YAxis
-                        hide
-                        domain={[
-                          'dataMin - (dataMax - dataMin) * 0.1',
-                          'dataMax + (dataMax - dataMin) * 0.1',
-                        ]}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="#4f46e5"
-                        strokeWidth={3}
-                        dot={false}
-                        activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 2 }}
-                      />
-                    </LineChart>
-                  </ChartContainer>
+                  {metric.data.length > 0 ? (
+                    <ChartContainer
+                      config={{ value: { label: metric.definition.metric_name, color: '#4f46e5' } }}
+                      className="h-full w-full"
+                    >
+                      <LineChart data={metric.data}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="date" hide />
+                        <YAxis
+                          hide
+                          domain={[
+                            'dataMin - (dataMax - dataMin) * 0.1',
+                            'dataMax + (dataMax - dataMin) * 0.1',
+                          ]}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#4f46e5"
+                          strokeWidth={3}
+                          dot={false}
+                          activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 2 }}
+                        />
+                      </LineChart>
+                    </ChartContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400">
+                      No trend data
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { format, subDays, startOfDay, endOfDay, differenceInDays, startOfYear } from 'date-fns'
+import { format, subDays, startOfDay, endOfDay, differenceInDays } from 'date-fns'
 import { enUS } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -76,7 +76,6 @@ const COLORS = [
 ]
 
 export default function SalesDashboard() {
-  const [period, setPeriod] = useState<string>('30')
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subDays(new Date(), 30),
     to: new Date(),
@@ -99,20 +98,6 @@ export default function SalesDashboard() {
   const [salespersons, setSalespersons] = useState<any[]>([])
   const [customers, setCustomers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (period === 'all') {
-      setDateRange({ from: undefined, to: undefined })
-    } else if (period === 'ytd') {
-      setDateRange({ from: startOfYear(new Date()), to: new Date() })
-    } else if (period !== 'custom') {
-      const days = parseInt(period)
-      setDateRange({
-        from: subDays(new Date(), days),
-        to: new Date(),
-      })
-    }
-  }, [period])
 
   useEffect(() => {
     const loadData = async (showLoading = true) => {
@@ -454,7 +439,11 @@ export default function SalesDashboard() {
       doc.setTextColor(100, 116, 139)
       const dateStr = format(new Date(), 'MM/dd/yyyy HH:mm')
       doc.text(`Generated on: ${dateStr}`, 14, 28)
-      doc.text(`Period: ${period}`, 14, 33)
+
+      const periodStr = dateRange.from
+        ? `${format(dateRange.from, 'MM/dd/yyyy')} - ${dateRange.to ? format(dateRange.to, 'MM/dd/yyyy') : format(dateRange.from, 'MM/dd/yyyy')}`
+        : 'All Time'
+      doc.text(`Period: ${periodStr}`, 14, 33)
 
       const filtersStr = []
       if (filters.salesperson !== 'all') filtersStr.push(`Salesperson: ${filters.salesperson}`)
@@ -627,62 +616,47 @@ export default function SalesDashboard() {
             )}
             Export Dashboard to PDF
           </Button>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-              <SelectItem value="ytd">Year to Date</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="custom">Custom</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {period === 'custom' && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-[240px] justify-start text-left font-normal',
-                    !dateRange.from && 'text-muted-foreground',
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, 'MM/dd/yyyy')} -{' '}
-                        {format(dateRange.to, 'MM/dd/yyyy')}
-                      </>
-                    ) : (
-                      format(dateRange.from, 'MM/dd/yyyy')
-                    )
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'w-[260px] justify-start text-left font-normal bg-white border-slate-200',
+                  !dateRange.from && 'text-muted-foreground',
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, 'MM/dd/yyyy')} - {format(dateRange.to, 'MM/dd/yyyy')}
+                    </>
                   ) : (
-                    <span>Select date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange.from}
-                  selected={{ from: dateRange.from, to: dateRange.to }}
-                  onSelect={(range) => {
-                    if (range?.from) {
-                      setDateRange({ from: range.from, to: range.to || range.from })
-                    }
-                  }}
-                  numberOfMonths={2}
-                  locale={enUS}
-                />
-              </PopoverContent>
-            </Popover>
-          )}
+                    format(dateRange.from, 'MM/dd/yyyy')
+                  )
+                ) : (
+                  <span>Select date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange.from}
+                selected={{ from: dateRange.from, to: dateRange.to }}
+                onSelect={(range) => {
+                  if (range) {
+                    setDateRange({ from: range.from, to: range.to })
+                  } else {
+                    setDateRange({ from: undefined, to: undefined })
+                  }
+                }}
+                numberOfMonths={2}
+                locale={enUS}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
