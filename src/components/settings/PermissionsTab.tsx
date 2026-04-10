@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import {
   Table,
   TableBody,
@@ -6,61 +8,74 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ShieldAlert } from 'lucide-react'
-import { toast } from 'sonner'
+import { Info } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
-const roles = [
-  { name: 'Admin', depts: ['All Departments'], access: 'Full Access' },
-  { name: 'Manager', depts: ['Sales', 'Engineering', 'Production'], access: 'Read/Write' },
-  { name: 'Supervisor', depts: ['Production', 'Quality'], access: 'Read/Write (Specific)' },
-  { name: 'Operator', depts: ['Production'], access: 'Read Only / Status' },
+const roleDefinitions = [
+  { role: 'admin', access: 'Acesso total ao sistema, configurações e gerenciamento de usuários' },
+  { role: 'manager', access: 'Leitura/Escrita em todos os departamentos, relatórios gerenciais' },
+  { role: 'supervisor', access: 'Leitura/Escrita limitada ao próprio departamento' },
+  { role: 'user', access: 'Acesso básico, atualização de status de tarefas próprias' },
 ]
 
 export function PermissionsTab() {
+  const [roleCounts, setRoleCounts] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    async function fetchRoles() {
+      const { data } = await supabase.from('users').select('role')
+      if (data) {
+        const counts = data.reduce(
+          (acc, user) => {
+            const r = user.role || 'user'
+            acc[r] = (acc[r] || 0) + 1
+            return acc
+          },
+          {} as Record<string, number>,
+        )
+        setRoleCounts(counts)
+      }
+    }
+    fetchRoles()
+  }, [])
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div>
         <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Permissions Control (RBAC)
+          Níveis de Acesso e Permissões (RBAC)
         </h3>
-        <Button variant="outline" onClick={() => toast.info('Edit policies (simulation)')}>
-          <ShieldAlert className="w-4 h-4 mr-2" /> Edit Global Policies
-        </Button>
+        <p className="text-sm text-slate-500">
+          Controle as regras e limites de acesso de cada função no sistema.
+        </p>
       </div>
-      <div className="border rounded-md">
+
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertTitle>Segurança Integrada</AlertTitle>
+        <AlertDescription>
+          As permissões são controladas nativamente pelo banco de dados (Row Level Security). Para
+          conceder um novo acesso, altere o "Nível de Acesso" do usuário na aba Usuários.
+        </AlertDescription>
+      </Alert>
+
+      <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Role</TableHead>
-              <TableHead>Allowed Departments</TableHead>
-              <TableHead>Access Level</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Função (Role)</TableHead>
+              <TableHead>Nível de Acesso Permitido</TableHead>
+              <TableHead className="text-right">Usuários Ativos</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {roles.map((r) => (
-              <TableRow key={r.name}>
-                <TableCell className="font-medium">{r.name}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {r.depts.map((d) => (
-                      <Badge key={d} variant="secondary">
-                        {d}
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
+            {roleDefinitions.map((r) => (
+              <TableRow key={r.role}>
+                <TableCell className="font-medium capitalize">{r.role}</TableCell>
                 <TableCell>{r.access}</TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toast.info(`Edit permissions for ${r.name}`)}
-                  >
-                    Edit Permissions
-                  </Button>
+                  <Badge variant="secondary">{roleCounts[r.role] || 0} Usuários</Badge>
                 </TableCell>
               </TableRow>
             ))}

@@ -13,12 +13,36 @@ import { Badge } from '@/components/ui/badge'
 import { Edit, Trash2, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Database } from '@/lib/supabase/types'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type User = Database['public']['Tables']['users']['Row']
 
 export function UsersTab() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [formData, setFormData] = useState<{ full_name: string; department: string; role: string }>(
+    {
+      full_name: '',
+      department: '',
+      role: 'user',
+    },
+  )
 
   useEffect(() => {
     fetchUsers()
@@ -28,52 +52,89 @@ export function UsersTab() {
     setLoading(true)
     const { data, error } = await supabase.from('users').select('*').order('full_name')
     if (error) {
-      toast.error('Error loading users')
+      toast.error('Erro ao carregar usuários')
     } else {
       setUsers(data || [])
     }
     setLoading(false)
   }
 
-  const handleDelete = (id: string) => {
-    toast.success('User deleted successfully (simulation)')
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover o acesso deste usuário?')) return
+
+    const { error } = await supabase.from('users').delete().eq('id', id)
+    if (error) {
+      toast.error('Erro ao remover usuário. Ele pode ter registros dependentes.')
+    } else {
+      toast.success('Usuário removido com sucesso')
+      fetchUsers()
+    }
   }
 
-  const handleEdit = (id: string) => {
-    toast.info('Open edit modal (simulation)')
+  const handleEdit = (user: User) => {
+    setEditingUser(user)
+    setFormData({
+      full_name: user.full_name || '',
+      department: user.department || '',
+      role: user.role || 'user',
+    })
+  }
+
+  const handleSave = async () => {
+    if (!editingUser) return
+    const { error } = await supabase
+      .from('users')
+      .update({
+        full_name: formData.full_name,
+        department: formData.department,
+        role: formData.role,
+      })
+      .eq('id', editingUser.id)
+
+    if (error) {
+      toast.error('Erro ao atualizar usuário')
+    } else {
+      toast.success('Usuário atualizado com sucesso')
+      setEditingUser(null)
+      fetchUsers()
+    }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">User Management</h3>
-        <Button>
-          <UserPlus className="w-4 h-4 mr-2" /> New User
+        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
+          Gerenciamento de Usuários
+        </h3>
+        <Button
+          onClick={() => toast.info('Acesse a página de Cadastro para adicionar novos usuários.')}
+        >
+          <UserPlus className="w-4 h-4 mr-2" /> Novo Usuário
         </Button>
       </div>
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Departamento</TableHead>
+              <TableHead>Nível de Acesso</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                  Loading users...
+                  Carregando usuários...
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                  No users found.
+                  Nenhum usuário encontrado.
                 </TableCell>
               </TableRow>
             ) : (
@@ -82,17 +143,24 @@ export function UsersTab() {
                   <TableCell className="font-medium">{u.full_name}</TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell className="capitalize">{u.department || '-'}</TableCell>
-                  <TableCell className="capitalize">{u.role || 'user'}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={u.role === 'admin' ? 'default' : 'secondary'}
+                      className="capitalize"
+                    >
+                      {u.role || 'user'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
                       className="bg-green-50 text-green-700 border-green-200"
                     >
-                      Active
+                      Ativo
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(u.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(u)}>
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button
@@ -110,6 +178,66 @@ export function UsersTab() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome Completo</Label>
+              <Input
+                value={formData.full_name}
+                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Departamento</Label>
+              <Select
+                value={formData.department}
+                onValueChange={(v) => setFormData({ ...formData, department: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o departamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sales">Sales</SelectItem>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Production">Production</SelectItem>
+                  <SelectItem value="Purchasing">Purchasing</SelectItem>
+                  <SelectItem value="Quality">Quality</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                  <SelectItem value="Management">Management</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Nível de Acesso (Role)</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(v) => setFormData({ ...formData, role: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a função" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Administrador (Total)</SelectItem>
+                  <SelectItem value="manager">Gerente</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="user">Usuário Padrão</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingUser(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
