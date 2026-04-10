@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Search, Eye, Edit, Trash2 } from 'lucide-react'
+import { Search, Eye, Edit, Trash2, Plus } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import ExpediteKPIs from './ExpediteKPIs'
@@ -46,6 +46,17 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
   const [editItem, setEditItem] = useState<any>(null)
   const [newStatus, setNewStatus] = useState('')
 
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [newExpedite, setNewExpedite] = useState({
+    pn_number: '',
+    pn_description: '',
+    vendor: '',
+    area_supervisor: '',
+    expedite_date: format(new Date(), 'yyyy-MM-dd'),
+    expedite_reason: '',
+    component_type: 'Engine',
+  })
+
   const fetchData = async () => {
     const { data: res, error } = await supabase
       .from('purchasing_expedites')
@@ -61,12 +72,23 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
   const filtered = useMemo(
     () =>
       data.filter((d) => {
-        const cName = (d.purchasing_tasks?.component_name || d.component_type || '').toLowerCase()
-        const supp = (d.purchasing_tasks?.supplier || '').toLowerCase()
+        const cName = (
+          d.pn_description ||
+          d.purchasing_tasks?.component_name ||
+          d.component_type ||
+          ''
+        ).toLowerCase()
+        const supp = (d.vendor || d.purchasing_tasks?.supplier || '').toLowerCase()
+        const pn = (d.pn_number || '').toLowerCase()
         const wo = (d.work_orders?.wo_number || '').toLowerCase()
 
         if (woFilter && !wo.includes(woFilter.toLowerCase())) return false
-        if (search && !cName.includes(search.toLowerCase()) && !supp.includes(search.toLowerCase()))
+        if (
+          search &&
+          !cName.includes(search.toLowerCase()) &&
+          !supp.includes(search.toLowerCase()) &&
+          !pn.includes(search.toLowerCase())
+        )
           return false
         if (status !== 'all' && d.status !== status) return false
         if (priority !== 'all' && d.priority !== priority) return false
@@ -87,6 +109,47 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
       toast({ title: 'Status updated' })
       setEditItem(null)
       fetchData()
+    }
+  }
+
+  const handleCreate = async () => {
+    if (!newExpedite.pn_number || !newExpedite.vendor) {
+      toast({ title: 'Please fill in required fields (PN Number, Vendor)', variant: 'destructive' })
+      return
+    }
+    const { error } = await supabase.from('purchasing_expedites').insert([
+      {
+        pn_number: newExpedite.pn_number,
+        pn_description: newExpedite.pn_description,
+        vendor: newExpedite.vendor,
+        area_supervisor: newExpedite.area_supervisor,
+        expedite_date: newExpedite.expedite_date,
+        expedite_reason: newExpedite.expedite_reason,
+        component_type: newExpedite.component_type,
+        status: 'pending',
+        priority: 'medium',
+      },
+    ])
+
+    if (!error) {
+      toast({ title: 'Expedite created successfully' })
+      setIsCreateOpen(false)
+      setNewExpedite({
+        pn_number: '',
+        pn_description: '',
+        vendor: '',
+        area_supervisor: '',
+        expedite_date: format(new Date(), 'yyyy-MM-dd'),
+        expedite_reason: '',
+        component_type: 'Engine',
+      })
+      fetchData()
+    } else {
+      toast({
+        title: 'Error creating expedite',
+        description: error.message,
+        variant: 'destructive',
+      })
     }
   }
 
@@ -130,7 +193,7 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
         <div className="relative flex-1 w-full min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search component or supplier..."
+            placeholder="Search component, supplier or PN..."
             className="pl-8"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -171,6 +234,9 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
             onChange={(e) => setDateTo(e.target.value)}
             className="w-[130px]"
           />
+          <Button onClick={() => setIsCreateOpen(true)} className="ml-auto w-full xl:w-auto">
+            <Plus className="h-4 w-4 mr-2" /> New Expedite
+          </Button>
         </div>
       </div>
 
@@ -178,9 +244,10 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Task ID</TableHead>
-              <TableHead>Component</TableHead>
-              <TableHead>Supplier</TableHead>
+              <TableHead>Task / PN</TableHead>
+              <TableHead>Component / Desc</TableHead>
+              <TableHead>Supplier / Vendor</TableHead>
+              <TableHead>Area Supervisor</TableHead>
               <TableHead>Reason</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Cost</TableHead>
@@ -194,12 +261,15 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
             {filtered.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-mono text-xs">
-                  {item.task_id?.split('-')[0] || '-'}
+                  {item.pn_number || item.task_id?.split('-')[0] || '-'}
                 </TableCell>
                 <TableCell>
-                  {item.purchasing_tasks?.component_name || item.component_type}
+                  {item.pn_description ||
+                    item.purchasing_tasks?.component_name ||
+                    item.component_type}
                 </TableCell>
-                <TableCell>{item.purchasing_tasks?.supplier || '-'}</TableCell>
+                <TableCell>{item.vendor || item.purchasing_tasks?.supplier || '-'}</TableCell>
+                <TableCell>{item.area_supervisor || '-'}</TableCell>
                 <TableCell className="max-w-[150px] truncate" title={item.expedite_reason || ''}>
                   {item.expedite_reason || '-'}
                 </TableCell>
@@ -289,6 +359,74 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
           </div>
           <DialogFooter>
             <Button onClick={handleUpdate}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Expedite</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">PN Number</label>
+              <Input
+                placeholder="Enter PN Number"
+                value={newExpedite.pn_number}
+                onChange={(e) => setNewExpedite({ ...newExpedite, pn_number: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">PN Description</label>
+              <Input
+                placeholder="Enter description"
+                value={newExpedite.pn_description}
+                onChange={(e) => setNewExpedite({ ...newExpedite, pn_description: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Vendor</label>
+              <Input
+                placeholder="Enter vendor"
+                value={newExpedite.vendor}
+                onChange={(e) => setNewExpedite({ ...newExpedite, vendor: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Area Supervisor</label>
+              <Input
+                placeholder="Enter area supervisor"
+                value={newExpedite.area_supervisor}
+                onChange={(e) =>
+                  setNewExpedite({ ...newExpedite, area_supervisor: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Date</label>
+              <Input
+                type="date"
+                value={newExpedite.expedite_date}
+                onChange={(e) => setNewExpedite({ ...newExpedite, expedite_date: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Reason</label>
+              <Input
+                placeholder="Enter reason"
+                value={newExpedite.expedite_reason}
+                onChange={(e) =>
+                  setNewExpedite({ ...newExpedite, expedite_reason: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreate}>Create Expedite</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
