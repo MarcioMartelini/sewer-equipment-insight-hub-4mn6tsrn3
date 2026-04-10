@@ -57,6 +57,10 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
     component_type: 'Engine',
   })
 
+  const [users, setUsers] = useState<{ id: string; full_name: string }[]>([])
+  const [vendors, setVendors] = useState<string[]>([])
+  const [isNewVendor, setIsNewVendor] = useState(false)
+
   const fetchData = async () => {
     const { data: res, error } = await supabase
       .from('purchasing_expedites')
@@ -65,8 +69,37 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
     if (!error) setData(res || [])
   }
 
+  const fetchDropdowns = async () => {
+    const { data: usersData } = await supabase
+      .from('users')
+      .select('id, full_name')
+      .order('full_name')
+    if (usersData) setUsers(usersData)
+
+    const { data: tasks } = await supabase
+      .from('purchasing_tasks')
+      .select('supplier')
+      .not('supplier', 'is', null)
+    const { data: expedites } = await supabase
+      .from('purchasing_expedites')
+      .select('vendor')
+      .not('vendor', 'is', null)
+
+    const uniqueVendors = Array.from(
+      new Set([
+        ...(tasks?.map((t) => t.supplier) || []),
+        ...(expedites?.map((e) => e.vendor) || []),
+      ]),
+    )
+      .filter(Boolean)
+      .sort() as string[]
+
+    setVendors(uniqueVendors)
+  }
+
   useEffect(() => {
     fetchData()
+    fetchDropdowns()
   }, [])
 
   const filtered = useMemo(
@@ -122,7 +155,8 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
         pn_number: newExpedite.pn_number,
         pn_description: newExpedite.pn_description,
         vendor: newExpedite.vendor,
-        area_supervisor: newExpedite.area_supervisor,
+        area_supervisor:
+          newExpedite.area_supervisor === 'unassigned' ? '' : newExpedite.area_supervisor,
         expedite_date: newExpedite.expedite_date,
         expedite_reason: newExpedite.expedite_reason,
         component_type: newExpedite.component_type,
@@ -134,6 +168,7 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
     if (!error) {
       toast({ title: 'Expedite created successfully' })
       setIsCreateOpen(false)
+      setIsNewVendor(false)
       setNewExpedite({
         pn_number: '',
         pn_description: '',
@@ -144,6 +179,7 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
         component_type: 'Engine',
       })
       fetchData()
+      fetchDropdowns()
     } else {
       toast({
         title: 'Error creating expedite',
@@ -366,7 +402,13 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      <Dialog
+        open={isCreateOpen}
+        onOpenChange={(val) => {
+          setIsCreateOpen(val)
+          if (!val) setIsNewVendor(false)
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Expedite</DialogTitle>
@@ -390,21 +432,67 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Vendor</label>
-              <Input
-                placeholder="Enter vendor"
-                value={newExpedite.vendor}
-                onChange={(e) => setNewExpedite({ ...newExpedite, vendor: e.target.value })}
-              />
+              {!isNewVendor ? (
+                <Select
+                  value={newExpedite.vendor}
+                  onValueChange={(val) => {
+                    if (val === '___new___') {
+                      setIsNewVendor(true)
+                      setNewExpedite({ ...newExpedite, vendor: '' })
+                    } else {
+                      setNewExpedite({ ...newExpedite, vendor: val })
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vendor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendors.map((v) => (
+                      <SelectItem key={v} value={v}>
+                        {v}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="___new___">+ Add New Vendor</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter new vendor"
+                    value={newExpedite.vendor}
+                    onChange={(e) => setNewExpedite({ ...newExpedite, vendor: e.target.value })}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsNewVendor(false)
+                      setNewExpedite({ ...newExpedite, vendor: '' })
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Area Supervisor</label>
-              <Input
-                placeholder="Enter area supervisor"
+              <Select
                 value={newExpedite.area_supervisor}
-                onChange={(e) =>
-                  setNewExpedite({ ...newExpedite, area_supervisor: e.target.value })
-                }
-              />
+                onValueChange={(val) => setNewExpedite({ ...newExpedite, area_supervisor: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select area supervisor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.full_name}>
+                      {u.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Date</label>
