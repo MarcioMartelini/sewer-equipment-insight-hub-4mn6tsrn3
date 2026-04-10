@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -39,11 +45,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'alert_rules_metric_id_fkey'
-            columns: ['metric_id']
+            foreignKeyName: "alert_rules_metric_id_fkey"
+            columns: ["metric_id"]
             isOneToOne: false
-            referencedRelation: 'metrics_definitions'
-            referencedColumns: ['id']
+            referencedRelation: "metrics_definitions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -77,18 +83,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'alerts_assigned_to_fkey'
-            columns: ['assigned_to']
+            foreignKeyName: "alerts_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'alerts_metric_id_fkey'
-            columns: ['metric_id']
+            foreignKeyName: "alerts_metric_id_fkey"
+            columns: ["metric_id"]
             isOneToOne: false
-            referencedRelation: 'metrics'
-            referencedColumns: ['id']
+            referencedRelation: "metrics"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -128,25 +134,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'alerts_log_alert_rule_id_fkey'
-            columns: ['alert_rule_id']
+            foreignKeyName: "alerts_log_alert_rule_id_fkey"
+            columns: ["alert_rule_id"]
             isOneToOne: false
-            referencedRelation: 'alert_rules'
-            referencedColumns: ['id']
+            referencedRelation: "alert_rules"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'alerts_log_assigned_to_fkey'
-            columns: ['assigned_to']
+            foreignKeyName: "alerts_log_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'alerts_log_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "alerts_log_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -177,18 +183,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'audit_log_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "audit_log_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'audit_log_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "audit_log_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -228,18 +234,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'customer_history_customer_id_fkey'
-            columns: ['customer_id']
+            foreignKeyName: "customer_history_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: 'customers'
-            referencedColumns: ['id']
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'customer_history_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "customer_history_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -348,11 +354,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'engineering_accessories_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "engineering_accessories_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -383,11 +389,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'engineering_boms_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "engineering_boms_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -418,11 +424,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'engineering_layouts_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "engineering_layouts_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -456,11 +462,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'engineering_tasks_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "engineering_tasks_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -491,11 +497,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'engineering_travelers_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "engineering_travelers_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -532,11 +538,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'hr_absences_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "hr_absences_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -576,11 +582,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'hr_injuries_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "hr_injuries_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -623,18 +629,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'hr_productivity_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "hr_productivity_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'hr_productivity_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "hr_productivity_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -707,11 +713,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'metrics_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "metrics_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -781,11 +787,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'metrics_tracking_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "metrics_tracking_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -822,11 +828,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'notifications_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -857,11 +863,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_final_assembly_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "production_final_assembly_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -892,11 +898,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_paint_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "production_paint_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -927,11 +933,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_sub_assembly_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "production_sub_assembly_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -965,18 +971,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_task_audit_log_changed_by_fkey'
-            columns: ['changed_by']
+            foreignKeyName: "production_task_audit_log_changed_by_fkey"
+            columns: ["changed_by"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'production_task_audit_log_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "production_task_audit_log_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: 'production_tasks'
-            referencedColumns: ['id']
+            referencedRelation: "production_tasks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -987,7 +993,9 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           id: string
-          status: Database['public']['Enums']['production_task_status_enum'] | null
+          status:
+            | Database["public"]["Enums"]["production_task_status_enum"]
+            | null
           task_id: string
           updated_at: string | null
         }
@@ -997,7 +1005,9 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
-          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          status?:
+            | Database["public"]["Enums"]["production_task_status_enum"]
+            | null
           task_id: string
           updated_at?: string | null
         }
@@ -1007,24 +1017,26 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
-          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          status?:
+            | Database["public"]["Enums"]["production_task_status_enum"]
+            | null
           task_id?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'production_task_comments_history_author_id_fkey'
-            columns: ['author_id']
+            foreignKeyName: "production_task_comments_history_author_id_fkey"
+            columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'production_task_comments_history_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "production_task_comments_history_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: 'production_tasks'
-            referencedColumns: ['id']
+            referencedRelation: "production_tasks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1039,7 +1051,9 @@ export type Database = {
           id: string
           is_completed: boolean | null
           start_date: string | null
-          status: Database['public']['Enums']['production_task_status_enum'] | null
+          status:
+            | Database["public"]["Enums"]["production_task_status_enum"]
+            | null
           sub_department: string | null
           task_name: string
           updated_at: string | null
@@ -1055,7 +1069,9 @@ export type Database = {
           id?: string
           is_completed?: boolean | null
           start_date?: string | null
-          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          status?:
+            | Database["public"]["Enums"]["production_task_status_enum"]
+            | null
           sub_department?: string | null
           task_name: string
           updated_at?: string | null
@@ -1071,7 +1087,9 @@ export type Database = {
           id?: string
           is_completed?: boolean | null
           start_date?: string | null
-          status?: Database['public']['Enums']['production_task_status_enum'] | null
+          status?:
+            | Database["public"]["Enums"]["production_task_status_enum"]
+            | null
           sub_department?: string | null
           task_name?: string
           updated_at?: string | null
@@ -1079,18 +1097,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_tasks_assigned_to_fkey'
-            columns: ['assigned_to']
+            foreignKeyName: "production_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'production_tasks_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "production_tasks_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1121,11 +1139,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_tests_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "production_tests_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1156,11 +1174,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_warehouse_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "production_warehouse_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1191,11 +1209,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'production_weld_shop_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "production_weld_shop_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1262,68 +1280,80 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'purchasing_components_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "purchasing_components_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
       purchasing_expedites: {
         Row: {
+          area_supervisor: string | null
           component_type: string
           created_at: string | null
           expedite_cost: number | null
           expedite_date: string | null
           expedite_reason: string | null
           id: string
-          priority: Database['public']['Enums']['priority_enum'] | null
-          status: Database['public']['Enums']['expedite_status_enum'] | null
+          pn_description: string | null
+          pn_number: string | null
+          priority: Database["public"]["Enums"]["priority_enum"] | null
+          status: Database["public"]["Enums"]["expedite_status_enum"] | null
           task_id: string | null
           updated_at: string | null
+          vendor: string | null
           wo_id: string | null
         }
         Insert: {
+          area_supervisor?: string | null
           component_type: string
           created_at?: string | null
           expedite_cost?: number | null
           expedite_date?: string | null
           expedite_reason?: string | null
           id?: string
-          priority?: Database['public']['Enums']['priority_enum'] | null
-          status?: Database['public']['Enums']['expedite_status_enum'] | null
+          pn_description?: string | null
+          pn_number?: string | null
+          priority?: Database["public"]["Enums"]["priority_enum"] | null
+          status?: Database["public"]["Enums"]["expedite_status_enum"] | null
           task_id?: string | null
           updated_at?: string | null
+          vendor?: string | null
           wo_id?: string | null
         }
         Update: {
+          area_supervisor?: string | null
           component_type?: string
           created_at?: string | null
           expedite_cost?: number | null
           expedite_date?: string | null
           expedite_reason?: string | null
           id?: string
-          priority?: Database['public']['Enums']['priority_enum'] | null
-          status?: Database['public']['Enums']['expedite_status_enum'] | null
+          pn_description?: string | null
+          pn_number?: string | null
+          priority?: Database["public"]["Enums"]["priority_enum"] | null
+          status?: Database["public"]["Enums"]["expedite_status_enum"] | null
           task_id?: string | null
           updated_at?: string | null
+          vendor?: string | null
           wo_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'purchasing_expedites_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "purchasing_expedites_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: 'purchasing_tasks'
-            referencedColumns: ['id']
+            referencedRelation: "purchasing_tasks"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'purchasing_expedites_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "purchasing_expedites_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1357,18 +1387,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'purchasing_task_audit_log_changed_by_fkey'
-            columns: ['changed_by']
+            foreignKeyName: "purchasing_task_audit_log_changed_by_fkey"
+            columns: ["changed_by"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'purchasing_task_audit_log_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "purchasing_task_audit_log_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: 'purchasing_tasks'
-            referencedColumns: ['id']
+            referencedRelation: "purchasing_tasks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1402,18 +1432,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'purchasing_task_comments_history_author_fkey'
-            columns: ['author']
+            foreignKeyName: "purchasing_task_comments_history_author_fkey"
+            columns: ["author"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'purchasing_task_comments_history_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "purchasing_task_comments_history_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: 'purchasing_tasks'
-            referencedColumns: ['id']
+            referencedRelation: "purchasing_tasks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1429,7 +1459,9 @@ export type Database = {
           is_completed: boolean | null
           quantity: number | null
           start_date: string | null
-          status: Database['public']['Enums']['purchasing_task_status_enum'] | null
+          status:
+            | Database["public"]["Enums"]["purchasing_task_status_enum"]
+            | null
           supplier: string | null
           total_price: number | null
           unit_price: number | null
@@ -1447,7 +1479,9 @@ export type Database = {
           is_completed?: boolean | null
           quantity?: number | null
           start_date?: string | null
-          status?: Database['public']['Enums']['purchasing_task_status_enum'] | null
+          status?:
+            | Database["public"]["Enums"]["purchasing_task_status_enum"]
+            | null
           supplier?: string | null
           total_price?: number | null
           unit_price?: number | null
@@ -1465,7 +1499,9 @@ export type Database = {
           is_completed?: boolean | null
           quantity?: number | null
           start_date?: string | null
-          status?: Database['public']['Enums']['purchasing_task_status_enum'] | null
+          status?:
+            | Database["public"]["Enums"]["purchasing_task_status_enum"]
+            | null
           supplier?: string | null
           total_price?: number | null
           unit_price?: number | null
@@ -1474,18 +1510,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'purchasing_tasks_assigned_to_fkey'
-            columns: ['assigned_to']
+            foreignKeyName: "purchasing_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'purchasing_tasks_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "purchasing_tasks_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1567,11 +1603,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'quality_warranty_claims_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "quality_warranty_claims_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1611,18 +1647,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'quote_history_quote_id_fkey'
-            columns: ['quote_id']
+            foreignKeyName: "quote_history_quote_id_fkey"
+            columns: ["quote_id"]
             isOneToOne: false
-            referencedRelation: 'quotes'
-            referencedColumns: ['id']
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'quote_history_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "quote_history_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1713,11 +1749,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'quotes_created_by_fkey'
-            columns: ['created_by']
+            foreignKeyName: "quotes_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1790,11 +1826,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'salesperson_history_salesperson_id_fkey'
-            columns: ['salesperson_id']
+            foreignKeyName: "salesperson_history_salesperson_id_fkey"
+            columns: ["salesperson_id"]
             isOneToOne: false
-            referencedRelation: 'salespersons'
-            referencedColumns: ['id']
+            referencedRelation: "salespersons"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1942,11 +1978,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'warranty_claims_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "warranty_claims_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1995,18 +2031,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'wo_history_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "wo_history_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'wo_history_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "wo_history_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2017,7 +2053,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           id: string
-          status: Database['public']['Enums']['task_status_enum'] | null
+          status: Database["public"]["Enums"]["task_status_enum"] | null
           task_id: string
           updated_at: string | null
         }
@@ -2027,7 +2063,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
-          status?: Database['public']['Enums']['task_status_enum'] | null
+          status?: Database["public"]["Enums"]["task_status_enum"] | null
           task_id: string
           updated_at?: string | null
         }
@@ -2037,24 +2073,24 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
-          status?: Database['public']['Enums']['task_status_enum'] | null
+          status?: Database["public"]["Enums"]["task_status_enum"] | null
           task_id?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'wo_task_comments_history_author_id_fkey'
-            columns: ['author_id']
+            foreignKeyName: "wo_task_comments_history_author_id_fkey"
+            columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'wo_task_comments_history_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "wo_task_comments_history_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: 'wo_tasks'
-            referencedColumns: ['id']
+            referencedRelation: "wo_tasks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2088,11 +2124,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'wo_task_history_task_id_fkey'
-            columns: ['task_id']
+            foreignKeyName: "wo_task_history_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: 'wo_tasks'
-            referencedColumns: ['id']
+            referencedRelation: "wo_tasks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2108,7 +2144,7 @@ export type Database = {
           is_completed: boolean | null
           progress: number | null
           start_date: string | null
-          status: Database['public']['Enums']['task_status_enum']
+          status: Database["public"]["Enums"]["task_status_enum"]
           sub_department: string | null
           task_name: string
           updated_at: string
@@ -2126,7 +2162,7 @@ export type Database = {
           is_completed?: boolean | null
           progress?: number | null
           start_date?: string | null
-          status?: Database['public']['Enums']['task_status_enum']
+          status?: Database["public"]["Enums"]["task_status_enum"]
           sub_department?: string | null
           task_name: string
           updated_at?: string
@@ -2144,7 +2180,7 @@ export type Database = {
           is_completed?: boolean | null
           progress?: number | null
           start_date?: string | null
-          status?: Database['public']['Enums']['task_status_enum']
+          status?: Database["public"]["Enums"]["task_status_enum"]
           sub_department?: string | null
           task_name?: string
           updated_at?: string
@@ -2153,18 +2189,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'wo_tasks_assigned_to_fkey'
-            columns: ['assigned_to']
+            foreignKeyName: "wo_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'wo_tasks_wo_id_fkey'
-            columns: ['wo_id']
+            foreignKeyName: "wo_tasks_wo_id_fkey"
+            columns: ["wo_id"]
             isOneToOne: false
-            referencedRelation: 'work_orders'
-            referencedColumns: ['id']
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2243,18 +2279,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'work_orders_created_by_fkey'
-            columns: ['created_by']
+            foreignKeyName: "work_orders_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'work_orders_quote_id_fkey'
-            columns: ['quote_id']
+            foreignKeyName: "work_orders_quote_id_fkey"
+            columns: ["quote_id"]
             isOneToOne: false
-            referencedRelation: 'quotes'
-            referencedColumns: ['id']
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2267,23 +2303,29 @@ export type Database = {
       get_user_role: { Args: never; Returns: string }
     }
     Enums: {
-      expedite_status_enum: 'pending' | 'in_progress' | 'completed'
-      priority_enum: 'low' | 'medium' | 'high'
+      expedite_status_enum: "pending" | "in_progress" | "completed"
+      priority_enum: "low" | "medium" | "high"
       production_task_status_enum:
-        | 'not_started'
-        | 'parked'
-        | 'on_track'
-        | 'at_risk'
-        | 'delayed'
-        | 'complete'
+        | "not_started"
+        | "parked"
+        | "on_track"
+        | "at_risk"
+        | "delayed"
+        | "complete"
       purchasing_task_status_enum:
-        | 'not_started'
-        | 'parked'
-        | 'on_track'
-        | 'at_risk'
-        | 'delayed'
-        | 'complete'
-      task_status_enum: 'not_started' | 'parked' | 'on_track' | 'at_risk' | 'delayed' | 'complete'
+        | "not_started"
+        | "parked"
+        | "on_track"
+        | "at_risk"
+        | "delayed"
+        | "complete"
+      task_status_enum:
+        | "not_started"
+        | "parked"
+        | "on_track"
+        | "at_risk"
+        | "delayed"
+        | "complete"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2291,31 +2333,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -2324,23 +2368,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -2349,23 +2393,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -2374,63 +2418,71 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
     Enums: {
-      expedite_status_enum: ['pending', 'in_progress', 'completed'],
-      priority_enum: ['low', 'medium', 'high'],
+      expedite_status_enum: ["pending", "in_progress", "completed"],
+      priority_enum: ["low", "medium", "high"],
       production_task_status_enum: [
-        'not_started',
-        'parked',
-        'on_track',
-        'at_risk',
-        'delayed',
-        'complete',
+        "not_started",
+        "parked",
+        "on_track",
+        "at_risk",
+        "delayed",
+        "complete",
       ],
       purchasing_task_status_enum: [
-        'not_started',
-        'parked',
-        'on_track',
-        'at_risk',
-        'delayed',
-        'complete',
+        "not_started",
+        "parked",
+        "on_track",
+        "at_risk",
+        "delayed",
+        "complete",
       ],
-      task_status_enum: ['not_started', 'parked', 'on_track', 'at_risk', 'delayed', 'complete'],
+      task_status_enum: [
+        "not_started",
+        "parked",
+        "on_track",
+        "at_risk",
+        "delayed",
+        "complete",
+      ],
     },
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -2722,6 +2774,10 @@ export const Constants = {
 //   task_id: uuid (nullable)
 //   expedite_cost: numeric (nullable)
 //   priority: priority_enum (nullable)
+//   pn_number: text (nullable)
+//   pn_description: text (nullable)
+//   vendor: text (nullable)
+//   area_supervisor: text (nullable)
 // Table: purchasing_task_audit_log
 //   id: uuid (not null, default: gen_random_uuid())
 //   task_id: uuid (not null)
@@ -3527,7 +3583,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT department FROM public.users WHERE id = auth.uid();
 //   $function$
-//
+//   
 // FUNCTION get_user_role()
 //   CREATE OR REPLACE FUNCTION public.get_user_role()
 //    RETURNS text
@@ -3536,7 +3592,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT role FROM public.users WHERE id = auth.uid();
 //   $function$
-//
+//   
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -3556,7 +3612,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_customer_changes()
 //   CREATE OR REPLACE FUNCTION public.log_customer_changes()
 //    RETURNS trigger
@@ -3570,7 +3626,7 @@ export const Constants = {
 //       v_user_id uuid;
 //   BEGIN
 //       v_user_id := auth.uid();
-//
+//       
 //       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
 //       LOOP
 //           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
@@ -3580,11 +3636,11 @@ export const Constants = {
 //               END IF;
 //           END IF;
 //       END LOOP;
-//
+//       
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_production_task_changes()
 //   CREATE OR REPLACE FUNCTION public.log_production_task_changes()
 //    RETURNS trigger
@@ -3598,7 +3654,7 @@ export const Constants = {
 //       v_user_id UUID;
 //   BEGIN
 //       v_user_id := auth.uid();
-//
+//       
 //       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
 //       LOOP
 //           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
@@ -3608,11 +3664,11 @@ export const Constants = {
 //               END IF;
 //           END IF;
 //       END LOOP;
-//
+//       
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_purchasing_task_changes()
 //   CREATE OR REPLACE FUNCTION public.log_purchasing_task_changes()
 //    RETURNS trigger
@@ -3626,7 +3682,7 @@ export const Constants = {
 //       v_user_id UUID;
 //   BEGIN
 //       v_user_id := auth.uid();
-//
+//       
 //       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
 //       LOOP
 //           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
@@ -3636,11 +3692,11 @@ export const Constants = {
 //               END IF;
 //           END IF;
 //       END LOOP;
-//
+//       
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_quote_changes()
 //   CREATE OR REPLACE FUNCTION public.log_quote_changes()
 //    RETURNS trigger
@@ -3654,7 +3710,7 @@ export const Constants = {
 //       v_user_id uuid;
 //   BEGIN
 //       v_user_id := auth.uid();
-//
+//       
 //       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
 //       LOOP
 //           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
@@ -3664,11 +3720,11 @@ export const Constants = {
 //               END IF;
 //           END IF;
 //       END LOOP;
-//
+//       
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_salesperson_changes()
 //   CREATE OR REPLACE FUNCTION public.log_salesperson_changes()
 //    RETURNS trigger
@@ -3682,7 +3738,7 @@ export const Constants = {
 //       v_user_id UUID;
 //   BEGIN
 //       v_user_id := auth.uid();
-//
+//       
 //       FOR v_key IN SELECT * FROM jsonb_object_keys(v_new_json)
 //       LOOP
 //           IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
@@ -3692,11 +3748,11 @@ export const Constants = {
 //               END IF;
 //           END IF;
 //       END LOOP;
-//
+//       
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION notify_production_task_status_change()
 //   CREATE OR REPLACE FUNCTION public.notify_production_task_status_change()
 //    RETURNS trigger
@@ -3720,7 +3776,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION notify_task_status_change()
 //   CREATE OR REPLACE FUNCTION public.notify_task_status_change()
 //    RETURNS trigger
@@ -3744,7 +3800,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_production_task_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_production_task_updated_at()
 //    RETURNS trigger
@@ -3756,7 +3812,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_purchasing_task_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_purchasing_task_updated_at()
 //    RETURNS trigger
@@ -3768,7 +3824,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: customers
@@ -3804,3 +3860,4 @@ export const Constants = {
 //   CREATE INDEX wo_tasks_wo_id_idx ON public.wo_tasks USING btree (wo_id)
 // Table: work_orders
 //   CREATE UNIQUE INDEX work_orders_wo_number_key ON public.work_orders USING btree (wo_number)
+
