@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import ComponentsTab from '@/components/purchasing/ComponentsTab'
 import ExpeditesTab from '@/components/purchasing/ExpeditesTab'
 import PurchasingDashboard from '@/components/purchasing/PurchasingDashboard'
-import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
+import PurchasingTasksTab from '@/components/purchasing/PurchasingTasksTab'
 
 const MENU_ITEMS = [
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
@@ -79,7 +79,7 @@ export default function Purchasing() {
 
         <div className="flex-1 overflow-y-auto rounded-md">
           {activeTab === 'dashboard' && <PurchasingDashboard />}
-          {activeTab === 'tasks' && <DepartmentTasks department="Purchasing" />}
+          {activeTab === 'tasks' && <PurchasingTasksTab woFilter={woFilter} />}
           {activeTab === 'kanban' && (
             <div className="flex h-64 items-center justify-center rounded-md border border-dashed text-muted-foreground">
               Kanban Board View - Em construção
