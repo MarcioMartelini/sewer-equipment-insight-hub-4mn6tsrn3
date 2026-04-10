@@ -379,7 +379,9 @@ export default function InjuriesTab() {
               />
             </div>
             <div className="flex justify-end pt-4">
-              <Button type="submit">Save Changes</Button>
+              <Button className="bg-[#0030ff]" type="submit">
+                Save Changes
+              </Button>
             </div>
           </form>
         </DialogContent>
