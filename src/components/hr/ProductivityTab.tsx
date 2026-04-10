@@ -139,15 +139,15 @@ export default function ProductivityTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-4 rounded-lg border shadow-sm">
+    <div className="space-y-6 print:space-y-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-4 rounded-lg border shadow-sm print:shadow-none print:border-none print:p-0">
         <div>
           <h2 className="text-xl font-bold tracking-tight">Productivity Dashboard</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground print:hidden">
             Track period metrics and configure availability.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto print:hidden">
           {dateRange === 'custom' && (
             <div className="flex items-center gap-2">
               <Input
@@ -180,11 +180,11 @@ export default function ProductivityTab() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4">
+        <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Produced Value ($)</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground print:hidden" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -194,50 +194,50 @@ export default function ProductivityTab() {
                     metrics.producedValue,
                   )}
             </div>
-            <p className="text-xs text-muted-foreground">Finished WOs in period</p>
+            <p className="text-xs text-muted-foreground print:hidden">Finished WOs in period</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Hours Worked</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-muted-foreground print:hidden" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {loading ? '-' : `${metrics.hoursWorked.toFixed(1)}h`}
             </div>
-            <p className="text-xs text-muted-foreground">Total logged in period</p>
+            <p className="text-xs text-muted-foreground print:hidden">Total logged in period</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Hours per $1000</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <Target className="h-4 w-4 text-muted-foreground print:hidden" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {loading ? '-' : `${metrics.hoursPer1000.toFixed(2)}h`}
             </div>
-            <p className="text-xs text-muted-foreground">Needed to produce $1000</p>
+            <p className="text-xs text-muted-foreground print:hidden">Needed to produce $1000</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Actual Available Hours</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <UserCheck className="h-4 w-4 text-muted-foreground print:hidden" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {loading ? '-' : `${metrics.availableHours.toFixed(1)}h`}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground print:hidden">
               Contracted minus {metrics.unexcusedAbsences} unexcused absences
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="print:hidden">
         <CardHeader>
           <CardTitle>Work Schedule Settings</CardTitle>
           <CardDescription>Set the baseline for availability calculations.</CardDescription>

@@ -66,10 +66,10 @@ export default function DashboardTab() {
   }, [dateRange, customDates])
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4 bg-card p-4 rounded-lg border shadow-sm">
+    <div className="space-y-6 print:space-y-4">
+      <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4 bg-card p-4 rounded-lg border shadow-sm print:shadow-none print:border-none print:p-0">
         <h2 className="text-lg font-semibold">Executive Dashboard</h2>
-        <div className="flex flex-col sm:flex-row items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 print:hidden">
           {dateRange === 'custom' && (
             <div className="flex items-center gap-2 mr-2">
               <Input

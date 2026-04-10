@@ -116,15 +116,17 @@ export default function InjuriesTab() {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <Card className="print:shadow-none print:border-none print:bg-transparent">
+      <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:p-0 print:pb-4">
         <div>
           <CardTitle>Workplace Safety</CardTitle>
-          <CardDescription>Record of incidents and injuries.</CardDescription>
+          <CardDescription className="print:hidden">
+            Record of incidents and injuries.
+          </CardDescription>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => setEditingItem(null)}>
+            <Button size="sm" onClick={() => setEditingItem(null)} className="print:hidden">
               <Plus className="mr-2 h-4 w-4" /> Add Injury
             </Button>
           </DialogTrigger>
@@ -233,7 +235,7 @@ export default function InjuriesTab() {
                 <TableHead>Department</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Severity</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
+                <TableHead className="w-[80px] print:hidden">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -265,7 +267,7 @@ export default function InjuriesTab() {
                     <TableCell>
                       <span className="capitalize">{item.severity_level}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="print:hidden">
                       <Button variant="ghost" size="icon" onClick={() => setEditingItem(item)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
