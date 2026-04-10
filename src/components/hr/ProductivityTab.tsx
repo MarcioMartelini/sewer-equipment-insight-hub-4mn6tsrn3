@@ -270,7 +270,7 @@ export default function ProductivityTab() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full md:w-auto">
+            <Button type="submit" className="w-full md:w-auto bg-[#0500ff]">
               Save Settings
             </Button>
           </form>
