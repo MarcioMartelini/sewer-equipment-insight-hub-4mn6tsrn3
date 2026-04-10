@@ -3,7 +3,6 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -18,93 +17,108 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Create a Supabase client with the Service Role key to bypass RLS
-    // This is required because this function will be triggered by a background cron job
     const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        persistSession: false,
-      },
+      auth: { persistSession: false },
     })
 
     const now = new Date()
-    const today = now.toISOString().split('T')[0] // Format: YYYY-MM-DD
+    const today = now.toISOString().split('T')[0]
 
-    // Calculate date for 2 days from now
     const twoDaysFromNow = new Date(now)
     twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2)
     const inTwoDays = twoDaysFromNow.toISOString().split('T')[0]
 
     // Rule 1: If finish_date has passed and status is not 'complete' -> change to 'delayed'
-    const { data: delayedTasks, error: delayedError } = await supabase
+    const { data: delayedWo, error: e1 } = await supabase
       .from('wo_tasks')
       .update({ status: 'delayed', was_delayed: true })
       .lt('finish_date', today)
       .neq('status', 'complete')
-      .neq('status', 'delayed') // Avoid updating already delayed tasks
+      .neq('status', 'delayed')
       .select('id')
+    if (e1) throw e1
 
-    if (delayedError) throw delayedError
-
-    const { data: delayedProdTasks, error: delayedProdError } = await supabase
+    const { data: delayedProd, error: e2 } = await supabase
       .from('production_tasks')
       .update({ status: 'delayed' })
       .lt('finish_date', today)
       .neq('status', 'complete')
       .neq('status', 'delayed')
       .select('id')
+    if (e2) throw e2
 
-    if (delayedProdError) throw delayedProdError
+    const { data: delayedPurch, error: e3 } = await supabase
+      .from('purchasing_tasks')
+      .update({ status: 'delayed' })
+      .lt('finish_date', today)
+      .neq('status', 'complete')
+      .neq('status', 'delayed')
+      .select('id')
+    if (e3) throw e3
 
     // Rule 2: If finish_date is within 2 days and status is 'not_started' -> change to 'at_risk'
-    const { data: atRiskTasks, error: atRiskError } = await supabase
+    const { data: atRiskWo, error: e4 } = await supabase
       .from('wo_tasks')
       .update({ status: 'at_risk' })
       .gte('finish_date', today)
       .lte('finish_date', inTwoDays)
       .eq('status', 'not_started')
       .select('id')
+    if (e4) throw e4
 
-    if (atRiskError) throw atRiskError
-
-    const { data: atRiskProdTasks, error: atRiskProdError } = await supabase
+    const { data: atRiskProd, error: e5 } = await supabase
       .from('production_tasks')
       .update({ status: 'at_risk' })
       .gte('finish_date', today)
       .lte('finish_date', inTwoDays)
       .eq('status', 'not_started')
       .select('id')
+    if (e5) throw e5
 
-    if (atRiskProdError) throw atRiskProdError
+    const { data: atRiskPurch, error: e6 } = await supabase
+      .from('purchasing_tasks')
+      .update({ status: 'at_risk' })
+      .gte('finish_date', today)
+      .lte('finish_date', inTwoDays)
+      .eq('status', 'not_started')
+      .select('id')
+    if (e6) throw e6
 
     // Rule 3: If task is 'parked' for more than 3 days, notify assigned user
     const threeDaysAgo = new Date(now)
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
     const parkedDateStr = threeDaysAgo.toISOString()
 
-    const { data: parkedTasks, error: parkedError } = await supabase
-      .from('wo_tasks')
-      .select('id, assigned_to, task_name')
+    const getParked = async (table: string, type: string) => {
+      const { data, error } = await supabase
+        .from(table)
+        .select('id, assigned_to, task_name')
+        .eq('status', 'parked')
+        .lt('updated_at', parkedDateStr)
+        .not('assigned_to', 'is', null)
+      if (error) throw error
+      return (data || []).map((t) => ({ ...t, type }))
+    }
+
+    const parkedWo = await getParked('wo_tasks', 'wo_tasks')
+    const parkedProd = await getParked('production_tasks', 'production_tasks')
+
+    // For purchasing tasks, the field is component_name
+    const { data: parkedPurchRaw, error: e7 } = await supabase
+      .from('purchasing_tasks')
+      .select('id, assigned_to, component_name')
       .eq('status', 'parked')
       .lt('updated_at', parkedDateStr)
       .not('assigned_to', 'is', null)
-
-    if (parkedError) throw parkedError
-
-    const { data: parkedProdTasks, error: parkedProdError } = await supabase
-      .from('production_tasks')
-      .select('id, assigned_to, task_name')
-      .eq('status', 'parked')
-      .lt('updated_at', parkedDateStr)
-      .not('assigned_to', 'is', null)
-
-    if (parkedProdError) throw parkedProdError
+    if (e7) throw e7
+    const parkedPurch = (parkedPurchRaw || []).map((t) => ({
+      ...t,
+      type: 'purchasing_tasks',
+      task_name: t.component_name,
+    }))
 
     let parkedNotificationsCount = 0
-
-    const allParkedTasks = [
-      ...(parkedTasks || []).map((t) => ({ ...t, type: 'wo_tasks' })),
-      ...(parkedProdTasks || []).map((t) => ({ ...t, type: 'production_tasks' })),
-    ]
+    const allParkedTasks = [...parkedWo, ...parkedProd, ...parkedPurch]
 
     if (allParkedTasks.length > 0) {
       const taskIds = allParkedTasks.map((t) => t.id)
@@ -115,15 +129,14 @@ Deno.serve(async (req: Request) => {
         .like('message', '%Parked por mais de 3 dias%')
 
       const notifiedTaskIds = new Set(existingNotifs?.map((n) => n.related_entity_id) || [])
-
       const notificationsToInsert = allParkedTasks
-        .filter((task) => !notifiedTaskIds.has(task.id))
-        .map((task) => ({
-          user_id: task.assigned_to,
+        .filter((t) => !notifiedTaskIds.has(t.id))
+        .map((t) => ({
+          user_id: t.assigned_to,
           type: 'System',
-          message: `A tarefa "${task.task_name}" está em status Parked por mais de 3 dias.`,
-          related_entity_id: task.id,
-          related_entity_type: task.type,
+          message: `A tarefa "${t.task_name}" está em status Parked por mais de 3 dias.`,
+          related_entity_id: t.id,
+          related_entity_type: t.type,
           is_read: false,
         }))
 
@@ -131,7 +144,6 @@ Deno.serve(async (req: Request) => {
         const { error: notifyError } = await supabase
           .from('notifications')
           .insert(notificationsToInsert)
-
         if (notifyError) throw notifyError
         parkedNotificationsCount = notificationsToInsert.length
       }
@@ -140,15 +152,14 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         message: 'Tasks updated successfully',
-        delayedCount: (delayedTasks?.length || 0) + (delayedProdTasks?.length || 0),
-        atRiskCount: (atRiskTasks?.length || 0) + (atRiskProdTasks?.length || 0),
+        delayedCount:
+          (delayedWo?.length || 0) + (delayedProd?.length || 0) + (delayedPurch?.length || 0),
+        atRiskCount:
+          (atRiskWo?.length || 0) + (atRiskProd?.length || 0) + (atRiskPurch?.length || 0),
         parkedNotificationsCount,
         timestamp: new Date().toISOString(),
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     )
   } catch (error: any) {
     console.error('Edge Function Error:', error)
