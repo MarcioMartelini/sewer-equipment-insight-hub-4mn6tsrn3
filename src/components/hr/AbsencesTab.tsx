@@ -122,7 +122,7 @@ export default function AbsencesTab() {
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => setEditingItem(null)}>
+            <Button className="bg-[#0c00f9]" size="sm" onClick={() => setEditingItem(null)}>
               <Plus className="mr-2 h-4 w-4" /> Add Absence
             </Button>
           </DialogTrigger>
@@ -322,6 +322,7 @@ export default function AbsencesTab() {
             </div>
             <div className="flex items-center space-x-2 pt-2 pb-4">
               <Checkbox
+                className="bg-[#0d00fc]"
                 id="edit_is_excused"
                 name="is_excused"
                 defaultChecked={editingItem?.absence_type === 'excused'}
