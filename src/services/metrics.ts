@@ -22,7 +22,7 @@ export interface MetricTracking {
 
 export const getMetricsDefinitions = async (department?: string) => {
   let query = supabase.from('metrics_definitions').select('*')
-  if (department && department !== 'Todos') {
+  if (department && department !== 'Todos' && department !== 'All') {
     query = query.eq('department', department)
   }
   const { data, error } = await query
@@ -30,47 +30,44 @@ export const getMetricsDefinitions = async (department?: string) => {
   return data as MetricDefinition[]
 }
 
-export const getMetricsTracking = async (department?: string) => {
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const formattedDate = sevenDaysAgo.toISOString().split('T')[0]
+export const getMetricsTracking = async (department?: string, period: string = '7d') => {
+  const endDate = new Date()
+  let startDate = new Date()
+
+  switch (period) {
+    case '30d':
+      startDate.setDate(startDate.getDate() - 30)
+      break
+    case '90d':
+      startDate.setDate(startDate.getDate() - 90)
+      break
+    case 'ytd':
+      startDate = new Date(endDate.getFullYear(), 0, 1)
+      break
+    case '7d':
+    default:
+      startDate.setDate(startDate.getDate() - 7)
+      break
+  }
+
+  const formattedStartDate = startDate.toISOString().split('T')[0]
+
+  // Add 1 day to end date to ensure we include records from today completely
+  const nextDay = new Date(endDate)
+  nextDay.setDate(nextDay.getDate() + 1)
+  const formattedEndDate = nextDay.toISOString().split('T')[0]
 
   let query = supabase
     .from('metrics_tracking')
     .select('*')
-    .gte('recorded_date', formattedDate)
+    .gte('recorded_date', formattedStartDate)
+    .lt('recorded_date', formattedEndDate)
     .order('recorded_date', { ascending: true })
 
-  if (department && department !== 'Todos') {
+  if (department && department !== 'Todos' && department !== 'All') {
     query = query.eq('department', department)
   }
   const { data, error } = await query
   if (error) throw error
   return data as MetricTracking[]
-}
-
-export const getActiveAlerts = async () => {
-  const { data, error } = await supabase
-    .from('alerts_log')
-    .select(`
-      id, alert_rule_id, wo_id, metric_value, alert_message, alert_status, assigned_to, created_at, resolved_at,
-      users!alerts_log_assigned_to_fkey(full_name),
-      work_orders!alerts_log_wo_id_fkey(wo_number),
-      alert_rules(
-        metrics_definitions(metric_name)
-      )
-    `)
-    .eq('alert_status', 'pending')
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-  return data as any[]
-}
-
-export const acknowledgeAlert = async (id: string) => {
-  const { error } = await supabase
-    .from('alerts_log')
-    .update({ alert_status: 'acknowledged' })
-    .eq('id', id)
-  if (error) throw error
 }

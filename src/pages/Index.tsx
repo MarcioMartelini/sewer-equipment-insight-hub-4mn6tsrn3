@@ -7,29 +7,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { AreaChart, Area } from 'recharts'
 import {
   getMetricsDefinitions,
   getMetricsTracking,
-  getActiveAlerts,
-  acknowledgeAlert,
   MetricDefinition,
   MetricTracking,
 } from '@/services/metrics'
 import { format, parseISO } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
-import { Activity, AlertTriangle, CheckCircle, BellRing } from 'lucide-react'
+import { Activity, TrendingUp, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const chartConfig = {
@@ -78,46 +66,40 @@ const getStatusColorHex = (status: string) => {
 
 export default function Dashboard() {
   const [department, setDepartment] = useState<string>('All')
+  const [period, setPeriod] = useState<string>('30d')
   const [metricsDef, setMetricsDef] = useState<MetricDefinition[]>([])
   const [metricsTrack, setMetricsTrack] = useState<MetricTracking[]>([])
-  const [alerts, setAlerts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
   const loadData = async () => {
+    setIsLoading(true)
     try {
       const fetchDept = department === 'All' ? 'Todos' : department
-      const [defs, tracks, activeAlerts] = await Promise.all([
+      const [defs, tracks] = await Promise.all([
         getMetricsDefinitions(fetchDept),
-        getMetricsTracking(fetchDept),
-        getActiveAlerts(),
+        getMetricsTracking(fetchDept, period),
       ])
       setMetricsDef(defs)
       setMetricsTrack(tracks)
-      setAlerts(activeAlerts)
     } catch (err: any) {
       toast({ title: 'Error loading data', description: err.message, variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
     loadData()
-  }, [department])
-
-  const handleAcknowledge = async (id: string) => {
-    try {
-      await acknowledgeAlert(id)
-      toast({ title: 'Alert acknowledged successfully' })
-      loadData()
-    } catch (err: any) {
-      toast({
-        title: 'Error acknowledging alert',
-        description: err.message,
-        variant: 'destructive',
-      })
-    }
-  }
+  }, [department, period])
 
   const departments = ['All', 'Sales', 'Engineering', 'Purchasing', 'Production', 'Quality', 'HR']
+  const periods = [
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: '90d', label: 'Last 90 Days' },
+    { value: 'ytd', label: 'Year to Date' },
+  ]
 
   const metricsData = useMemo(() => {
     return metricsDef.map((def) => {
@@ -128,179 +110,211 @@ export default function Dashboard() {
       const latest = trackings[trackings.length - 1]
       const currentValue = latest ? latest.metric_value : 0
       const status = getStatus(currentValue, def.threshold_min, def.threshold_max)
+
+      let trend = 0
+      if (trackings.length >= 2) {
+        const prev = trackings[trackings.length - 2].metric_value
+        if (prev > 0) {
+          trend = ((currentValue - prev) / prev) * 100
+        } else if (prev === 0 && currentValue > 0) {
+          trend = 100
+        } else if (prev === 0 && currentValue < 0) {
+          trend = -100
+        }
+      }
+
       const chartData = trackings.map((t) => ({
         date: format(parseISO(t.recorded_date), 'MM/dd'),
         value: t.metric_value,
       }))
 
-      return { def, currentValue, status, chartData }
+      return { def, currentValue, status, chartData, trend }
     })
   }, [metricsDef, metricsTrack])
 
+  const metricsByDepartment = useMemo(() => {
+    const grouped: Record<string, typeof metricsData> = {}
+    metricsData.forEach((m) => {
+      const dept = m.def.department || 'General'
+      if (!grouped[dept]) grouped[dept] = []
+      grouped[dept].push(m)
+    })
+    return grouped
+  }, [metricsData])
+
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="p-6 space-y-8 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-5 rounded-xl border shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Metrics Dashboard</h1>
-          <p className="text-muted-foreground">Monitor performance and real-time alerts.</p>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <BarChart3 className="h-6 w-6 text-primary" />
+            Metrics Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Monitor key performance indicators across departments.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select department" />
-            </SelectTrigger>
-            <SelectContent>
-              {departments.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {metricsData.map((m, i) => (
-          <Card key={`${m.def.id}-${i}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex justify-between items-center">
-                {m.def.metric_name}
-                <Activity className={cn('h-4 w-4', statusColors[m.status])} />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline justify-between mb-4">
-                <div className={cn('text-2xl font-bold', statusColors[m.status])}>
-                  {m.currentValue}{' '}
-                  <span className="text-sm font-normal text-muted-foreground">{m.def.unit}</span>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Limits: {m.def.threshold_min ?? '-'} ~ {m.def.threshold_max ?? '-'}
-                </div>
-              </div>
-
-              <div className="h-[80px]">
-                {m.chartData.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="h-full w-full">
-                    <AreaChart data={m.chartData} margin={{ top: 0, left: 0, right: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id={`fill-${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop
-                            offset="5%"
-                            stopColor={getStatusColorHex(m.status)}
-                            stopOpacity={0.3}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor={getStatusColorHex(m.status)}
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <Area
-                        type="monotone"
-                        dataKey="value"
-                        stroke={getStatusColorHex(m.status)}
-                        fillOpacity={1}
-                        fill={`url(#fill-${i})`}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                    </AreaChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                    No recent data
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {metricsData.length === 0 && (
-          <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-lg">
-            No metrics found for this department.
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-sm font-medium text-muted-foreground w-16 sm:w-auto">
+              Period:
+            </span>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-full sm:w-[150px] bg-background">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                {periods.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <BellRing className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Active Alerts</h2>
-          {alerts.length > 0 && (
-            <Badge variant="destructive" className="ml-2">
-              {alerts.length}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-sm font-medium text-muted-foreground w-16 sm:w-auto">Dept:</span>
+            <Select value={department} onValueChange={setDepartment}>
+              <SelectTrigger className="w-full sm:w-[150px] bg-background">
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>WO ID</TableHead>
-                  <TableHead>Metric</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Assignee</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {alerts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500 opacity-50" />
-                      No pending alerts.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  alerts.map((alert) => (
-                    <TableRow key={alert.id}>
-                      <TableCell className="font-medium">
-                        {alert.work_orders?.wo_number || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {alert.alert_rules?.metrics_definitions?.metric_name || '-'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[300px] truncate" title={alert.alert_message}>
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
-                          <span className="truncate">{alert.alert_message}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{alert.users?.full_name || 'Unassigned'}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border-0"
-                          variant="secondary"
-                        >
-                          {alert.alert_status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleAcknowledge(alert.id)}
-                          className="hover:bg-emerald-50 hover:text-emerald-600"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Acknowledge
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
       </div>
+
+      {isLoading ? (
+        <div className="flex justify-center items-center py-24">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : Object.keys(metricsByDepartment).length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center bg-card rounded-xl border border-dashed shadow-sm">
+          <Activity className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+          <h3 className="text-lg font-medium">No metrics found</h3>
+          <p className="text-muted-foreground text-sm max-w-md mt-1">
+            There are no metric definitions or tracking data available for the selected filters.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-10">
+          {Object.entries(metricsByDepartment).map(([dept, metrics]) => (
+            <div key={dept} className="space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2 pb-2 border-b text-foreground/90">
+                <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                {dept} Department
+                <span className="text-xs font-normal text-muted-foreground ml-2 px-2.5 py-0.5 bg-muted rounded-full">
+                  {metrics.length} metrics
+                </span>
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {metrics.map((m, i) => (
+                  <Card
+                    key={`${m.def.id}-${i}`}
+                    className="overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/20"
+                  >
+                    <CardHeader className="pb-2 bg-muted/20">
+                      <CardTitle className="text-sm font-medium flex justify-between items-start gap-4">
+                        <span className="line-clamp-2 leading-tight">{m.def.metric_name}</span>
+                        <Activity
+                          className={cn('h-4 w-4 shrink-0 mt-0.5', statusColors[m.status])}
+                        />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <div className="flex items-end justify-between mb-1">
+                        <div
+                          className={cn(
+                            'text-3xl font-bold tracking-tight',
+                            statusColors[m.status],
+                          )}
+                        >
+                          {m.currentValue.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                          <span className="text-sm font-normal text-muted-foreground ml-1.5">
+                            {m.def.unit}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-4 h-4">
+                        <div className="flex items-center gap-1">
+                          Limits: {m.def.threshold_min ?? '-'} ~ {m.def.threshold_max ?? '-'}
+                        </div>
+                        {m.trend !== 0 && m.chartData.length > 1 && (
+                          <div
+                            className={cn(
+                              'flex items-center gap-0.5 font-medium px-1.5 rounded bg-background border shadow-xs',
+                              m.trend > 0
+                                ? 'text-emerald-500 border-emerald-500/20'
+                                : 'text-rose-500 border-rose-500/20',
+                            )}
+                          >
+                            <TrendingUp className={cn('h-3 w-3', m.trend < 0 && 'rotate-180')} />
+                            {Math.abs(m.trend).toFixed(1)}%
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="h-[60px] w-full mt-2">
+                        {m.chartData.length > 0 ? (
+                          <ChartContainer config={chartConfig} className="h-full w-full">
+                            <AreaChart
+                              data={m.chartData}
+                              margin={{ top: 5, left: 0, right: 0, bottom: 0 }}
+                            >
+                              <defs>
+                                <linearGradient id={`fill-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop
+                                    offset="5%"
+                                    stopColor={getStatusColorHex(m.status)}
+                                    stopOpacity={0.3}
+                                  />
+                                  <stop
+                                    offset="95%"
+                                    stopColor={getStatusColorHex(m.status)}
+                                    stopOpacity={0}
+                                  />
+                                </linearGradient>
+                              </defs>
+                              <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke={getStatusColorHex(m.status)}
+                                strokeWidth={2}
+                                fillOpacity={1}
+                                fill={`url(#fill-${i})`}
+                              />
+                              <ChartTooltip
+                                content={<ChartTooltipContent hideLabel />}
+                                cursor={{
+                                  stroke: 'hsl(var(--muted-foreground))',
+                                  strokeWidth: 1,
+                                  strokeDasharray: '3 3',
+                                }}
+                              />
+                            </AreaChart>
+                          </ChartContainer>
+                        ) : (
+                          <div className="h-full flex items-center justify-center text-xs text-muted-foreground bg-muted/20 rounded-md border border-dashed">
+                            No recent data
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
