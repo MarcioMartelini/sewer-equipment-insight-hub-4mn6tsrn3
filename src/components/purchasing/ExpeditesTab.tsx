@@ -234,7 +234,10 @@ export default function ExpeditesTab({ woFilter }: { woFilter: string }) {
             onChange={(e) => setDateTo(e.target.value)}
             className="w-[130px]"
           />
-          <Button onClick={() => setIsCreateOpen(true)} className="ml-auto w-full xl:w-auto">
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            className="ml-auto w-full xl:w-auto text-[#ffffff] bg-[#0002e9]"
+          >
             <Plus className="h-4 w-4 mr-2" /> New Expedite
           </Button>
         </div>
