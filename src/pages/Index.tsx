@@ -15,13 +15,27 @@ import {
 } from '@/components/ui/select'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { Loader2, TrendingUp, TrendingDown, Minus, LayoutDashboard } from 'lucide-react'
+import {
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  LayoutDashboard,
+  Calendar as CalendarIcon,
+} from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { Button } from '@/components/ui/button'
+import { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
 export default function Index() {
   const [department, setDepartment] = useState<string>('All')
-  const [period, setPeriod] = useState<string>('30d')
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: new Date(),
+  })
 
   const [definitions, setDefinitions] = useState<MetricDefinition[]>([])
   const [tracking, setTracking] = useState<MetricTracking[]>([])
@@ -33,7 +47,7 @@ export default function Index() {
       try {
         const [defs, tracks] = await Promise.all([
           getMetricsDefinitions(department),
-          getMetricsTracking(department, period),
+          getMetricsTracking(department, date?.from, date?.to),
         ])
         setDefinitions(defs)
         setTracking(tracks)
@@ -44,7 +58,7 @@ export default function Index() {
       }
     }
     loadData()
-  }, [department, period])
+  }, [department, date])
 
   const departments = useMemo(() => {
     const deps = ['All', 'Sales', 'Production', 'Quality', 'HR', 'Engineering', 'Purchasing']
@@ -136,17 +150,43 @@ export default function Index() {
             </SelectContent>
           </Select>
 
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[150px] bg-slate-50 border-slate-200">
-              <SelectValue placeholder="Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="ytd">Year to Date</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={'outline'}
+                  className={cn(
+                    'w-[260px] justify-start text-left font-normal bg-slate-50 border-slate-200',
+                    !date && 'text-muted-foreground',
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date?.from ? (
+                    date.to ? (
+                      <>
+                        {format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}
+                      </>
+                    ) : (
+                      format(date.from, 'LLL dd, y')
+                    )
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={setDate}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
 

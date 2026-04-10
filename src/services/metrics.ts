@@ -30,39 +30,21 @@ export const getMetricsDefinitions = async (department?: string) => {
   return data as MetricDefinition[]
 }
 
-export const getMetricsTracking = async (department?: string, period: string = '7d') => {
-  const endDate = new Date()
-  let startDate = new Date()
-
-  switch (period) {
-    case '30d':
-      startDate.setDate(startDate.getDate() - 30)
-      break
-    case '90d':
-      startDate.setDate(startDate.getDate() - 90)
-      break
-    case 'ytd':
-      startDate = new Date(endDate.getFullYear(), 0, 1)
-      break
-    case '7d':
-    default:
-      startDate.setDate(startDate.getDate() - 7)
-      break
-  }
-
-  const formattedStartDate = startDate.toISOString().split('T')[0]
-
-  // Add 1 day to end date to ensure we include records from today completely
-  const nextDay = new Date(endDate)
-  nextDay.setDate(nextDay.getDate() + 1)
-  const formattedEndDate = nextDay.toISOString().split('T')[0]
-
+export const getMetricsTracking = async (department?: string, startDate?: Date, endDate?: Date) => {
   let query = supabase
     .from('metrics_tracking')
     .select('*')
-    .gte('recorded_date', formattedStartDate)
-    .lt('recorded_date', formattedEndDate)
     .order('recorded_date', { ascending: true })
+
+  if (startDate) {
+    query = query.gte('recorded_date', startDate.toISOString().split('T')[0])
+  }
+
+  if (endDate) {
+    const nextDay = new Date(endDate)
+    nextDay.setDate(nextDay.getDate() + 1)
+    query = query.lt('recorded_date', nextDay.toISOString().split('T')[0])
+  }
 
   if (department && department !== 'Todos' && department !== 'All') {
     query = query.eq('department', department)
