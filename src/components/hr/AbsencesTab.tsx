@@ -331,7 +331,9 @@ export default function AbsencesTab() {
               </Label>
             </div>
             <div className="flex justify-end pt-4">
-              <Button type="submit">Save Changes</Button>
+              <Button className="bg-[#000aff]" type="submit">
+                Save Changes
+              </Button>
             </div>
           </form>
         </DialogContent>
