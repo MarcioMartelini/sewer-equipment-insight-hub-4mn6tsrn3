@@ -1,72 +1,99 @@
 import { useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
-import { Search, LayoutDashboard, PackageSearch, AlertCircle, ListTodo } from 'lucide-react'
+import {
+  Search,
+  LayoutDashboard,
+  Zap,
+  ListTodo,
+  Kanban,
+  TrendingUp,
+  PackageSearch,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import ComponentsTab from '@/components/purchasing/ComponentsTab'
 import ExpeditesTab from '@/components/purchasing/ExpeditesTab'
 import PurchasingDashboard from '@/components/purchasing/PurchasingDashboard'
 import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 
+const MENU_ITEMS = [
+  { id: 'tasks', label: 'Tasks', icon: ListTodo },
+  { id: 'kanban', label: 'Kanban Board', icon: Kanban },
+  { id: 'expedites', label: 'Expedites', icon: Zap },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'performance', label: 'Performance Report', icon: TrendingUp },
+  { id: 'components', label: 'Components', icon: PackageSearch },
+]
+
 export default function Purchasing() {
+  const [activeTab, setActiveTab] = useState('tasks')
   const [woFilter, setWoFilter] = useState('')
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Purchasing</h2>
-      </div>
+    <div className="flex-1 flex flex-col md:flex-row gap-6 p-4 md:p-8 pt-6">
+      {/* Sidebar */}
+      <aside className="w-full md:w-64 flex-shrink-0 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold tracking-tight">Purchasing</h2>
+        </div>
+        <nav className="flex flex-col space-y-1">
+          {MENU_ITEMS.map((item) => {
+            const Icon = item.icon
+            const isActive = activeTab === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={cn(
+                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-muted text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            )
+          })}
+        </nav>
+      </aside>
 
-      <div className="flex flex-col gap-4">
-        <Tabs defaultValue="dashboard" className="w-full">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-            <TabsList>
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </TabsTrigger>
-              <TabsTrigger value="tasks" className="flex items-center gap-2">
-                <ListTodo className="h-4 w-4" />
-                <span className="hidden sm:inline">Tasks List</span>
-              </TabsTrigger>
-              <TabsTrigger value="components" className="flex items-center gap-2">
-                <PackageSearch className="h-4 w-4" />
-                <span className="hidden sm:inline">Components</span>
-              </TabsTrigger>
-              <TabsTrigger value="expedites" className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Expedites</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Filter by WO Number..."
-                className="pl-8"
-                value={woFilter}
-                onChange={(e) => setWoFilter(e.target.value)}
-              />
-            </div>
+      {/* Main Content */}
+      <main className="flex-1 overflow-hidden flex flex-col space-y-4">
+        {/* Top bar with filter */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h3 className="text-xl font-semibold tracking-tight">
+            {MENU_ITEMS.find((i) => i.id === activeTab)?.label}
+          </h3>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Filter by WO Number..."
+              className="pl-8"
+              value={woFilter}
+              onChange={(e) => setWoFilter(e.target.value)}
+            />
           </div>
+        </div>
 
-          <TabsContent value="dashboard" className="mt-0">
-            <PurchasingDashboard />
-          </TabsContent>
-
-          <TabsContent value="tasks" className="mt-0">
-            <DepartmentTasks department="Purchasing" />
-          </TabsContent>
-
-          <TabsContent value="components" className="mt-0">
-            <ComponentsTab woFilter={woFilter} />
-          </TabsContent>
-
-          <TabsContent value="expedites" className="mt-0">
-            <ExpeditesTab woFilter={woFilter} />
-          </TabsContent>
-        </Tabs>
-      </div>
+        <div className="flex-1 overflow-y-auto rounded-md">
+          {activeTab === 'dashboard' && <PurchasingDashboard />}
+          {activeTab === 'tasks' && <DepartmentTasks department="Purchasing" />}
+          {activeTab === 'kanban' && (
+            <div className="flex h-64 items-center justify-center rounded-md border border-dashed text-muted-foreground">
+              Kanban Board View - Em construção
+            </div>
+          )}
+          {activeTab === 'components' && <ComponentsTab woFilter={woFilter} />}
+          {activeTab === 'expedites' && <ExpeditesTab woFilter={woFilter} />}
+          {activeTab === 'performance' && (
+            <div className="flex h-64 items-center justify-center rounded-md border border-dashed text-muted-foreground">
+              Performance Report View - Em construção
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   )
 }
