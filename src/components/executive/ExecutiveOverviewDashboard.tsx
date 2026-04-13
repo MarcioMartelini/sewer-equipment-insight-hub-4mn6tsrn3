@@ -143,7 +143,9 @@ export default function ExecutiveOverviewDashboard() {
     if (saved) {
       try {
         setPresets(JSON.parse(saved))
-      } catch (e) {}
+      } catch (e) {
+        console.error('Failed to parse saved presets:', e)
+      }
     }
   }, [])
 
