@@ -5,6 +5,13 @@ import {
   EngineeringFilters,
   DashboardData,
 } from '@/services/engineering-dashboard'
+import { DashboardHeader } from '@/components/shared/DashboardHeader'
+import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
+import { useDashboardExport } from '@/hooks/use-dashboard-export'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { subDays } from 'date-fns'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Bar, BarChart, Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import {
@@ -26,29 +33,19 @@ import {
   TrendingUp,
   FileDown,
 } from 'lucide-react'
-import { EngineeringFiltersPanel } from './EngineeringFiltersPanel'
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
-import logoUrl from '@/assets/design-sem-nome-70de8.png'
-
-const loadImage = (url: string): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.crossOrigin = 'Anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = url
-  })
-}
 
 export function EngineeringDashboard() {
-  const { toast } = useToast()
   const dashboardRef = useRef<HTMLDivElement>(null)
+  const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'Engineering Dashboard')
+
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  })
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
   const [filters, setFilters] = useState<EngineeringFilters>({
-    period: '30d',
+    period: 'custom',
     engineer: '',
     designer: '',
     productDivision: '',
@@ -68,7 +65,11 @@ export function EngineeringDashboard() {
     async function fetchData() {
       setLoading(true)
       try {
-        const result = await getEngineeringDashboardData(filters)
+        const result = await getEngineeringDashboardData({
+          ...filters,
+          startDate: dateRange.from?.toISOString(),
+          endDate: dateRange.to?.toISOString(),
+        })
         setData(result)
       } catch (error) {
         console.error(error)
@@ -77,15 +78,16 @@ export function EngineeringDashboard() {
       }
     }
     fetchData()
-  }, [filters])
+  }, [filters, dateRange])
 
   const updateFilter = (key: keyof EngineeringFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
   const resetFilters = () => {
+    setDateRange({ from: subDays(new Date(), 30), to: new Date() })
     setFilters({
-      period: '30d',
+      period: 'custom',
       engineer: '',
       designer: '',
       productDivision: '',
@@ -99,77 +101,6 @@ export function EngineeringDashboard() {
     })
   }
 
-  const handleExportPDF = async () => {
-    if (!dashboardRef.current) return
-
-    try {
-      toast({
-        title: 'Gerando PDF',
-        description: 'Aguarde enquanto o documento é gerado...',
-      })
-
-      const canvas = await html2canvas(dashboardRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      })
-
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4',
-      })
-
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const startY = 25
-      const maxImgHeight = pageHeight - startY - 10
-
-      let imgWidth = pdfWidth - 20
-      let imgHeight = (canvas.height * imgWidth) / canvas.width
-
-      if (imgHeight > maxImgHeight) {
-        imgHeight = maxImgHeight
-        imgWidth = (canvas.width * imgHeight) / canvas.height
-      }
-
-      const startX = (pdfWidth - imgWidth) / 2
-
-      pdf.setFontSize(16)
-      pdf.text('Engineering Dashboard Report', 14, 15)
-      pdf.setFontSize(10)
-      pdf.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 22)
-
-      try {
-        const logoImg = await loadImage(logoUrl)
-        const logoHeight = 15
-        const logoWidth = (logoImg.width * logoHeight) / logoImg.height
-        const logoX = pdfWidth - logoWidth - 14
-        const logoY = 7
-        pdf.addImage(logoImg, 'PNG', logoX, logoY, logoWidth, logoHeight)
-      } catch (err) {
-        console.error('Could not load logo for PDF:', err)
-      }
-
-      pdf.addImage(imgData, 'PNG', startX, startY, imgWidth, imgHeight)
-      pdf.save(`engineering-dashboard-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
-
-      toast({
-        title: 'Sucesso',
-        description: 'PDF gerado com sucesso!',
-      })
-    } catch (error) {
-      console.error('Error generating PDF:', error)
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível gerar o PDF.',
-        variant: 'destructive',
-      })
-    }
-  }
-
   if (loading || !data) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -179,22 +110,108 @@ export function EngineeringDashboard() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xl font-semibold">Engineering Overview</h2>
-        <Button onClick={handleExportPDF} variant="outline" size="sm" className="gap-2">
-          <FileDown className="h-4 w-4" />
-          Exportar PDF
-        </Button>
-      </div>
+    <div className="flex flex-col gap-6 animate-fade-in pb-8">
+      <DashboardHeader
+        title="Engineering Dashboard"
+        description="Real-time engineering performance and insights"
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        onExport={handleExportPDF}
+        isExporting={isExporting}
+      />
 
-      <div ref={dashboardRef} className="space-y-6 bg-background p-2 rounded-lg -mx-2 px-2">
-        <EngineeringFiltersPanel
-          filters={filters}
-          updateFilter={updateFilter}
-          resetFilters={resetFilters}
-        />
+      <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Engineer</Label>
+          <Input
+            value={filters.engineer}
+            onChange={(e) => updateFilter('engineer', e.target.value)}
+            placeholder="Search Engineer..."
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Designer</Label>
+          <Input
+            value={filters.designer}
+            onChange={(e) => updateFilter('designer', e.target.value)}
+            placeholder="Search Designer..."
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Product Division</Label>
+          <Input
+            value={filters.productDivision}
+            onChange={(e) => updateFilter('productDivision', e.target.value)}
+            placeholder="Search Division..."
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Customer</Label>
+          <Input
+            value={filters.customer}
+            onChange={(e) => updateFilter('customer', e.target.value)}
+            placeholder="Search Customer..."
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Machine Family</Label>
+          <Input
+            value={filters.machineFamily}
+            onChange={(e) => updateFilter('machineFamily', e.target.value)}
+            placeholder="Search Family..."
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Machine Model</Label>
+          <Input
+            value={filters.machineModel}
+            onChange={(e) => updateFilter('machineModel', e.target.value)}
+            placeholder="Search Model..."
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">WO Number</Label>
+          <Input
+            value={filters.woNumber}
+            onChange={(e) => updateFilter('woNumber', e.target.value)}
+            placeholder="Search WO..."
+          />
+        </div>
+        <div className="flex flex-col gap-2 pt-2">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="t-comp"
+              checked={filters.tasksCompleted}
+              onCheckedChange={(v) => updateFilter('tasksCompleted', v)}
+            />
+            <Label htmlFor="t-comp" className="text-sm">
+              Tasks Completed
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="t-risk"
+              checked={filters.tasksAtRisk}
+              onCheckedChange={(v) => updateFilter('tasksAtRisk', v)}
+            />
+            <Label htmlFor="t-risk" className="text-sm">
+              Tasks at Risk
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="t-del"
+              checked={filters.tasksDelayed}
+              onCheckedChange={(v) => updateFilter('tasksDelayed', v)}
+            />
+            <Label htmlFor="t-del" className="text-sm">
+              Tasks Delayed
+            </Label>
+          </div>
+        </div>
+      </AdvancedFilters>
 
+      <div ref={dashboardRef} className="space-y-6 bg-transparent">
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>

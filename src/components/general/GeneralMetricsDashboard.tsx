@@ -1,10 +1,13 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   getMetricsDefinitions,
   getMetricsTracking,
   MetricDefinition,
   MetricTracking,
 } from '@/services/metrics'
+import { DashboardHeader } from '@/components/shared/DashboardHeader'
+import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
+import { useDashboardExport } from '@/hooks/use-dashboard-export'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Select,
@@ -32,11 +35,18 @@ import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 
 export default function GeneralMetricsDashboard() {
+  const dashboardRef = useRef<HTMLDivElement>(null)
+  const { isExporting, handleExportPDF } = useDashboardExport(
+    dashboardRef,
+    'General Metrics Dashboard',
+  )
+
   const [department, setDepartment] = useState<string>('All')
-  const [date, setDate] = useState<DateRange | undefined>({
+  const [date, setDate] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: new Date(new Date().setDate(new Date().getDate() - 30)),
     to: new Date(),
   })
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
   const [definitions, setDefinitions] = useState<MetricDefinition[]>([])
   const [tracking, setTracking] = useState<MetricTracking[]>([])
@@ -290,18 +300,30 @@ export default function GeneralMetricsDashboard() {
     return formatted
   }
 
+  const resetFilters = () => {
+    setDepartment('All')
+    setDate({
+      from: new Date(new Date().setDate(new Date().getDate() - 30)),
+      to: new Date(),
+    })
+  }
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in pb-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-800">Generic Metrics</h2>
-            <p className="text-sm text-slate-500">Other cross-department tracking</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
+      <DashboardHeader
+        title="Generic Metrics"
+        description="Other cross-department tracking"
+        dateRange={date}
+        setDateRange={setDate}
+        onExport={handleExportPDF}
+        isExporting={isExporting}
+      />
+
+      <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Department</Label>
           <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200">
+            <SelectTrigger className="bg-white">
               <SelectValue placeholder="Department" />
             </SelectTrigger>
             <SelectContent>
@@ -312,143 +334,109 @@ export default function GeneralMetricsDashboard() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </AdvancedFilters>
 
-          <div className="grid gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={'outline'}
-                  className={cn(
-                    'w-[260px] justify-start text-left font-normal bg-slate-50 border-slate-200',
-                    !date && 'text-muted-foreground',
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}
-                      </>
-                    ) : (
-                      format(date.from, 'LLL dd, y')
-                    )
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={setDate}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
+      <div ref={dashboardRef} className="space-y-6">
+        {loading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
           </div>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {Object.values(metricsData).map((metric) => (
-            <Card
-              key={metric.definition.id}
-              className="bg-white shadow-sm border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
-            >
-              <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardDescription className="font-semibold text-indigo-600 mb-1 uppercase tracking-wider text-xs">
-                      {metric.definition.department}
-                    </CardDescription>
-                    <CardTitle className="text-lg text-slate-800 font-bold">
-                      {metric.definition.metric_name}
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="flex items-end justify-between mb-6">
-                  <div className="text-3xl font-black text-slate-900 tracking-tight">
-                    {formatValue(
-                      metric.latestValue,
-                      metric.definition.metric_type,
-                      metric.definition.unit,
-                    )}
-                  </div>
-                  <div
-                    className={cn(
-                      'flex items-center text-sm font-bold px-2 py-1 rounded-full',
-                      metric.trend === 'up'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : metric.trend === 'down'
-                          ? 'bg-rose-100 text-rose-700'
-                          : 'bg-slate-100 text-slate-700',
-                    )}
-                  >
-                    {metric.trend === 'up' && <TrendingUp className="w-4 h-4 mr-1" />}
-                    {metric.trend === 'down' && <TrendingDown className="w-4 h-4 mr-1" />}
-                    {metric.trend === 'neutral' && <Minus className="w-4 h-4 mr-1" />}
-                    {Math.abs(metric.change).toFixed(1)}%
-                  </div>
-                </div>
-
-                <div className="h-[100px] w-full mt-4 -ml-2">
-                  {metric.data.length > 0 ? (
-                    <ChartContainer
-                      config={{ value: { label: metric.definition.metric_name, color: '#4f46e5' } }}
-                      className="h-full w-full"
-                    >
-                      <LineChart data={metric.data}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="date" hide />
-                        <YAxis
-                          hide
-                          domain={[
-                            'dataMin - (dataMax - dataMin) * 0.1',
-                            'dataMax + (dataMax - dataMin) * 0.1',
-                          ]}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                        <Line
-                          type="monotone"
-                          dataKey="value"
-                          stroke="#4f46e5"
-                          strokeWidth={3}
-                          dot={false}
-                          activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 2 }}
-                        />
-                      </LineChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400">
-                      No trend data
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {Object.values(metricsData).map((metric) => (
+              <Card
+                key={metric.definition.id}
+                className="bg-white shadow-sm border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
+              >
+                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardDescription className="font-semibold text-indigo-600 mb-1 uppercase tracking-wider text-xs">
+                        {metric.definition.department}
+                      </CardDescription>
+                      <CardTitle className="text-lg text-slate-800 font-bold">
+                        {metric.definition.metric_name}
+                      </CardTitle>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {Object.keys(metricsData).length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center p-16 bg-slate-50/80 rounded-xl border border-slate-200 border-dashed">
-              <LayoutDashboard className="w-12 h-12 text-slate-300 mb-4" />
-              <p className="text-slate-600 font-semibold text-lg">No metrics available</p>
-              <p className="text-slate-500 text-sm mt-1">
-                Try changing the department or period filters.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="flex items-end justify-between mb-6">
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">
+                      {formatValue(
+                        metric.latestValue,
+                        metric.definition.metric_type,
+                        metric.definition.unit,
+                      )}
+                    </div>
+                    <div
+                      className={cn(
+                        'flex items-center text-sm font-bold px-2 py-1 rounded-full',
+                        metric.trend === 'up'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : metric.trend === 'down'
+                            ? 'bg-rose-100 text-rose-700'
+                            : 'bg-slate-100 text-slate-700',
+                      )}
+                    >
+                      {metric.trend === 'up' && <TrendingUp className="w-4 h-4 mr-1" />}
+                      {metric.trend === 'down' && <TrendingDown className="w-4 h-4 mr-1" />}
+                      {metric.trend === 'neutral' && <Minus className="w-4 h-4 mr-1" />}
+                      {Math.abs(metric.change).toFixed(1)}%
+                    </div>
+                  </div>
+
+                  <div className="h-[100px] w-full mt-4 -ml-2">
+                    {metric.data.length > 0 ? (
+                      <ChartContainer
+                        config={{
+                          value: { label: metric.definition.metric_name, color: '#4f46e5' },
+                        }}
+                        className="h-full w-full"
+                      >
+                        <LineChart data={metric.data}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="date" hide />
+                          <YAxis
+                            hide
+                            domain={[
+                              'dataMin - (dataMax - dataMin) * 0.1',
+                              'dataMax + (dataMax - dataMin) * 0.1',
+                            ]}
+                          />
+                          <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke="#4f46e5"
+                            strokeWidth={3}
+                            dot={false}
+                            activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ChartContainer>
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-sm text-slate-400">
+                        No trend data
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {Object.keys(metricsData).length === 0 && (
+              <div className="col-span-full flex flex-col items-center justify-center p-16 bg-slate-50/80 rounded-xl border border-slate-200 border-dashed">
+                <LayoutDashboard className="w-12 h-12 text-slate-300 mb-4" />
+                <p className="text-slate-600 font-semibold text-lg">No metrics available</p>
+                <p className="text-slate-500 text-sm mt-1">
+                  Try changing the department or period filters.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

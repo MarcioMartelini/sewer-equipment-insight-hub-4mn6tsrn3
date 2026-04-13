@@ -1,41 +1,36 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { format, subDays } from 'date-fns'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
 import HRDashboardKPIs from './HRDashboardKPIs'
 import HRDashboardCharts from './HRDashboardCharts'
+import { DashboardHeader } from '@/components/shared/DashboardHeader'
+import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
+import { useDashboardExport } from '@/hooks/use-dashboard-export'
 
 export default function DashboardTab() {
-  const [dateRange, setDateRange] = useState('30')
-  const [customDates, setCustomDates] = useState({ start: '', end: '' })
+  const dashboardRef = useRef<HTMLDivElement>(null)
+  const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'HR Dashboard')
+
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  })
+
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [data, setData] = useState({ prod: [], abs: [], inj: [] })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      let start = new Date()
-      let end = new Date()
 
-      if (dateRange !== 'custom') {
-        start = subDays(new Date(), parseInt(dateRange))
-      } else if (customDates.start && customDates.end) {
-        start = new Date(customDates.start)
-        end = new Date(customDates.end)
-      } else {
+      if (!dateRange.from) {
         setLoading(false)
         return
       }
 
-      const startStr = format(start, 'yyyy-MM-dd')
-      const endStr = format(end, 'yyyy-MM-dd')
+      const startStr = format(dateRange.from, 'yyyy-MM-dd')
+      const endStr = format(dateRange.to || dateRange.from, 'yyyy-MM-dd')
 
       const [prodRes, absRes, injRes] = await Promise.all([
         supabase
@@ -63,54 +58,39 @@ export default function DashboardTab() {
       setLoading(false)
     }
     fetchData()
-  }, [dateRange, customDates])
+  }, [dateRange])
+
+  const resetFilters = () => {
+    setDateRange({ from: subDays(new Date(), 30), to: new Date() })
+  }
 
   return (
-    <div className="space-y-6 print:space-y-4">
-      <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4 bg-card p-4 rounded-lg border shadow-sm print:shadow-none print:border-none print:p-0">
-        <h2 className="text-lg font-semibold">Executive Dashboard</h2>
-        <div className="flex flex-col sm:flex-row items-center gap-2 print:hidden">
-          {dateRange === 'custom' && (
-            <div className="flex items-center gap-2 mr-2">
-              <Input
-                type="date"
-                value={customDates.start}
-                onChange={(e) => setCustomDates((p) => ({ ...p, start: e.target.value }))}
-                className="w-auto h-9"
-              />
-              <span className="text-muted-foreground">-</span>
-              <Input
-                type="date"
-                value={customDates.end}
-                onChange={(e) => setCustomDates((p) => ({ ...p, end: e.target.value }))}
-                className="w-auto h-9"
-              />
-            </div>
-          )}
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[180px] h-9">
-              <SelectValue placeholder="Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-              <SelectItem value="custom">Custom</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+    <div className="flex flex-col gap-6 animate-fade-in pb-8">
+      <DashboardHeader
+        title="HR Executive Dashboard"
+        description="Overview of human resources performance and metrics"
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        onExport={handleExportPDF}
+        isExporting={isExporting}
+      />
 
-      {loading ? (
-        <div className="h-64 flex items-center justify-center text-muted-foreground">
-          Loading indicators...
-        </div>
-      ) : (
-        <>
-          <HRDashboardKPIs data={data} />
-          <HRDashboardCharts data={data} />
-        </>
-      )}
+      <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
+        <div className="col-span-full text-sm text-slate-500">More filters coming soon...</div>
+      </AdvancedFilters>
+
+      <div ref={dashboardRef} className="space-y-6 bg-transparent">
+        {loading ? (
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
+            Loading indicators...
+          </div>
+        ) : (
+          <>
+            <HRDashboardKPIs data={data} />
+            <HRDashboardCharts data={data} />
+          </>
+        )}
+      </div>
     </div>
   )
 }
