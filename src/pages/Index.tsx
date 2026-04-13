@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import SalesDashboard from '@/components/sales/SalesDashboard'
 import { EngineeringDashboard } from '@/components/engineering/EngineeringDashboard'
 import GeneralMetricsDashboard from '@/components/general/GeneralMetricsDashboard'
-import ProductionDashboard from '@/components/production/ProductionDashboard'
+import { ProductionDashboard } from '@/components/production/ProductionDashboard'
 import HighManagement from './HighManagement'
 import ExecutiveOverviewDashboard from '@/components/executive/ExecutiveOverviewDashboard'
 

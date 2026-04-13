@@ -20,7 +20,7 @@ import { supabase } from '@/lib/supabase/client'
 import { format, subDays, parseISO } from 'date-fns'
 import { Loader2, Settings, Hammer, Zap, AlertTriangle } from 'lucide-react'
 
-export default function ProductionDashboard() {
+export function ProductionDashboard() {
   const dashboardRef = useRef<HTMLDivElement>(null)
   const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'Production Dashboard')
 
