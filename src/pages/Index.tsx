@@ -4,6 +4,7 @@ import SalesDashboard from '@/components/sales/SalesDashboard'
 import { EngineeringDashboard } from '@/components/engineering/EngineeringDashboard'
 import GeneralMetricsDashboard from '@/components/general/GeneralMetricsDashboard'
 import HighManagement from './HighManagement'
+import ExecutiveOverviewDashboard from '@/components/executive/ExecutiveOverviewDashboard'
 
 export default function Index() {
   return (
@@ -20,21 +21,42 @@ export default function Index() {
         </div>
       </div>
 
-      <Tabs defaultValue="high-management" className="w-full">
-        <TabsList className="mb-4 grid w-full grid-cols-2 sm:grid-cols-4 max-w-[800px] h-auto">
-          <TabsTrigger value="high-management" className="py-2">
+      <Tabs defaultValue="executive" className="w-full">
+        <TabsList className="mb-4 flex flex-wrap gap-2 w-full h-auto bg-transparent p-0">
+          <TabsTrigger
+            value="executive"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white border border-slate-200 shadow-sm"
+          >
+            Executive Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="high-management"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white border border-slate-200 shadow-sm"
+          >
             High Management
           </TabsTrigger>
-          <TabsTrigger value="sales" className="py-2">
+          <TabsTrigger
+            value="sales"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white border border-slate-200 shadow-sm"
+          >
             Sales
           </TabsTrigger>
-          <TabsTrigger value="engineering" className="py-2">
+          <TabsTrigger
+            value="engineering"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white border border-slate-200 shadow-sm"
+          >
             Engineering
           </TabsTrigger>
-          <TabsTrigger value="general" className="py-2">
+          <TabsTrigger
+            value="general"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white border border-slate-200 shadow-sm"
+          >
             General Metrics
           </TabsTrigger>
         </TabsList>
+        <TabsContent value="executive" className="mt-0 focus-visible:outline-none">
+          <ExecutiveOverviewDashboard />
+        </TabsContent>
         <TabsContent value="high-management" className="mt-0 focus-visible:outline-none">
           <HighManagement />
         </TabsContent>

@@ -170,10 +170,7 @@ import appLogo from '@/assets/image-ea73b.png'
 const navigation = [
   {
     title: 'Overview',
-    items: [
-      { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
-      { title: 'Reports', icon: FileText, url: '/reports' },
-    ],
+    items: [{ title: 'Dashboard', icon: LayoutDashboard, url: '/' }],
   },
   {
     title: 'Departments',
