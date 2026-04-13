@@ -23,13 +23,14 @@ import CustomerDetail from './pages/CustomerDetail'
 import SalespersonDetail from './pages/SalespersonDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 import { GlobalNotificationWatcher } from './components/GlobalNotificationWatcher'
-import logoUrl from './assets/design-sem-nome-70de8.png'
+import logoUrl from './assets/design-sem-nome-1bffa.png'
 
 const GlobalPrintStyles = () => (
   <style>
     {`
       @media print {
         @page {
+          size: letter portrait;
           margin-top: 25mm;
           margin-bottom: 15mm;
         }
