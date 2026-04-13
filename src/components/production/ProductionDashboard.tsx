@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { DashboardHeader } from '@/components/shared/DashboardHeader'
 import { useDashboardExport } from '@/hooks/use-dashboard-export'
+import { ProductionFiltersPanel } from './ProductionFiltersPanel'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import {
@@ -29,6 +30,36 @@ export function ProductionDashboard() {
     to: new Date(),
   })
 
+  const [filters, setFilters] = useState<any>({
+    salesperson: 'all',
+    division: 'all',
+    region: 'all',
+    customer: 'all',
+    machineFamily: 'all',
+    machineModel: 'all',
+    quoteNumber: '',
+    woNumber: '',
+    metric: 'all',
+  })
+
+  const updateFilter = (key: string, value: any) => {
+    setFilters((prev: any) => ({ ...prev, [key]: value }))
+  }
+
+  const resetFilters = () => {
+    setFilters({
+      salesperson: 'all',
+      division: 'all',
+      region: 'all',
+      customer: 'all',
+      machineFamily: 'all',
+      machineModel: 'all',
+      quoteNumber: '',
+      woNumber: '',
+      metric: 'all',
+    })
+  }
+
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any>(null)
 
@@ -37,7 +68,9 @@ export function ProductionDashboard() {
     try {
       let query = supabase
         .from('production_tasks')
-        .select('id, status, created_at, task_name, department')
+        .select(
+          'id, status, created_at, task_name, department, work_orders!inner(wo_number, customer_name, machine_model)',
+        )
 
       if (dateRange.from) query = query.gte('created_at', dateRange.from.toISOString())
       if (dateRange.to) {
@@ -45,6 +78,12 @@ export function ProductionDashboard() {
         nextDay.setDate(nextDay.getDate() + 1)
         query = query.lt('created_at', nextDay.toISOString())
       }
+
+      if (filters.woNumber) query = query.ilike('work_orders.wo_number', `%${filters.woNumber}%`)
+      if (filters.customer && filters.customer !== 'all')
+        query = query.ilike('work_orders.customer_name', `%${filters.customer}%`)
+      if (filters.machineModel && filters.machineModel !== 'all')
+        query = query.ilike('work_orders.machine_model', `%${filters.machineModel}%`)
 
       const { data: tasks, error } = await query
       if (error) throw error
@@ -101,7 +140,7 @@ export function ProductionDashboard() {
 
   useEffect(() => {
     loadData()
-  }, [dateRange])
+  }, [dateRange, filters])
 
   return (
     <div className="flex flex-col gap-6 pb-8 animate-fade-in">
@@ -112,6 +151,12 @@ export function ProductionDashboard() {
         setDateRange={setDateRange}
         onExport={handleExportPDF}
         isExporting={isExporting}
+      />
+
+      <ProductionFiltersPanel
+        filters={filters}
+        updateFilter={updateFilter}
+        resetFilters={resetFilters}
       />
 
       <div ref={dashboardRef} className="space-y-6">
