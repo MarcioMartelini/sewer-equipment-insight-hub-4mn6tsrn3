@@ -91,6 +91,7 @@ export default function SalesDashboard() {
     machineModel: 'all',
     quoteNumber: '',
     woNumber: '',
+    metric: 'all',
   })
 
   const [quotes, setQuotes] = useState<any[]>([])
@@ -170,6 +171,7 @@ export default function SalesDashboard() {
       machineModel: 'all',
       quoteNumber: '',
       woNumber: '',
+      metric: 'all',
     })
   }
 
@@ -827,122 +829,167 @@ export default function SalesDashboard() {
                 onChange={(e) => setFilters((f) => ({ ...f, woNumber: e.target.value }))}
               />
             </div>
+            <div>
+              <Label className="text-xs text-slate-500 mb-1">Métrica (Metric)</Label>
+              <Select
+                value={filters.metric}
+                onValueChange={(v) => setFilters((f) => ({ ...f, metric: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Metrics" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Metrics</SelectItem>
+                  <SelectItem value="gross_revenue">Gross Revenue</SelectItem>
+                  <SelectItem value="total_quotes">Total Quotes</SelectItem>
+                  <SelectItem value="total_wos">Total WOs</SelectItem>
+                  <SelectItem value="conversion_rate">Conversion Rate</SelectItem>
+                  <SelectItem value="avg_profit_margin">Avg Profit Margin</SelectItem>
+                  <SelectItem value="avg_sales_cycle">Avg Sales Cycle</SelectItem>
+                  <SelectItem value="customer_ltv">Customer LTV</SelectItem>
+                  <SelectItem value="avg_purchase_value">Avg Purchase Value</SelectItem>
+                  <SelectItem value="total_purchases">Total Purchases</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Gross Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              $
-              {grossRevenue.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'gross_revenue') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Gross Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                $
+                {grossRevenue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Quotes</CardTitle>
-            <FileText className="h-4 w-4 text-indigo-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">{totalQuotes}</div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'total_quotes') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Total Quotes</CardTitle>
+              <FileText className="h-4 w-4 text-indigo-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{totalQuotes}</div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total WOs</CardTitle>
-            <ClipboardList className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">{totalWOs}</div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'total_wos') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Total WOs</CardTitle>
+              <ClipboardList className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{totalWOs}</div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Conversion Rate</CardTitle>
-            <Percent className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">{conversionRate.toFixed(1)}%</div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'conversion_rate') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Conversion Rate</CardTitle>
+              <Percent className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{conversionRate.toFixed(1)}%</div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Avg Profit Margin</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">{avgProfitMargin.toFixed(1)}%</div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'avg_profit_margin') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Avg Profit Margin
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{avgProfitMargin.toFixed(1)}%</div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Avg Sales Cycle</CardTitle>
-            <Clock className="h-4 w-4 text-cyan-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              {avgSalesCycle.toFixed(1)}{' '}
-              <span className="text-sm font-normal text-slate-500">days</span>
-            </div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'avg_sales_cycle') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Avg Sales Cycle</CardTitle>
+              <Clock className="h-4 w-4 text-cyan-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                {avgSalesCycle.toFixed(1)}{' '}
+                <span className="text-sm font-normal text-slate-500">days</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Customer LTV</CardTitle>
-            <Users className="h-4 w-4 text-rose-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              $
-              {clv.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'customer_ltv') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Customer LTV</CardTitle>
+              <Users className="h-4 w-4 text-rose-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                $
+                {clv.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Avg Purchase Value</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-teal-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              $
-              {avgPurchaseValue.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'avg_purchase_value') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Avg Purchase Value
+              </CardTitle>
+              <ShoppingCart className="h-4 w-4 text-teal-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                $
+                {avgPurchaseValue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Purchases</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">{numberOfPurchases}</div>
-          </CardContent>
-        </Card>
+        {(filters.metric === 'all' || filters.metric === 'total_purchases') && (
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Total Purchases</CardTitle>
+              <ShoppingBag className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{numberOfPurchases}</div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Charts */}

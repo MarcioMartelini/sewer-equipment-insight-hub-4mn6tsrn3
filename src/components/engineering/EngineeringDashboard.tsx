@@ -309,6 +309,45 @@ export function EngineeringDashboard() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Task Status by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  not_started: { label: 'Not Started', color: '#94a3b8' },
+                  parked: { label: 'Parked', color: '#cbd5e1' },
+                  on_track: { label: 'On Track', color: '#3b82f6' },
+                  at_risk: { label: 'At Risk', color: '#f59e0b' },
+                  delayed: { label: 'Delayed', color: '#ef4444' },
+                  complete: { label: 'Complete', color: '#22c55e' },
+                }}
+                className="h-[350px] w-full"
+              >
+                <BarChart
+                  data={[
+                    { name: 'Layouts', ...data.layoutsStatus },
+                    { name: 'BOMs', ...data.bomsStatus },
+                    { name: 'Travelers', ...data.travelersStatus },
+                    { name: 'Accessories', ...data.accessoriesStatus },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="not_started" stackId="a" fill="var(--color-not_started)" />
+                  <Bar dataKey="parked" stackId="a" fill="var(--color-parked)" />
+                  <Bar dataKey="on_track" stackId="a" fill="var(--color-on_track)" />
+                  <Bar dataKey="at_risk" stackId="a" fill="var(--color-at_risk)" />
+                  <Bar dataKey="delayed" stackId="a" fill="var(--color-delayed)" />
+                  <Bar dataKey="complete" stackId="a" fill="var(--color-complete)" />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Top 10 Delayed Work Orders</CardTitle>
             </CardHeader>
             <CardContent>

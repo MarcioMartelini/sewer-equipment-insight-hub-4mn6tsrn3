@@ -16,6 +16,15 @@ export interface EngineeringFilters {
   tasksDelayed?: boolean
 }
 
+export interface TaskStatusCounts {
+  not_started: number
+  parked: number
+  on_track: number
+  at_risk: number
+  delayed: number
+  complete: number
+}
+
 export interface DashboardData {
   kpis: {
     totalTasks: number
@@ -34,6 +43,10 @@ export interface DashboardData {
     delayDays: number
     pendingTasks: number
   }[]
+  layoutsStatus: TaskStatusCounts
+  bomsStatus: TaskStatusCounts
+  travelersStatus: TaskStatusCounts
+  accessoriesStatus: TaskStatusCounts
 }
 
 export async function getEngineeringDashboardData(
@@ -194,6 +207,25 @@ export async function getEngineeringDashboardData(
     }
   }
 
+  const getCounts = (type: string) => {
+    const tasks = filteredTasks.filter((t) =>
+      t.task_name?.toLowerCase().includes(type.toLowerCase()),
+    )
+    return {
+      not_started: tasks.filter((t) => t.status === 'not_started').length,
+      parked: tasks.filter((t) => t.status === 'parked').length,
+      on_track: tasks.filter((t) => t.status === 'on_track').length,
+      at_risk: tasks.filter((t) => t.status === 'at_risk').length,
+      delayed: tasks.filter((t) => t.was_delayed || t.status === 'delayed').length,
+      complete: tasks.filter((t) => t.status === 'complete' || t.is_completed).length,
+    }
+  }
+
+  const layoutsStatus = getCounts('layout')
+  const bomsStatus = getCounts('bom')
+  const travelersStatus = getCounts('traveler')
+  const accessoriesStatus = getCounts('accessori')
+
   const topDelayed = wosToConsider
     .map((wo: any) => {
       let delayDays = 0
@@ -234,5 +266,9 @@ export async function getEngineeringDashboardData(
     progressByType,
     trend,
     topDelayed,
+    layoutsStatus,
+    bomsStatus,
+    travelersStatus,
+    accessoriesStatus,
   }
 }
