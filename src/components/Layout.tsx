@@ -172,7 +172,6 @@ const navigation = [
     title: 'Overview',
     items: [
       { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
-      { title: 'High Management', icon: LineChart, url: '/high-management' },
       { title: 'Reports', icon: FileText, url: '/reports' },
     ],
   },
