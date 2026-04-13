@@ -4,7 +4,8 @@ import { PermissionsTab } from '@/components/settings/PermissionsTab'
 import { IntegrationsTab } from '@/components/settings/IntegrationsTab'
 import { BackupTab } from '@/components/settings/BackupTab'
 import { AdminDashboardTab } from '@/components/settings/AdminDashboardTab'
-import { Users, Shield, Plug, HardDrive, ShieldAlert } from 'lucide-react'
+import { AppearanceTab } from '@/components/settings/AppearanceTab'
+import { Users, Shield, Plug, HardDrive, ShieldAlert, Palette } from 'lucide-react'
 
 export default function Settings() {
   return (
@@ -40,6 +41,10 @@ export default function Settings() {
             <HardDrive className="w-4 h-4" />
             Backup
           </TabsTrigger>
+          <TabsTrigger value="appearance" className="flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            Aparência
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
@@ -69,6 +74,12 @@ export default function Settings() {
         <TabsContent value="backup">
           <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
             <BackupTab />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="appearance">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
+            <AppearanceTab />
           </div>
         </TabsContent>
       </Tabs>

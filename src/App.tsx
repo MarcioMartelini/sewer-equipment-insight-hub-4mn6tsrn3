@@ -23,6 +23,7 @@ import CustomerDetail from './pages/CustomerDetail'
 import SalespersonDetail from './pages/SalespersonDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 import { GlobalNotificationWatcher } from './components/GlobalNotificationWatcher'
+import { ThemeProvider } from './components/theme-provider'
 import logoUrl from './assets/design-sem-nome-1bffa.png'
 
 const GlobalPrintStyles = () => (
@@ -83,48 +84,50 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 }
 
 const App = () => (
-  <AuthProvider>
-    <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-      <GlobalPrintStyles />
-      <PrintHeader />
-      <TooltipProvider delayDuration={300}>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/login" element={<AuthPage />} />
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<Index />} />
-            <Route path="/relatorios" element={<Reports />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/configuracoes" element={<Settings />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/sales" element={<Sales />} />
-            <Route path="/engineering" element={<Engineering />} />
-            <Route path="/purchasing" element={<Purchasing />} />
-            <Route path="/production" element={<Production />} />
-            <Route path="/production/:subDepartment" element={<Production />} />
-            <Route path="/quality" element={<Quality />} />
-            <Route path="/hr" element={<HR />} />
-            <Route path="/high-management" element={<HighManagement />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/notificacoes" element={<Notifications />} />
-            <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
-            <Route path="/sales/quotes/:id" element={<QuoteDetail />} />
-            <Route path="/sales/customers/:id" element={<CustomerDetail />} />
-            <Route path="/sales/salespersons/:id" element={<SalespersonDetail />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
-    </BrowserRouter>
-  </AuthProvider>
+  <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <AuthProvider>
+      <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+        <GlobalPrintStyles />
+        <PrintHeader />
+        <TooltipProvider delayDuration={300}>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/login" element={<AuthPage />} />
+            <Route
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<Index />} />
+              <Route path="/relatorios" element={<Reports />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/configuracoes" element={<Settings />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/sales" element={<Sales />} />
+              <Route path="/engineering" element={<Engineering />} />
+              <Route path="/purchasing" element={<Purchasing />} />
+              <Route path="/production" element={<Production />} />
+              <Route path="/production/:subDepartment" element={<Production />} />
+              <Route path="/quality" element={<Quality />} />
+              <Route path="/hr" element={<HR />} />
+              <Route path="/high-management" element={<HighManagement />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/notificacoes" element={<Notifications />} />
+              <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
+              <Route path="/sales/quotes/:id" element={<QuoteDetail />} />
+              <Route path="/sales/customers/:id" element={<CustomerDetail />} />
+              <Route path="/sales/salespersons/:id" element={<SalespersonDetail />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </BrowserRouter>
+    </AuthProvider>
+  </ThemeProvider>
 )
 
 export default App

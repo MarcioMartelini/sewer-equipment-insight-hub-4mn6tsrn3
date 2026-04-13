@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import SalesDashboard from '@/components/sales/SalesDashboard'
 import { EngineeringDashboard } from '@/components/engineering/EngineeringDashboard'
 import GeneralMetricsDashboard from '@/components/general/GeneralMetricsDashboard'
+import ProductionDashboard from '@/components/production/ProductionDashboard'
 import HighManagement from './HighManagement'
 import ExecutiveOverviewDashboard from '@/components/executive/ExecutiveOverviewDashboard'
 
@@ -43,13 +44,19 @@ export default function Index() {
           </TabsTrigger>
           <TabsTrigger
             value="engineering"
-            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white border border-slate-200 shadow-sm"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
           >
             Engineering
           </TabsTrigger>
           <TabsTrigger
+            value="production"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            Production
+          </TabsTrigger>
+          <TabsTrigger
             value="general"
-            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white border border-slate-200 shadow-sm"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
           >
             General Metrics
           </TabsTrigger>
@@ -65,6 +72,9 @@ export default function Index() {
         </TabsContent>
         <TabsContent value="engineering" className="mt-0 focus-visible:outline-none">
           <EngineeringDashboard />
+        </TabsContent>
+        <TabsContent value="production" className="mt-0 focus-visible:outline-none">
+          <ProductionDashboard />
         </TabsContent>
         <TabsContent value="general" className="mt-0 focus-visible:outline-none">
           <GeneralMetricsDashboard />

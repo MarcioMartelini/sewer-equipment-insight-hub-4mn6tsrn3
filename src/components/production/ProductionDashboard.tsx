@@ -1,47 +1,26 @@
 import { useState, useEffect, useRef } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  getProductionDashboardData,
-  ProductionFilters,
-  DashboardData,
-} from '@/services/production-dashboard'
 import { DashboardHeader } from '@/components/shared/DashboardHeader'
-import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
 import { useDashboardExport } from '@/hooks/use-dashboard-export'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { subDays } from 'date-fns'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { Bar, BarChart, Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { format } from 'date-fns'
-import {
-  Loader2,
-  CheckCircle2,
-  Clock,
-  ListTodo,
-  AlertTriangle,
-  TrendingUp,
-  FileDown,
-} from 'lucide-react'
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+} from 'recharts'
+import { supabase } from '@/lib/supabase/client'
+import { format, subDays, parseISO } from 'date-fns'
+import { Loader2, Settings, Hammer, Zap, AlertTriangle } from 'lucide-react'
 
-export function ProductionDashboard() {
+export default function ProductionDashboard() {
   const dashboardRef = useRef<HTMLDivElement>(null)
   const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'Production Dashboard')
 
@@ -49,340 +28,273 @@ export function ProductionDashboard() {
     from: subDays(new Date(), 30),
     to: new Date(),
   })
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
-  const [filters, setFilters] = useState<ProductionFilters & { subDepartment?: string }>({
-    period: 'custom',
-    subDepartment: 'all',
-    operator: '',
-    productDivision: '',
-    customer: '',
-    machineFamily: '',
-    machineModel: '',
-    woNumber: '',
-    tasksCompleted: false,
-    tasksAtRisk: false,
-    tasksDelayed: false,
-  })
-
-  const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<any>(null)
+
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      let query = supabase
+        .from('production_tasks')
+        .select('id, status, created_at, task_name, department')
+
+      if (dateRange.from) query = query.gte('created_at', dateRange.from.toISOString())
+      if (dateRange.to) {
+        const nextDay = new Date(dateRange.to)
+        nextDay.setDate(nextDay.getDate() + 1)
+        query = query.lt('created_at', nextDay.toISOString())
+      }
+
+      const { data: tasks, error } = await query
+      if (error) throw error
+
+      const statusCounts = {
+        not_started: 0,
+        parked: 0,
+        on_track: 0,
+        at_risk: 0,
+        delayed: 0,
+        complete: 0,
+      }
+
+      const trendsMap: Record<string, number> = {}
+
+      tasks?.forEach((task) => {
+        if (task.status && statusCounts[task.status as keyof typeof statusCounts] !== undefined) {
+          statusCounts[task.status as keyof typeof statusCounts]++
+        }
+
+        if (task.created_at) {
+          const date = format(parseISO(task.created_at), 'MM/dd')
+          trendsMap[date] = (trendsMap[date] || 0) + 1
+        }
+      })
+
+      const statusData = [
+        { name: 'Complete', value: statusCounts.complete, color: '#10b981' },
+        { name: 'On Track', value: statusCounts.on_track, color: '#3b82f6' },
+        { name: 'At Risk', value: statusCounts.at_risk, color: '#f59e0b' },
+        { name: 'Delayed', value: statusCounts.delayed, color: '#ef4444' },
+        { name: 'Parked', value: statusCounts.parked, color: '#64748b' },
+        { name: 'Not Started', value: statusCounts.not_started, color: '#cbd5e1' },
+      ].filter((s) => s.value > 0)
+
+      const trendData = Object.entries(trendsMap)
+        .map(([date, count]) => ({ date, tasks: count }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+
+      setData({
+        totalTasks: tasks?.length || 0,
+        completedTasks: statusCounts.complete,
+        delayedTasks: statusCounts.delayed,
+        parkedTasks: statusCounts.parked,
+        statusData,
+        trendData,
+      })
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true)
-      try {
-        const result = await getProductionDashboardData({
-          ...filters,
-          startDate: dateRange.from?.toISOString(),
-          endDate: dateRange.to?.toISOString(),
-        } as any)
-        setData(result)
-      } catch (error) {
-        console.error(error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [filters, dateRange])
-
-  const updateFilter = (key: string, value: any) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const resetFilters = () => {
-    setDateRange({ from: subDays(new Date(), 30), to: new Date() })
-    setFilters({
-      period: 'custom',
-      subDepartment: 'all',
-      operator: '',
-      productDivision: '',
-      customer: '',
-      machineFamily: '',
-      machineModel: '',
-      woNumber: '',
-      tasksCompleted: false,
-      tasksAtRisk: false,
-      tasksDelayed: false,
-    })
-  }
-
-  if (loading || !data) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+    loadData()
+  }, [dateRange])
 
   return (
-    <div className="flex flex-col gap-6 animate-fade-in pb-8">
+    <div className="flex flex-col gap-6 pb-8 animate-fade-in">
       <DashboardHeader
-        title="Production Dashboard"
-        description="Real-time production performance and insights"
+        title="Production Overview"
+        description="Production tasks performance, distribution and execution trends"
         dateRange={dateRange}
         setDateRange={setDateRange}
         onExport={handleExportPDF}
         isExporting={isExporting}
       />
 
-      <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
-        <div>
-          <Label className="text-xs text-slate-500 mb-1">Sub Department</Label>
-          <Select
-            value={filters.subDepartment}
-            onValueChange={(v) => updateFilter('subDepartment', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="weld_shop">Weld Shop</SelectItem>
-              <SelectItem value="paint">Paint</SelectItem>
-              <SelectItem value="sub_assembly">Sub Assembly</SelectItem>
-              <SelectItem value="final_assembly">Final Assembly</SelectItem>
-              <SelectItem value="warehouse">Warehouse</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-xs text-slate-500 mb-1">Operator</Label>
-          <Input
-            value={filters.operator}
-            onChange={(e) => updateFilter('operator', e.target.value)}
-            placeholder="Search Operator..."
-          />
-        </div>
-        <div>
-          <Label className="text-xs text-slate-500 mb-1">Product Division</Label>
-          <Input
-            value={filters.productDivision}
-            onChange={(e) => updateFilter('productDivision', e.target.value)}
-            placeholder="Search Division..."
-          />
-        </div>
-        <div>
-          <Label className="text-xs text-slate-500 mb-1">Customer</Label>
-          <Input
-            value={filters.customer}
-            onChange={(e) => updateFilter('customer', e.target.value)}
-            placeholder="Search Customer..."
-          />
-        </div>
-        <div>
-          <Label className="text-xs text-slate-500 mb-1">Machine Family</Label>
-          <Input
-            value={filters.machineFamily}
-            onChange={(e) => updateFilter('machineFamily', e.target.value)}
-            placeholder="Search Family..."
-          />
-        </div>
-        <div>
-          <Label className="text-xs text-slate-500 mb-1">Machine Model</Label>
-          <Input
-            value={filters.machineModel}
-            onChange={(e) => updateFilter('machineModel', e.target.value)}
-            placeholder="Search Model..."
-          />
-        </div>
-        <div>
-          <Label className="text-xs text-slate-500 mb-1">WO Number</Label>
-          <Input
-            value={filters.woNumber}
-            onChange={(e) => updateFilter('woNumber', e.target.value)}
-            placeholder="Search WO..."
-          />
-        </div>
-        <div className="flex flex-col gap-2 pt-2">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="t-comp-prod"
-              checked={filters.tasksCompleted}
-              onCheckedChange={(v) => updateFilter('tasksCompleted', v)}
-            />
-            <Label htmlFor="t-comp-prod" className="text-sm">
-              Tasks Completed
-            </Label>
+      <div ref={dashboardRef} className="space-y-6">
+        {loading ? (
+          <div className="flex h-64 items-center justify-center bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="t-risk-prod"
-              checked={filters.tasksAtRisk}
-              onCheckedChange={(v) => updateFilter('tasksAtRisk', v)}
-            />
-            <Label htmlFor="t-risk-prod" className="text-sm">
-              Tasks at Risk
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="t-del-prod"
-              checked={filters.tasksDelayed}
-              onCheckedChange={(v) => updateFilter('tasksDelayed', v)}
-            />
-            <Label htmlFor="t-del-prod" className="text-sm">
-              Tasks Delayed
-            </Label>
-          </div>
-        </div>
-      </AdvancedFilters>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    Total Tasks
+                  </CardTitle>
+                  <Settings className="h-4 w-4 text-indigo-500" />
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {data?.totalTasks}
+                  </div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
+                    Created in period
+                  </p>
+                </CardContent>
+              </Card>
 
-      <div ref={dashboardRef} className="space-y-6 bg-transparent">
-        <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
-                <ListTodo className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.kpis.totalTasks}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.kpis.completedTasks}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-blue-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data.kpis.completionRate.toFixed(1)}%</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Delayed Tasks</CardTitle>
-                <Clock className="h-4 w-4 text-red-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">{data.kpis.delayedTasks}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">At Risk Tasks</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-amber-600">{data.kpis.atRiskTasks}</div>
-              </CardContent>
-            </Card>
-          </div>
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    Completed Tasks
+                  </CardTitle>
+                  <Zap className="h-4 w-4 text-emerald-500" />
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {data?.completedTasks}
+                  </div>
+                  <p className="text-sm font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                    Successfully finished
+                  </p>
+                </CardContent>
+              </Card>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Completion by Department</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    completionRate: { label: 'Completion %', color: 'hsl(var(--primary))' },
-                  }}
-                  className="h-[300px] w-full"
-                >
-                  <BarChart data={data.progressByType}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="type" />
-                    <YAxis unit="%" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar
-                      dataKey="completionRate"
-                      fill="var(--color-completionRate)"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    Delayed Tasks
+                  </CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-rose-500" />
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold text-rose-600 dark:text-rose-400">
+                    {data?.delayedTasks}
+                  </div>
+                  <p className="text-sm font-medium text-rose-600/70 dark:text-rose-400/70 mt-1">
+                    Behind schedule
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Completion Trend</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{ completed: { label: 'Completed Tasks', color: 'hsl(var(--primary))' } }}
-                  className="h-[300px] w-full"
-                >
-                  <LineChart data={data.trend}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(val) => format(new Date(val), 'MMM dd')}
-                    />
-                    <YAxis />
-                    <ChartTooltip
-                      content={
-                        <ChartTooltipContent
-                          labelFormatter={(val) => format(new Date(val), 'MMM dd, yyyy')}
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    Parked Tasks
+                  </CardTitle>
+                  <Hammer className="h-4 w-4 text-amber-500" />
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+                    {data?.parkedTasks}
+                  </div>
+                  <p className="text-sm font-medium text-amber-600/70 dark:text-amber-400/70 mt-1">
+                    Currently on hold
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
+                    Task Status Distribution
+                  </CardTitle>
+                  <CardDescription>Current status breakdown of production tasks</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 h-[340px] flex items-center justify-center">
+                  {data?.statusData?.length > 0 ? (
+                    <ChartContainer
+                      config={{
+                        tasks: { label: 'Tasks', color: '#3b82f6' },
+                      }}
+                      className="h-full w-full"
+                    >
+                      <PieChart>
+                        <Pie
+                          data={data.statusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={80}
+                          outerRadius={120}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {data.statusData.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Legend
+                          layout="vertical"
+                          verticalAlign="middle"
+                          align="right"
+                          wrapperStyle={{ fontSize: '12px' }}
                         />
-                      }
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="completed"
-                      stroke="var(--color-completed)"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Top 10 Delayed Work Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>WO Number</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Delay</TableHead>
-                    <TableHead className="text-right">Pending Tasks</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.topDelayed.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                        No delayed work orders found.
-                      </TableCell>
-                    </TableRow>
+                      </PieChart>
+                    </ChartContainer>
+                  ) : (
+                    <div className="text-sm text-slate-400">No data available</div>
                   )}
-                  {data.topDelayed.map((wo) => (
-                    <TableRow key={wo.wo_id}>
-                      <TableCell className="font-medium">{wo.wo_number}</TableCell>
-                      <TableCell>{wo.customer_name}</TableCell>
-                      <TableCell>
-                        {wo.due_date !== '-' ? format(new Date(wo.due_date), 'MMM dd, yyyy') : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="destructive">{wo.delayDays} days</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">{wo.pendingTasks}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
+                    Task Creation Trend
+                  </CardTitle>
+                  <CardDescription>
+                    Volume of new production tasks created over time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 h-[340px]">
+                  {data?.trendData?.length > 0 ? (
+                    <ChartContainer
+                      config={{
+                        tasks: { label: 'Tasks', color: '#8b5cf6' },
+                      }}
+                      className="h-full w-full"
+                    >
+                      <LineChart
+                        data={data.trendData}
+                        margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#f1f5f9"
+                          className="dark:stroke-slate-800"
+                        />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fill: '#64748b', fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          tick={{ fill: '#64748b', fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line
+                          type="monotone"
+                          dataKey="tasks"
+                          stroke="#8b5cf6"
+                          strokeWidth={3}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ChartContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                      No data available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
