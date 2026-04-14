@@ -35,9 +35,51 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
+import { MultiSelect } from '@/components/MultiSelect'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const ALL_METRICS = [
+  'Total Sales Volume',
+  'Engineering Tasks',
+  'Production Tasks',
+  'Purchasing Tasks',
+  'Quality Claims',
+  'HR Absences',
+  'Sales vs Engineering Chart',
+  'Production vs Purchasing Chart',
+]
 
 export default function ExecutiveOverviewDashboard() {
   const dashboardRef = useRef<HTMLDivElement>(null)
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(ALL_METRICS)
+  const [department, setDepartment] = useState<string>('All')
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+
+  useEffect(() => {
+    if (department === 'All') {
+      setSelectedMetrics(ALL_METRICS)
+    } else if (department === 'Sales') {
+      setSelectedMetrics(['Total Sales Volume', 'Sales vs Engineering Chart'])
+    } else if (department === 'Engineering') {
+      setSelectedMetrics(['Engineering Tasks', 'Sales vs Engineering Chart'])
+    } else if (department.startsWith('Production')) {
+      setSelectedMetrics(['Production Tasks', 'Production vs Purchasing Chart'])
+    } else if (department === 'Quality') {
+      setSelectedMetrics(['Quality Claims'])
+    } else if (department === 'Purchasing') {
+      setSelectedMetrics(['Purchasing Tasks', 'Production vs Purchasing Chart'])
+    } else if (department === 'HR') {
+      setSelectedMetrics(['HR Absences'])
+    }
+  }, [department])
   const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'Executive Overview')
 
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -292,7 +334,50 @@ export default function ExecutiveOverviewDashboard() {
         </div>
       </DashboardHeader>
 
-      <div ref={dashboardRef} className="space-y-6">
+      <AdvancedFilters
+        isOpen={isFiltersOpen}
+        setIsOpen={setIsFiltersOpen}
+        onReset={() => {
+          setDepartment('All')
+          setSelectedMetrics(ALL_METRICS)
+        }}
+      >
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Department</Label>
+          <Select value={department} onValueChange={setDepartment}>
+            <SelectTrigger className="bg-white dark:bg-slate-950">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Sales">Sales</SelectItem>
+              <SelectItem value="Engineering">Engineering</SelectItem>
+              <SelectItem value="Production">Production</SelectItem>
+              <SelectItem value="Production - Final Assembly">
+                Production - Final Assembly
+              </SelectItem>
+              <SelectItem value="Production - Paint">Production - Paint</SelectItem>
+              <SelectItem value="Production - Sub Assembly">Production - Sub Assembly</SelectItem>
+              <SelectItem value="Production - Warehouse">Production - Warehouse</SelectItem>
+              <SelectItem value="Production - Weld Shop">Production - Weld Shop</SelectItem>
+              <SelectItem value="Quality">Quality</SelectItem>
+              <SelectItem value="Purchasing">Purchasing</SelectItem>
+              <SelectItem value="HR">HR</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Metrics</Label>
+          <MultiSelect
+            options={ALL_METRICS}
+            selected={selectedMetrics}
+            onChange={setSelectedMetrics}
+            placeholder="Select metrics..."
+          />
+        </div>
+      </AdvancedFilters>
+
+      <div ref={dashboardRef} className="space-y-6 mt-4">
         {loading ? (
           <div className="flex h-64 items-center justify-center bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
             <Loader2 className="h-8 w-8 animate-spin text-indigo-500 dark:text-indigo-400" />
@@ -300,254 +385,270 @@ export default function ExecutiveOverviewDashboard() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Total Sales Volume
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    $
-                    {data?.totalSales.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                  <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mt-1">
-                    {data?.totalWos} Work Orders
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Engineering Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {data?.totalEngTasks}
-                  </div>
-                  <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-1">
-                    Created in period
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Production Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {data?.totalProdTasks}
-                  </div>
-                  <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mt-1">
-                    Created in period
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Purchasing Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {data?.totalPurchTasks}
-                  </div>
-                  <p className="text-sm font-medium text-rose-600 dark:text-rose-400 mt-1">
-                    Created in period
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Quality Claims
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {data?.totalQualityClaims}
-                  </div>
-                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mt-1">
-                    Reported in period
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    HR Absences
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {data?.totalHrAbsences}
-                  </div>
-                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mt-1">
-                    Recorded in period
-                  </p>
-                </CardContent>
-              </Card>
+              {selectedMetrics.includes('Total Sales Volume') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Total Sales Volume
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                      $
+                      {data?.totalSales.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                    <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mt-1">
+                      {data?.totalWos} Work Orders
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              {selectedMetrics.includes('Engineering Tasks') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Engineering Tasks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                      {data?.totalEngTasks}
+                    </div>
+                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-1">
+                      Created in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              {selectedMetrics.includes('Production Tasks') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Production Tasks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                      {data?.totalProdTasks}
+                    </div>
+                    <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mt-1">
+                      Created in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              {selectedMetrics.includes('Purchasing Tasks') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Purchasing Tasks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                      {data?.totalPurchTasks}
+                    </div>
+                    <p className="text-sm font-medium text-rose-600 dark:text-rose-400 mt-1">
+                      Created in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              {selectedMetrics.includes('Quality Claims') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Quality Claims
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                      {data?.totalQualityClaims}
+                    </div>
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mt-1">
+                      Reported in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              {selectedMetrics.includes('HR Absences') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      HR Absences
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                      {data?.totalHrAbsences}
+                    </div>
+                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mt-1">
+                      Recorded in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
-                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
-                    Sales Volume vs Engineering Demand
-                  </CardTitle>
-                  <CardDescription className="dark:text-slate-400">
-                    Correlation between revenue ($) and volume of engineering tasks
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6 h-[340px]">
-                  {data?.chartData?.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        salesVolume: { label: 'Sales ($)', color: '#10b981' },
-                        engTasks: { label: 'Eng Tasks', color: '#6366f1' },
-                      }}
-                      className="h-full w-full"
-                    >
-                      <ComposedChart
-                        data={data.chartData}
-                        margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+              {selectedMetrics.includes('Sales vs Engineering Chart') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                  <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
+                      Sales Volume vs Engineering Demand
+                    </CardTitle>
+                    <CardDescription className="dark:text-slate-400">
+                      Correlation between revenue ($) and volume of engineering tasks
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6 h-[340px]">
+                    {data?.chartData?.length > 0 ? (
+                      <ChartContainer
+                        config={{
+                          salesVolume: { label: 'Sales ($)', color: '#10b981' },
+                          engTasks: { label: 'Eng Tasks', color: '#6366f1' },
+                        }}
+                        className="h-full w-full"
                       >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#f1f5f9"
-                          className="dark:stroke-slate-800"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          yAxisId="left"
-                          orientation="left"
-                          stroke="#10b981"
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(v) => `$${v}`}
-                        />
-                        <YAxis
-                          yAxisId="right"
-                          orientation="right"
-                          stroke="#6366f1"
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Legend
-                          iconType="circle"
-                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                        />
-                        <Bar
-                          yAxisId="left"
-                          dataKey="salesVolume"
-                          fill="#10b981"
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={40}
-                        />
-                        <Line
-                          yAxisId="right"
-                          type="monotone"
-                          dataKey="engTasks"
-                          stroke="#6366f1"
-                          strokeWidth={3}
-                          dot={{ r: 4, strokeWidth: 2 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </ComposedChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
-                      No data available for this period
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <ComposedChart
+                          data={data.chartData}
+                          margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#f1f5f9"
+                            className="dark:stroke-slate-800"
+                          />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            yAxisId="left"
+                            orientation="left"
+                            stroke="#10b981"
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(v) => `$${v}`}
+                          />
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="#6366f1"
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Legend
+                            iconType="circle"
+                            wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                          />
+                          <Bar
+                            yAxisId="left"
+                            dataKey="salesVolume"
+                            fill="#10b981"
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={40}
+                          />
+                          <Line
+                            yAxisId="right"
+                            type="monotone"
+                            dataKey="engTasks"
+                            stroke="#6366f1"
+                            strokeWidth={3}
+                            dot={{ r: 4, strokeWidth: 2 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </ComposedChart>
+                      </ChartContainer>
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                        No data available for this period
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
-                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
-                    Production vs Purchasing Demand
-                  </CardTitle>
-                  <CardDescription className="dark:text-slate-400">
-                    Comparison of tasks created over time
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6 h-[340px]">
-                  {data?.chartData?.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        prodTasks: { label: 'Prod Tasks', color: '#f59e0b' },
-                        purchTasks: { label: 'Purch Tasks', color: '#f43f5e' },
-                      }}
-                      className="h-full w-full"
-                    >
-                      <LineChart
-                        data={data.chartData}
-                        margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+              {selectedMetrics.includes('Production vs Purchasing Chart') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                  <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
+                      Production vs Purchasing Demand
+                    </CardTitle>
+                    <CardDescription className="dark:text-slate-400">
+                      Comparison of tasks created over time
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6 h-[340px]">
+                    {data?.chartData?.length > 0 ? (
+                      <ChartContainer
+                        config={{
+                          prodTasks: { label: 'Prod Tasks', color: '#f59e0b' },
+                          purchTasks: { label: 'Purch Tasks', color: '#f43f5e' },
+                        }}
+                        className="h-full w-full"
                       >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#f1f5f9"
-                          className="dark:stroke-slate-800"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Legend
-                          iconType="circle"
-                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="prodTasks"
-                          stroke="#f59e0b"
-                          strokeWidth={3}
-                          dot={{ r: 4, strokeWidth: 2 }}
-                          activeDot={{ r: 6 }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="purchTasks"
-                          stroke="#f43f5e"
-                          strokeWidth={3}
-                          dot={{ r: 4, strokeWidth: 2 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
-                      No data available for this period
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <LineChart
+                          data={data.chartData}
+                          margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#f1f5f9"
+                            className="dark:stroke-slate-800"
+                          />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Legend
+                            iconType="circle"
+                            wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="prodTasks"
+                            stroke="#f59e0b"
+                            strokeWidth={3}
+                            dot={{ r: 4, strokeWidth: 2 }}
+                            activeDot={{ r: 6 }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="purchTasks"
+                            stroke="#f43f5e"
+                            strokeWidth={3}
+                            dot={{ r: 4, strokeWidth: 2 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ChartContainer>
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                        No data available for this period
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </>
         )}

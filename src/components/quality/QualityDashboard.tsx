@@ -28,6 +28,14 @@ import {
   FilterX,
   CalendarIcon,
 } from 'lucide-react'
+import { MultiSelect } from '@/components/MultiSelect'
+
+const ALL_METRICS = [
+  'Total Warranty Claims',
+  'Total Late Card Pulls',
+  'Monthly Rate',
+  'Occurrences Trend',
+]
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
@@ -47,6 +55,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 export function QualityDashboard() {
   const dashboardRef = useRef<HTMLDivElement>(null)
   const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'Quality Dashboard')
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(ALL_METRICS)
 
   const [date, setDate] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subMonths(new Date(), 6),
@@ -201,6 +210,7 @@ export function QualityDashboard() {
     setShowWarranty(true)
     setShowLateCard(true)
     setSelectedSupervisor('all')
+    setSelectedMetrics(ALL_METRICS)
   }
 
   return (
@@ -257,6 +267,15 @@ export function QualityDashboard() {
             </Label>
           </div>
         </div>
+        <div>
+          <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Metrics</Label>
+          <MultiSelect
+            options={ALL_METRICS}
+            selected={selectedMetrics}
+            onChange={setSelectedMetrics}
+            placeholder="Select metrics..."
+          />
+        </div>
       </AdvancedFilters>
 
       <div ref={dashboardRef} className="space-y-6">
@@ -267,133 +286,144 @@ export function QualityDashboard() {
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-3">
-              <Card
-                className={cn(
-                  'bg-white dark:bg-slate-950 transition-all duration-200 border-slate-200 dark:border-slate-800',
-                  showWarranty ? 'opacity-100' : 'opacity-50 grayscale',
-                )}
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Total Warranty Claims
-                  </CardTitle>
-                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <ShieldAlert className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {showWarranty ? totalClaims : '-'}
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Records in period
-                  </p>
-                </CardContent>
-              </Card>
+              {selectedMetrics.includes('Total Warranty Claims') && (
+                <Card
+                  className={cn(
+                    'bg-white dark:bg-slate-950 transition-all duration-200 border-slate-200 dark:border-slate-800',
+                    showWarranty ? 'opacity-100' : 'opacity-50 grayscale',
+                  )}
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Total Warranty Claims
+                    </CardTitle>
+                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <ShieldAlert className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      {showWarranty ? totalClaims : '-'}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Records in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card
-                className={cn(
-                  'bg-white dark:bg-slate-950 transition-all duration-200 border-slate-200 dark:border-slate-800',
-                  showLateCard ? 'opacity-100' : 'opacity-50 grayscale',
-                )}
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Total Late Card Pulls
-                  </CardTitle>
-                  <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                    <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {showLateCard ? totalPulls : '-'}
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Occurrences in period
-                  </p>
-                </CardContent>
-              </Card>
+              {selectedMetrics.includes('Total Late Card Pulls') && (
+                <Card
+                  className={cn(
+                    'bg-white dark:bg-slate-950 transition-all duration-200 border-slate-200 dark:border-slate-800',
+                    showLateCard ? 'opacity-100' : 'opacity-50 grayscale',
+                  )}
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Total Late Card Pulls
+                    </CardTitle>
+                    <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                      <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      {showLateCard ? totalPulls : '-'}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Occurrences in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Monthly Rate
-                  </CardTitle>
-                  <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {avgOccurrences}
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Average occurrences per month
-                  </p>
-                </CardContent>
-              </Card>
+              {selectedMetrics.includes('Monthly Rate') && (
+                <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Monthly Rate
+                    </CardTitle>
+                    <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      {avgOccurrences}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Average occurrences per month
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
-            <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-slate-800 dark:text-slate-200">
-                  Occurrences Trend
-                </CardTitle>
-                <CardDescription>
-                  Evolution of Warranty Claims and Late Card Pulls over time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={activeChartConfig} className="h-[350px] w-full">
-                  <BarChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#e2e8f0"
-                      className="dark:stroke-slate-800"
-                    />
-                    <XAxis
-                      dataKey="month"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={12}
-                      fontSize={12}
-                      tick={{ fill: '#64748b' }}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={12}
-                      fontSize={12}
-                      tick={{ fill: '#64748b' }}
-                      allowDecimals={false}
-                    />
-                    <ChartTooltip
-                      content={<ChartTooltipContent />}
-                      cursor={{ fill: 'rgba(226, 232, 240, 0.4)' }}
-                    />
-                    <ChartLegend content={<ChartLegendContent />} />
-                    {showWarranty && (
-                      <Bar
-                        dataKey="claims"
-                        fill="var(--color-claims)"
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={40}
+            {selectedMetrics.includes('Occurrences Trend') && (
+              <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-slate-800 dark:text-slate-200">
+                    Occurrences Trend
+                  </CardTitle>
+                  <CardDescription>
+                    Evolution of Warranty Claims and Late Card Pulls over time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={activeChartConfig} className="h-[350px] w-full">
+                    <BarChart
+                      data={chartData}
+                      margin={{ top: 20, right: 20, left: -20, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#e2e8f0"
+                        className="dark:stroke-slate-800"
                       />
-                    )}
-                    {showLateCard && (
-                      <Bar
-                        dataKey="pulls"
-                        fill="var(--color-pulls)"
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={40}
+                      <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={12}
+                        fontSize={12}
+                        tick={{ fill: '#64748b' }}
                       />
-                    )}
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={12}
+                        fontSize={12}
+                        tick={{ fill: '#64748b' }}
+                        allowDecimals={false}
+                      />
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
+                        cursor={{ fill: 'rgba(226, 232, 240, 0.4)' }}
+                      />
+                      <ChartLegend content={<ChartLegendContent />} />
+                      {showWarranty && (
+                        <Bar
+                          dataKey="claims"
+                          fill="var(--color-claims)"
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={40}
+                        />
+                      )}
+                      {showLateCard && (
+                        <Bar
+                          dataKey="pulls"
+                          fill="var(--color-pulls)"
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={40}
+                        />
+                      )}
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </div>

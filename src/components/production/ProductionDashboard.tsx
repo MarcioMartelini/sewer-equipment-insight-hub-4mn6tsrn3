@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { DashboardHeader } from '@/components/shared/DashboardHeader'
 import { useDashboardExport } from '@/hooks/use-dashboard-export'
 import { ProductionFiltersPanel } from './ProductionFiltersPanel'
+import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
+import { MultiSelect } from '@/components/MultiSelect'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import {
@@ -21,8 +24,19 @@ import { supabase } from '@/lib/supabase/client'
 import { format, subDays, parseISO } from 'date-fns'
 import { Loader2, Settings, Hammer, Zap, AlertTriangle } from 'lucide-react'
 
+const ALL_METRICS = [
+  'Total Tasks',
+  'Completed Tasks',
+  'Delayed Tasks',
+  'Parked Tasks',
+  'Task Status Distribution',
+  'Task Creation Trend',
+]
+
 export function ProductionDashboard() {
   const dashboardRef = useRef<HTMLDivElement>(null)
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(ALL_METRICS)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'Production Dashboard')
 
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -47,6 +61,7 @@ export function ProductionDashboard() {
   }
 
   const resetFilters = () => {
+    setSelectedMetrics(ALL_METRICS)
     setFilters({
       salesperson: 'all',
       division: 'all',
@@ -159,6 +174,18 @@ export function ProductionDashboard() {
         resetFilters={resetFilters}
       />
 
+      <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Metrics</Label>
+          <MultiSelect
+            options={ALL_METRICS}
+            selected={selectedMetrics}
+            onChange={setSelectedMetrics}
+            placeholder="Select metrics..."
+          />
+        </div>
+      </AdvancedFilters>
+
       <div ref={dashboardRef} className="space-y-6">
         {loading ? (
           <div className="flex h-64 items-center justify-center bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
@@ -166,181 +193,193 @@ export function ProductionDashboard() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Total Tasks
-                  </CardTitle>
-                  <Settings className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {data?.totalTasks}
-                  </div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
-                    Created in period
-                  </p>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {selectedMetrics.includes('Total Tasks') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Total Tasks
+                    </CardTitle>
+                    <Settings className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                      {data?.totalTasks}
+                    </div>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
+                      Created in period
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Completed Tasks
-                  </CardTitle>
-                  <Zap className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                    {data?.completedTasks}
-                  </div>
-                  <p className="text-sm font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-1">
-                    Successfully finished
-                  </p>
-                </CardContent>
-              </Card>
+              {selectedMetrics.includes('Completed Tasks') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Completed Tasks
+                    </CardTitle>
+                    <Zap className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                      {data?.completedTasks}
+                    </div>
+                    <p className="text-sm font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                      Successfully finished
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Delayed Tasks
-                  </CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-rose-500 dark:text-rose-400" />
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-rose-600 dark:text-rose-400">
-                    {data?.delayedTasks}
-                  </div>
-                  <p className="text-sm font-medium text-rose-600/70 dark:text-rose-400/70 mt-1">
-                    Behind schedule
-                  </p>
-                </CardContent>
-              </Card>
+              {selectedMetrics.includes('Delayed Tasks') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Delayed Tasks
+                    </CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-rose-500 dark:text-rose-400" />
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-rose-600 dark:text-rose-400">
+                      {data?.delayedTasks}
+                    </div>
+                    <p className="text-sm font-medium text-rose-600/70 dark:text-rose-400/70 mt-1">
+                      Behind schedule
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
-                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    Parked Tasks
-                  </CardTitle>
-                  <Hammer className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
-                    {data?.parkedTasks}
-                  </div>
-                  <p className="text-sm font-medium text-amber-600/70 dark:text-amber-400/70 mt-1">
-                    Currently on hold
-                  </p>
-                </CardContent>
-              </Card>
+              {selectedMetrics.includes('Parked Tasks') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow dark:bg-slate-950">
+                  <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      Parked Tasks
+                    </CardTitle>
+                    <Hammer className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+                      {data?.parkedTasks}
+                    </div>
+                    <p className="text-sm font-medium text-amber-600/70 dark:text-amber-400/70 mt-1">
+                      Currently on hold
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
-                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
-                    Task Status Distribution
-                  </CardTitle>
-                  <CardDescription className="dark:text-slate-400">
-                    Current status breakdown of production tasks
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6 h-[340px] flex items-center justify-center">
-                  {data?.statusData?.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        tasks: { label: 'Tasks', color: '#3b82f6' },
-                      }}
-                      className="h-full w-full"
-                    >
-                      <PieChart>
-                        <Pie
-                          data={data.statusData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={80}
-                          outerRadius={120}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          {data.statusData.map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Legend
-                          layout="vertical"
-                          verticalAlign="middle"
-                          align="right"
-                          wrapperStyle={{ fontSize: '12px' }}
-                        />
-                      </PieChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="text-sm text-slate-400 dark:text-slate-500">
-                      No data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
-                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
-                    Task Creation Trend
-                  </CardTitle>
-                  <CardDescription className="dark:text-slate-400">
-                    Volume of new production tasks created over time
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6 h-[340px]">
-                  {data?.trendData?.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        tasks: { label: 'Tasks', color: '#8b5cf6' },
-                      }}
-                      className="h-full w-full"
-                    >
-                      <LineChart
-                        data={data.trendData}
-                        margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+              {selectedMetrics.includes('Task Status Distribution') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                  <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
+                      Task Status Distribution
+                    </CardTitle>
+                    <CardDescription className="dark:text-slate-400">
+                      Current status breakdown of production tasks
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6 h-[340px] flex items-center justify-center">
+                    {data?.statusData?.length > 0 ? (
+                      <ChartContainer
+                        config={{
+                          tasks: { label: 'Tasks', color: '#3b82f6' },
+                        }}
+                        className="h-full w-full"
                       >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#f1f5f9"
-                          className="dark:stroke-slate-800"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line
-                          type="monotone"
-                          dataKey="tasks"
-                          stroke="#8b5cf6"
-                          strokeWidth={3}
-                          dot={{ r: 4 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
-                      No data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <PieChart>
+                          <Pie
+                            data={data.statusData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={80}
+                            outerRadius={120}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {data.statusData.map((entry: any, index: number) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Legend
+                            layout="vertical"
+                            verticalAlign="middle"
+                            align="right"
+                            wrapperStyle={{ fontSize: '12px' }}
+                          />
+                        </PieChart>
+                      </ChartContainer>
+                    ) : (
+                      <div className="text-sm text-slate-400 dark:text-slate-500">
+                        No data available
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedMetrics.includes('Task Creation Trend') && (
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                  <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
+                      Task Creation Trend
+                    </CardTitle>
+                    <CardDescription className="dark:text-slate-400">
+                      Volume of new production tasks created over time
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6 h-[340px]">
+                    {data?.trendData?.length > 0 ? (
+                      <ChartContainer
+                        config={{
+                          tasks: { label: 'Tasks', color: '#8b5cf6' },
+                        }}
+                        className="h-full w-full"
+                      >
+                        <LineChart
+                          data={data.trendData}
+                          margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#f1f5f9"
+                            className="dark:stroke-slate-800"
+                          />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Line
+                            type="monotone"
+                            dataKey="tasks"
+                            stroke="#8b5cf6"
+                            strokeWidth={3}
+                            dot={{ r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ChartContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                        No data available
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </>
         )}

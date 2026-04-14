@@ -18,10 +18,14 @@ import { DepartmentTasks } from '@/components/tasks/DepartmentTasks'
 import { DashboardHeader } from '@/components/shared/DashboardHeader'
 import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
 import { useDashboardExport } from '@/hooks/use-dashboard-export'
+import { MultiSelect } from '@/components/MultiSelect'
+
+const ALL_METRICS = ['KPIs', 'Charts', 'Delayed Table']
 
 export default function PurchasingDashboard() {
   const dashboardRef = useRef<HTMLDivElement>(null)
   const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'Purchasing Dashboard')
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(ALL_METRICS)
 
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subDays(new Date(), 30),
@@ -79,6 +83,7 @@ export default function PurchasingDashboard() {
   const resetFilters = () => {
     setFilters({ status: 'all', componentType: 'all', woNumber: '' })
     setDateRange({ from: subDays(new Date(), 30), to: new Date() })
+    setSelectedMetrics(ALL_METRICS)
   }
 
   const filteredComponents = useMemo(() => {
@@ -167,16 +172,31 @@ export default function PurchasingDashboard() {
             className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100"
           />
         </div>
+        <div>
+          <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Metrics</Label>
+          <MultiSelect
+            options={ALL_METRICS}
+            selected={selectedMetrics}
+            onChange={setSelectedMetrics}
+            placeholder="Select metrics..."
+          />
+        </div>
       </AdvancedFilters>
 
       <TabsContent value="overview" className="space-y-6 mt-0" ref={dashboardRef}>
-        <PurchasingKPIs
-          components={filteredComponents}
-          expedites={filteredExpedites}
-          loading={loading}
-        />
-        <PurchasingCharts components={filteredComponents} loading={loading} />
-        <PurchasingDelayedTable components={filteredComponents} loading={loading} />
+        {selectedMetrics.includes('KPIs') && (
+          <PurchasingKPIs
+            components={filteredComponents}
+            expedites={filteredExpedites}
+            loading={loading}
+          />
+        )}
+        {selectedMetrics.includes('Charts') && (
+          <PurchasingCharts components={filteredComponents} loading={loading} />
+        )}
+        {selectedMetrics.includes('Delayed Table') && (
+          <PurchasingDelayedTable components={filteredComponents} loading={loading} />
+        )}
       </TabsContent>
 
       <TabsContent value="tasks" className="mt-0">

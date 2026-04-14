@@ -61,6 +61,24 @@ import { cn } from '@/lib/utils'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
 import html2canvas from 'html2canvas'
+import { MultiSelect } from '@/components/MultiSelect'
+
+const ALL_METRICS = [
+  'Gross Revenue',
+  'Total Quotes',
+  'Total WOs',
+  'Conversion Rate',
+  'Avg Profit Margin',
+  'Avg Sales Cycle',
+  'Customer LTV',
+  'Avg Purchase Value',
+  'Total Purchases',
+  'Revenue Over Time',
+  'Work Orders by Salesperson',
+  'Machine Family Distribution',
+  'Profit Margin Trend',
+  'Top 10 Salespersons',
+]
 
 const COLORS = [
   '#4f46e5',
@@ -76,6 +94,7 @@ const COLORS = [
 ]
 
 export default function SalesDashboard() {
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(ALL_METRICS)
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subDays(new Date(), 30),
     to: new Date(),
@@ -173,6 +192,7 @@ export default function SalesDashboard() {
       woNumber: '',
       metric: 'all',
     })
+    setSelectedMetrics(ALL_METRICS)
   }
 
   const uniqueSalespersons = useMemo(
@@ -846,29 +866,13 @@ export default function SalesDashboard() {
               />
             </div>
             <div>
-              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                Métrica (Metric)
-              </Label>
-              <Select
-                value={filters.metric}
-                onValueChange={(v) => setFilters((f) => ({ ...f, metric: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Metrics" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Metrics</SelectItem>
-                  <SelectItem value="gross_revenue">Gross Revenue</SelectItem>
-                  <SelectItem value="total_quotes">Total Quotes</SelectItem>
-                  <SelectItem value="total_wos">Total WOs</SelectItem>
-                  <SelectItem value="conversion_rate">Conversion Rate</SelectItem>
-                  <SelectItem value="avg_profit_margin">Avg Profit Margin</SelectItem>
-                  <SelectItem value="avg_sales_cycle">Avg Sales Cycle</SelectItem>
-                  <SelectItem value="customer_ltv">Customer LTV</SelectItem>
-                  <SelectItem value="avg_purchase_value">Avg Purchase Value</SelectItem>
-                  <SelectItem value="total_purchases">Total Purchases</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Metrics</Label>
+              <MultiSelect
+                options={ALL_METRICS}
+                selected={selectedMetrics}
+                onChange={setSelectedMetrics}
+                placeholder="Select metrics..."
+              />
             </div>
           </div>
         </CollapsibleContent>
@@ -876,7 +880,7 @@ export default function SalesDashboard() {
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {(filters.metric === 'all' || filters.metric === 'gross_revenue') && (
+        {selectedMetrics.includes('Gross Revenue') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -896,7 +900,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'total_quotes') && (
+        {selectedMetrics.includes('Total Quotes') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -912,7 +916,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'total_wos') && (
+        {selectedMetrics.includes('Total WOs') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -928,7 +932,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'conversion_rate') && (
+        {selectedMetrics.includes('Conversion Rate') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -944,7 +948,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'avg_profit_margin') && (
+        {selectedMetrics.includes('Avg Profit Margin') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -960,7 +964,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'avg_sales_cycle') && (
+        {selectedMetrics.includes('Avg Sales Cycle') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -977,7 +981,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'customer_ltv') && (
+        {selectedMetrics.includes('Customer LTV') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -997,7 +1001,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'avg_purchase_value') && (
+        {selectedMetrics.includes('Avg Purchase Value') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -1017,7 +1021,7 @@ export default function SalesDashboard() {
           </Card>
         )}
 
-        {(filters.metric === 'all' || filters.metric === 'total_purchases') && (
+        {selectedMetrics.includes('Total Purchases') && (
           <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -1036,257 +1040,276 @@ export default function SalesDashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
-              Revenue Over Time
-            </CardTitle>
-            <CardDescription>Gross revenue generated across the selected period</CardDescription>
-          </CardHeader>
-          <CardContent id="chart-revenue">
-            {revenueTrend.length > 0 ? (
-              <ChartContainer config={lineConfig} className="h-[300px] w-full">
-                <LineChart data={revenueTrend} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#e2e8f0"
-                    className="dark:stroke-slate-800"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={10}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                  />
-                  <YAxis
-                    tickFormatter={(value) =>
-                      `${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
-                    }
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                    width={60}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#4f46e5"
-                    strokeWidth={3}
-                    dot={{ r: 3, fill: '#4f46e5' }}
-                    activeDot={{ r: 6, fill: '#4f46e5' }}
-                  />
-                </LineChart>
-              </ChartContainer>
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
-                No data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
-              Work Orders by Salesperson
-            </CardTitle>
-            <CardDescription>Number of WOs generated per salesperson</CardDescription>
-          </CardHeader>
-          <CardContent id="chart-wos">
-            {wosBySpData.length > 0 ? (
-              <ChartContainer config={barConfig} className="h-[300px] w-full">
-                <BarChart data={wosBySpData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#e2e8f0"
-                    className="dark:stroke-slate-800"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={10}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="wos" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
-                No data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
-              Machine Family Distribution
-            </CardTitle>
-            <CardDescription>Share of work orders by product family</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center" id="chart-family">
-            {familyData.length > 0 ? (
-              <ChartContainer config={pieConfig} className="h-[300px] w-full">
-                <PieChart>
-                  <Pie
-                    data={familyData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={2}
+        {selectedMetrics.includes('Revenue Over Time') && (
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+                Revenue Over Time
+              </CardTitle>
+              <CardDescription>Gross revenue generated across the selected period</CardDescription>
+            </CardHeader>
+            <CardContent id="chart-revenue">
+              {revenueTrend.length > 0 ? (
+                <ChartContainer config={lineConfig} className="h-[300px] w-full">
+                  <LineChart
+                    data={revenueTrend}
+                    margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
                   >
-                    {familyData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ChartContainer>
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
-                No data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e2e8f0"
+                      className="dark:stroke-slate-800"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                    />
+                    <YAxis
+                      tickFormatter={(value) =>
+                        `${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
+                      }
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                      width={60}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#4f46e5"
+                      strokeWidth={3}
+                      dot={{ r: 3, fill: '#4f46e5' }}
+                      activeDot={{ r: 6, fill: '#4f46e5' }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
-              Profit Margin Trend
-            </CardTitle>
-            <CardDescription>Average profit margin over time</CardDescription>
-          </CardHeader>
-          <CardContent id="chart-margin">
-            {marginTrend.length > 0 ? (
-              <ChartContainer config={areaConfig} className="h-[300px] w-full">
-                <AreaChart data={marginTrend} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#e2e8f0"
-                    className="dark:stroke-slate-800"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={10}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                  />
-                  <YAxis
-                    tickFormatter={(value) => `${value}%`}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
-                    type="monotone"
-                    dataKey="margin"
-                    stroke="#10b981"
-                    fill="#10b981"
-                    fillOpacity={0.2}
-                  />
-                </AreaChart>
-              </ChartContainer>
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
-                No data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {selectedMetrics.includes('Work Orders by Salesperson') && (
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+                Work Orders by Salesperson
+              </CardTitle>
+              <CardDescription>Number of WOs generated per salesperson</CardDescription>
+            </CardHeader>
+            <CardContent id="chart-wos">
+              {wosBySpData.length > 0 ? (
+                <ChartContainer config={barConfig} className="h-[300px] w-full">
+                  <BarChart data={wosBySpData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e2e8f0"
+                      className="dark:stroke-slate-800"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="wos" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedMetrics.includes('Machine Family Distribution') && (
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+                Machine Family Distribution
+              </CardTitle>
+              <CardDescription>Share of work orders by product family</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center" id="chart-family">
+              {familyData.length > 0 ? (
+                <ChartContainer config={pieConfig} className="h-[300px] w-full">
+                  <PieChart>
+                    <Pie
+                      data={familyData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={2}
+                    >
+                      {familyData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ChartContainer>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedMetrics.includes('Profit Margin Trend') && (
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+                Profit Margin Trend
+              </CardTitle>
+              <CardDescription>Average profit margin over time</CardDescription>
+            </CardHeader>
+            <CardContent id="chart-margin">
+              {marginTrend.length > 0 ? (
+                <ChartContainer config={areaConfig} className="h-[300px] w-full">
+                  <AreaChart
+                    data={marginTrend}
+                    margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e2e8f0"
+                      className="dark:stroke-slate-800"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                    />
+                    <YAxis
+                      tickFormatter={(value) => `${value}%`}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="margin"
+                      stroke="#10b981"
+                      fill="#10b981"
+                      fillOpacity={0.2}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Summary Table */}
-      <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
-            Top 10 Salespersons
-          </CardTitle>
-          <CardDescription>Highest generating sales professionals by revenue</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
-              <TableRow>
-                <TableHead className="w-[80px] font-semibold text-slate-700 dark:text-slate-300">
-                  Rank
-                </TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Salesperson
-                </TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Division
-                </TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
-                  Area
-                </TableHead>
-                <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">
-                  Revenue
-                </TableHead>
-                <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">
-                  WOs
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topSalespersons.map((sp, index) => (
-                <TableRow key={sp.name} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                  <TableCell className="font-medium text-slate-500 dark:text-slate-400">
-                    #{index + 1}
-                  </TableCell>
-                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">
-                    {sp.name}
-                  </TableCell>
-                  <TableCell className="text-slate-600 dark:text-slate-400">
-                    {salespersons.find((s) => s.name === sp.name)?.department || '-'}
-                  </TableCell>
-                  <TableCell className="text-slate-600 dark:text-slate-400">
-                    {salespersons.find((s) => s.name === sp.name)?.region || '-'}
-                  </TableCell>
-                  <TableCell className="text-right text-emerald-600 dark:text-emerald-400 font-medium">
-                    $
-                    {sp.revenue.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </TableCell>
-                  <TableCell className="text-right text-slate-700 dark:text-slate-300 font-medium">
-                    {wosBySp[sp.name] || 0}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {topSalespersons.length === 0 && (
+      {selectedMetrics.includes('Top 10 Salespersons') && (
+        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+              Top 10 Salespersons
+            </CardTitle>
+            <CardDescription>Highest generating sales professionals by revenue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center text-slate-500 dark:text-slate-400 py-8"
-                  >
-                    No sales data available for the selected filters.
-                  </TableCell>
+                  <TableHead className="w-[80px] font-semibold text-slate-700 dark:text-slate-300">
+                    Rank
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Salesperson
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Division
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                    Area
+                  </TableHead>
+                  <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">
+                    Revenue
+                  </TableHead>
+                  <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">
+                    WOs
+                  </TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {topSalespersons.map((sp, index) => (
+                  <TableRow
+                    key={sp.name}
+                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                  >
+                    <TableCell className="font-medium text-slate-500 dark:text-slate-400">
+                      #{index + 1}
+                    </TableCell>
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                      {sp.name}
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {salespersons.find((s) => s.name === sp.name)?.department || '-'}
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {salespersons.find((s) => s.name === sp.name)?.region || '-'}
+                    </TableCell>
+                    <TableCell className="text-right text-emerald-600 dark:text-emerald-400 font-medium">
+                      $
+                      {sp.revenue.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right text-slate-700 dark:text-slate-300 font-medium">
+                      {wosBySp[sp.name] || 0}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {topSalespersons.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-slate-500 dark:text-slate-400 py-8"
+                    >
+                      No sales data available for the selected filters.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

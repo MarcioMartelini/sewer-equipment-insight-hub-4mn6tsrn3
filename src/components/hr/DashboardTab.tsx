@@ -6,9 +6,14 @@ import HRDashboardCharts from './HRDashboardCharts'
 import { DashboardHeader } from '@/components/shared/DashboardHeader'
 import { AdvancedFilters } from '@/components/shared/AdvancedFilters'
 import { useDashboardExport } from '@/hooks/use-dashboard-export'
+import { MultiSelect } from '@/components/MultiSelect'
+import { Label } from '@/components/ui/label'
+
+const ALL_METRICS = ['KPIs', 'Charts']
 
 export default function DashboardTab() {
   const dashboardRef = useRef<HTMLDivElement>(null)
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(ALL_METRICS)
   const { isExporting, handleExportPDF } = useDashboardExport(dashboardRef, 'HR Dashboard')
 
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -62,6 +67,7 @@ export default function DashboardTab() {
 
   const resetFilters = () => {
     setDateRange({ from: subDays(new Date(), 30), to: new Date() })
+    setSelectedMetrics(ALL_METRICS)
   }
 
   return (
@@ -76,8 +82,14 @@ export default function DashboardTab() {
       />
 
       <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
-        <div className="col-span-full text-sm text-slate-500 dark:text-slate-400">
-          More filters coming soon...
+        <div>
+          <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Metrics</Label>
+          <MultiSelect
+            options={ALL_METRICS}
+            selected={selectedMetrics}
+            onChange={setSelectedMetrics}
+            placeholder="Select metrics..."
+          />
         </div>
       </AdvancedFilters>
 
@@ -88,8 +100,8 @@ export default function DashboardTab() {
           </div>
         ) : (
           <>
-            <HRDashboardKPIs data={data} />
-            <HRDashboardCharts data={data} />
+            {selectedMetrics.includes('KPIs') && <HRDashboardKPIs data={data} />}
+            {selectedMetrics.includes('Charts') && <HRDashboardCharts data={data} />}
           </>
         )}
       </div>

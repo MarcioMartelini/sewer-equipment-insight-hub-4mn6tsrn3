@@ -34,6 +34,7 @@ import { DateRange } from 'react-day-picker'
 import { format, differenceInDays } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
+import { MultiSelect } from '@/components/MultiSelect'
 
 export default function GeneralMetricsDashboard() {
   const dashboardRef = useRef<HTMLDivElement>(null)
@@ -48,6 +49,7 @@ export default function GeneralMetricsDashboard() {
     to: new Date(),
   })
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>([])
 
   const [definitions, setDefinitions] = useState<MetricDefinition[]>([])
   const [tracking, setTracking] = useState<MetricTracking[]>([])
@@ -293,6 +295,15 @@ export default function GeneralMetricsDashboard() {
     return grouped
   }, [definitions, tracking, salesData, department])
 
+  const availableMetrics = useMemo(
+    () => Object.values(metricsData).map((m) => m.definition.metric_name),
+    [metricsData],
+  )
+
+  useEffect(() => {
+    setSelectedMetrics(availableMetrics)
+  }, [department, availableMetrics.length])
+
   const formatValue = (value: number, type: string | null, unit: string | null) => {
     let formatted = value.toLocaleString('en-US', { maximumFractionDigits: 2 })
     if (type === 'financial' || unit === '$') return `$${formatted}`
@@ -307,6 +318,7 @@ export default function GeneralMetricsDashboard() {
       from: new Date(new Date().setDate(new Date().getDate() - 30)),
       to: new Date(),
     })
+    setSelectedMetrics(availableMetrics)
   }
 
   return (
@@ -336,6 +348,15 @@ export default function GeneralMetricsDashboard() {
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <Label className="text-xs text-slate-500 mb-1">Metrics</Label>
+          <MultiSelect
+            options={availableMetrics}
+            selected={selectedMetrics}
+            onChange={setSelectedMetrics}
+            placeholder="Select metrics..."
+          />
+        </div>
       </AdvancedFilters>
 
       <div ref={dashboardRef} className="space-y-6">
@@ -345,87 +366,93 @@ export default function GeneralMetricsDashboard() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {Object.values(metricsData).map((metric) => (
-              <Card
-                key={metric.definition.id}
-                className="bg-white shadow-sm border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
-              >
-                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardDescription className="font-semibold text-indigo-600 mb-1 uppercase tracking-wider text-xs">
-                        {metric.definition.department}
-                      </CardDescription>
-                      <CardTitle className="text-lg text-slate-800 font-bold">
-                        {metric.definition.metric_name}
-                      </CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="flex items-end justify-between mb-6">
-                    <div className="text-3xl font-black text-slate-900 tracking-tight">
-                      {formatValue(
-                        metric.latestValue,
-                        metric.definition.metric_type,
-                        metric.definition.unit,
-                      )}
-                    </div>
-                    <div
-                      className={cn(
-                        'flex items-center text-sm font-bold px-2 py-1 rounded-full',
-                        metric.trend === 'up'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : metric.trend === 'down'
-                            ? 'bg-rose-100 text-rose-700'
-                            : 'bg-slate-100 text-slate-700',
-                      )}
-                    >
-                      {metric.trend === 'up' && <TrendingUp className="w-4 h-4 mr-1" />}
-                      {metric.trend === 'down' && <TrendingDown className="w-4 h-4 mr-1" />}
-                      {metric.trend === 'neutral' && <Minus className="w-4 h-4 mr-1" />}
-                      {Math.abs(metric.change).toFixed(1)}%
-                    </div>
-                  </div>
-
-                  <div className="h-[100px] w-full mt-4 -ml-2">
-                    {metric.data.length > 0 ? (
-                      <ChartContainer
-                        config={{
-                          value: { label: metric.definition.metric_name, color: '#4f46e5' },
-                        }}
-                        className="h-full w-full"
-                      >
-                        <LineChart data={metric.data}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis dataKey="date" hide />
-                          <YAxis
-                            hide
-                            domain={[
-                              'dataMin - (dataMax - dataMin) * 0.1',
-                              'dataMax + (dataMax - dataMin) * 0.1',
-                            ]}
-                          />
-                          <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                          <Line
-                            type="monotone"
-                            dataKey="value"
-                            stroke="#4f46e5"
-                            strokeWidth={3}
-                            dot={false}
-                            activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 2 }}
-                          />
-                        </LineChart>
-                      </ChartContainer>
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-sm text-slate-400">
-                        No trend data
+            {Object.values(metricsData)
+              .filter((metric) => selectedMetrics.includes(metric.definition.metric_name))
+              .map((metric) => (
+                <Card
+                  key={metric.definition.id}
+                  className="bg-white shadow-sm border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
+                >
+                  <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardDescription className="font-semibold text-indigo-600 mb-1 uppercase tracking-wider text-xs">
+                          {metric.definition.department}
+                        </CardDescription>
+                        <CardTitle className="text-lg text-slate-800 font-bold">
+                          {metric.definition.metric_name}
+                        </CardTitle>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="flex items-end justify-between mb-6">
+                      <div className="text-3xl font-black text-slate-900 tracking-tight">
+                        {formatValue(
+                          metric.latestValue,
+                          metric.definition.metric_type,
+                          metric.definition.unit,
+                        )}
+                      </div>
+                      <div
+                        className={cn(
+                          'flex items-center text-sm font-bold px-2 py-1 rounded-full',
+                          metric.trend === 'up'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : metric.trend === 'down'
+                              ? 'bg-rose-100 text-rose-700'
+                              : 'bg-slate-100 text-slate-700',
+                        )}
+                      >
+                        {metric.trend === 'up' && <TrendingUp className="w-4 h-4 mr-1" />}
+                        {metric.trend === 'down' && <TrendingDown className="w-4 h-4 mr-1" />}
+                        {metric.trend === 'neutral' && <Minus className="w-4 h-4 mr-1" />}
+                        {Math.abs(metric.change).toFixed(1)}%
+                      </div>
+                    </div>
+
+                    <div className="h-[100px] w-full mt-4 -ml-2">
+                      {metric.data.length > 0 ? (
+                        <ChartContainer
+                          config={{
+                            value: { label: metric.definition.metric_name, color: '#4f46e5' },
+                          }}
+                          className="h-full w-full"
+                        >
+                          <LineChart data={metric.data}>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              vertical={false}
+                              stroke="#f1f5f9"
+                            />
+                            <XAxis dataKey="date" hide />
+                            <YAxis
+                              hide
+                              domain={[
+                                'dataMin - (dataMax - dataMin) * 0.1',
+                                'dataMax + (dataMax - dataMin) * 0.1',
+                              ]}
+                            />
+                            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                            <Line
+                              type="monotone"
+                              dataKey="value"
+                              stroke="#4f46e5"
+                              strokeWidth={3}
+                              dot={false}
+                              activeDot={{ r: 6, fill: '#4f46e5', stroke: '#fff', strokeWidth: 2 }}
+                            />
+                          </LineChart>
+                        </ChartContainer>
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-sm text-slate-400">
+                          No trend data
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             {Object.keys(metricsData).length === 0 && (
               <div className="col-span-full flex flex-col items-center justify-center p-16 bg-slate-50/80 rounded-xl border border-slate-200 border-dashed">
                 <LayoutDashboard className="w-12 h-12 text-slate-300 mb-4" />
