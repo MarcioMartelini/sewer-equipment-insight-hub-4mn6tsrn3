@@ -1,5 +1,6 @@
 {
   "_versions": {
-    "update-task-status": 6
+    "update-task-status": 6,
+    "export-database": 1
   }
 }

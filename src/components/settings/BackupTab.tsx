@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,18 +9,58 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Database, Download, RotateCcw } from 'lucide-react'
+import { Database, Download, RotateCcw, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase/client'
+import { format } from 'date-fns'
 
-const backups = [
+const initialBackups = [
   { id: '1', date: '2026-04-06 23:00', size: '24.5 MB', type: 'Automatic' },
   { id: '2', date: '2026-04-05 23:00', size: '24.2 MB', type: 'Automatic' },
   { id: '3', date: '2026-04-04 15:30', size: '23.8 MB', type: 'Manual' },
 ]
 
 export function BackupTab() {
-  const handleBackup = () => {
-    toast.success('Backup started successfully. You will be notified when complete.')
+  const [isExporting, setIsExporting] = useState(false)
+  const [backups, setBackups] = useState(initialBackups)
+
+  const handleBackup = async () => {
+    setIsExporting(true)
+    const toastId = toast.loading('Generating backup...')
+    try {
+      const { data, error } = await supabase.functions.invoke('export-database', {
+        method: 'POST',
+      })
+
+      if (error) throw error
+      if (data.error) throw new Error(data.error)
+
+      const jsonString = JSON.stringify(data, null, 2)
+      const blob = new Blob([jsonString], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `backup_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast.success('Backup generated and downloaded successfully!', { id: toastId })
+
+      const newBackup = {
+        id: Math.random().toString(36).substring(2, 9),
+        date: format(new Date(), 'yyyy-MM-dd HH:mm'),
+        size: `${(blob.size / 1024 / 1024).toFixed(2)} MB`,
+        type: 'Manual',
+      }
+      setBackups([newBackup, ...backups])
+    } catch (error: any) {
+      console.error('Backup error:', error)
+      toast.error(`Failed to generate backup: ${error.message || 'Unknown error'}`, { id: toastId })
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   const handleRestore = (id: string) => {
@@ -39,8 +80,17 @@ export function BackupTab() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleBackup} className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Download className="w-4 h-4 mr-2" /> Generate Backup Now
+          <Button
+            onClick={handleBackup}
+            disabled={isExporting}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isExporting ? 'Generating...' : 'Generate Backup Now'}
           </Button>
         </CardContent>
       </Card>
@@ -72,9 +122,15 @@ export function BackupTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => toast.info('Starting download...')}
+                      onClick={() => handleBackup()}
+                      disabled={isExporting}
                     >
-                      <Download className="w-4 h-4 mr-2" /> Download
+                      {isExporting ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4 mr-2" />
+                      )}
+                      Download
                     </Button>
                   </TableCell>
                 </TableRow>
