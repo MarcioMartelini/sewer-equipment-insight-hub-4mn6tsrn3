@@ -6,6 +6,9 @@ import GeneralMetricsDashboard from '@/components/general/GeneralMetricsDashboar
 import { ProductionDashboard } from '@/components/production/ProductionDashboard'
 import HighManagement from './HighManagement'
 import ExecutiveOverviewDashboard from '@/components/executive/ExecutiveOverviewDashboard'
+import { QualityDashboard } from '@/components/quality/QualityDashboard'
+import PurchasingDashboard from '@/components/purchasing/PurchasingDashboard'
+import HRDashboard from '@/components/hr/DashboardTab'
 
 export default function Index() {
   return (
@@ -55,6 +58,24 @@ export default function Index() {
             Production
           </TabsTrigger>
           <TabsTrigger
+            value="quality"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            Quality
+          </TabsTrigger>
+          <TabsTrigger
+            value="purchasing"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            Purchasing
+          </TabsTrigger>
+          <TabsTrigger
+            value="hr"
+            className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            HR
+          </TabsTrigger>
+          <TabsTrigger
             value="general"
             className="py-2 px-4 rounded-full data-[state=active]:bg-indigo-600 data-[state=active]:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
           >
@@ -75,6 +96,15 @@ export default function Index() {
         </TabsContent>
         <TabsContent value="production" className="mt-0 focus-visible:outline-none">
           <ProductionDashboard />
+        </TabsContent>
+        <TabsContent value="quality" className="mt-0 focus-visible:outline-none">
+          <QualityDashboard />
+        </TabsContent>
+        <TabsContent value="purchasing" className="mt-0 focus-visible:outline-none">
+          <PurchasingDashboard />
+        </TabsContent>
+        <TabsContent value="hr" className="mt-0 focus-visible:outline-none">
+          <HRDashboard />
         </TabsContent>
         <TabsContent value="general" className="mt-0 focus-visible:outline-none">
           <GeneralMetricsDashboard />

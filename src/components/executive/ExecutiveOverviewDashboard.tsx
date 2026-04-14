@@ -83,11 +83,30 @@ export default function ExecutiveOverviewDashboard() {
         purchQuery = purchQuery.lt('created_at', nextDay.toISOString())
       }
 
-      const [woRes, engRes, prodRes, purchRes] = await Promise.all([
+      let qualityQuery = supabase.from('warranty_claims').select('created_at, status')
+      if (dateRange.from)
+        qualityQuery = qualityQuery.gte('created_at', dateRange.from.toISOString())
+      if (dateRange.to) {
+        const nextDay = new Date(dateRange.to)
+        nextDay.setDate(nextDay.getDate() + 1)
+        qualityQuery = qualityQuery.lt('created_at', nextDay.toISOString())
+      }
+
+      let hrQuery = supabase.from('hr_absences').select('created_at')
+      if (dateRange.from) hrQuery = hrQuery.gte('created_at', dateRange.from.toISOString())
+      if (dateRange.to) {
+        const nextDay = new Date(dateRange.to)
+        nextDay.setDate(nextDay.getDate() + 1)
+        hrQuery = hrQuery.lt('created_at', nextDay.toISOString())
+      }
+
+      const [woRes, engRes, prodRes, purchRes, qualityRes, hrRes] = await Promise.all([
         woQuery,
         engQuery,
         prodQuery,
         purchQuery,
+        qualityQuery,
+        hrQuery,
       ])
 
       const groupedByDate: Record<string, any> = {}
@@ -113,6 +132,8 @@ export default function ExecutiveOverviewDashboard() {
       processEntries(engRes.data || [], 'engTasks')
       processEntries(prodRes.data || [], 'prodTasks')
       processEntries(purchRes.data || [], 'purchTasks')
+      processEntries(qualityRes.data || [], 'qualityClaims')
+      processEntries(hrRes.data || [], 'hrAbsences')
 
       const chartData = Object.values(groupedByDate).sort((a, b) => a.date.localeCompare(b.date))
 
@@ -122,6 +143,8 @@ export default function ExecutiveOverviewDashboard() {
         totalEngTasks: engRes.data?.length || 0,
         totalProdTasks: prodRes.data?.length || 0,
         totalPurchTasks: purchRes.data?.length || 0,
+        totalQualityClaims: qualityRes.data?.length || 0,
+        totalHrAbsences: hrRes.data?.length || 0,
         chartData,
       })
     } catch (error) {
@@ -276,7 +299,7 @@ export default function ExecutiveOverviewDashboard() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
                   <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
@@ -338,6 +361,36 @@ export default function ExecutiveOverviewDashboard() {
                   </div>
                   <p className="text-sm font-medium text-rose-600 dark:text-rose-400 mt-1">
                     Created in period
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    Quality Claims
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {data?.totalQualityClaims}
+                  </div>
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mt-1">
+                    Reported in period
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    HR Absences
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {data?.totalHrAbsences}
+                  </div>
+                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mt-1">
+                    Recorded in period
                   </p>
                 </CardContent>
               </Card>
