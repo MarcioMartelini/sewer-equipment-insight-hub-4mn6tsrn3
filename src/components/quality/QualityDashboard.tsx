@@ -220,9 +220,11 @@ export function QualityDashboard() {
         onReset={handleClearFilters}
       >
         <div>
-          <Label className="text-xs text-slate-500 mb-1">Supervisor (Late Cards)</Label>
+          <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+            Supervisor (Late Cards)
+          </Label>
           <Select value={selectedSupervisor} onValueChange={setSelectedSupervisor}>
-            <SelectTrigger className="bg-white">
+            <SelectTrigger className="bg-white dark:bg-slate-950">
               <SelectValue placeholder="Todos os Supervisores" />
             </SelectTrigger>
             <SelectContent>
@@ -238,13 +240,19 @@ export function QualityDashboard() {
         <div className="flex flex-col justify-center gap-4 pt-2">
           <div className="flex items-center space-x-2">
             <Switch id="show-warranty" checked={showWarranty} onCheckedChange={setShowWarranty} />
-            <Label htmlFor="show-warranty" className="text-sm font-medium cursor-pointer">
+            <Label
+              htmlFor="show-warranty"
+              className="text-sm font-medium cursor-pointer text-slate-900 dark:text-slate-100"
+            >
               Warranty Claims
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <Switch id="show-late-card" checked={showLateCard} onCheckedChange={setShowLateCard} />
-            <Label htmlFor="show-late-card" className="text-sm font-medium cursor-pointer">
+            <Label
+              htmlFor="show-late-card"
+              className="text-sm font-medium cursor-pointer text-slate-900 dark:text-slate-100"
+            >
               Late Card Pulls
             </Label>
           </div>
@@ -254,72 +262,84 @@ export function QualityDashboard() {
       <div ref={dashboardRef} className="space-y-6">
         {loading ? (
           <div className="h-[400px] flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
           </div>
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-3">
               <Card
                 className={cn(
-                  'bg-white transition-all duration-200 border-slate-200',
+                  'bg-white dark:bg-slate-950 transition-all duration-200 border-slate-200 dark:border-slate-800',
                   showWarranty ? 'opacity-100' : 'opacity-50 grayscale',
                 )}
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700">
+                  <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Total Warranty Claims
                   </CardTitle>
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <ShieldAlert className="h-4 w-4 text-blue-600" />
+                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <ShieldAlert className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {showWarranty ? totalClaims : '-'}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">Registros no período</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Registros no período
+                  </p>
                 </CardContent>
               </Card>
 
               <Card
                 className={cn(
-                  'bg-white transition-all duration-200 border-slate-200',
+                  'bg-white dark:bg-slate-950 transition-all duration-200 border-slate-200 dark:border-slate-800',
                   showLateCard ? 'opacity-100' : 'opacity-50 grayscale',
                 )}
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700">
+                  <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Total Late Card Pulls
                   </CardTitle>
-                  <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
-                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                  <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                    <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {showLateCard ? totalPulls : '-'}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">Ocorrências no período</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Ocorrências no período
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white border-slate-200 shadow-sm">
+              <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-700">Taxa Mensal</CardTitle>
-                  <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <Activity className="h-4 w-4 text-emerald-600" />
+                  <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Taxa Mensal
+                  </CardTitle>
+                  <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">{avgOccurrences}</div>
-                  <p className="text-xs text-slate-500 mt-1">Ocorrências em média por mês</p>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    {avgOccurrences}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Ocorrências em média por mês
+                  </p>
                 </CardContent>
               </Card>
             </div>
 
-            <Card className="bg-white border-slate-200 shadow-sm">
+            <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-slate-800">Tendência de Ocorrências</CardTitle>
+                <CardTitle className="text-slate-800 dark:text-slate-200">
+                  Tendência de Ocorrências
+                </CardTitle>
                 <CardDescription>
                   Evolução de Warranty Claims e Late Card Pulls ao longo do tempo
                 </CardDescription>
@@ -327,7 +347,12 @@ export function QualityDashboard() {
               <CardContent>
                 <ChartContainer config={activeChartConfig} className="h-[350px] w-full">
                   <BarChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e2e8f0"
+                      className="dark:stroke-slate-800"
+                    />
                     <XAxis
                       dataKey="month"
                       tickLine={false}

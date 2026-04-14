@@ -7,12 +7,16 @@ export default function Quality() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="print:hidden">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Quality</h2>
-        <p className="text-slate-500">Management of Warranties and Component Pulls</p>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          Quality
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400">
+          Management of Warranties and Component Pulls
+        </p>
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 md:w-[600px] print:hidden">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 md:w-[600px] print:hidden bg-slate-100 dark:bg-slate-800">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="warranty">Warranty Claims</TabsTrigger>
           <TabsTrigger value="late_card">Late Card Pulls</TabsTrigger>

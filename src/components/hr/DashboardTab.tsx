@@ -76,12 +76,14 @@ export default function DashboardTab() {
       />
 
       <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
-        <div className="col-span-full text-sm text-slate-500">More filters coming soon...</div>
+        <div className="col-span-full text-sm text-slate-500 dark:text-slate-400">
+          More filters coming soon...
+        </div>
       </AdvancedFilters>
 
       <div ref={dashboardRef} className="space-y-6 bg-transparent">
         {loading ? (
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
+          <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400">
             Loading indicators...
           </div>
         ) : (

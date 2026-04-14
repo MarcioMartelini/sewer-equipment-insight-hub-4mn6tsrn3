@@ -566,7 +566,7 @@ export default function Sales() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400 dark:text-slate-500" />
       </div>
     )
   }
@@ -574,12 +574,16 @@ export default function Sales() {
   return (
     <div className="flex flex-col h-full gap-6 max-w-[1600px] mx-auto w-full animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Module</h1>
-        <p className="text-slate-500 text-sm mt-1">Manage quotes and track approved work orders.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          Sales Module
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          Manage quotes and track approved work orders.
+        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex w-full overflow-x-auto bg-slate-100 h-auto p-1">
+        <TabsList className="flex w-full overflow-x-auto bg-slate-100 dark:bg-slate-800 h-auto p-1">
           <TabsTrigger value="dashboard" className="flex-1 whitespace-nowrap min-w-max px-4">
             Executive Dashboard
           </TabsTrigger>
@@ -603,7 +607,9 @@ export default function Sales() {
         <TabsContent value="quotes" className="mt-6">
           <div className="flex flex-col gap-4 mb-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-slate-800">Quotes Registry</h2>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                Quotes Registry
+              </h2>
               <Button
                 className="bg-indigo-600 hover:bg-indigo-700 text-white"
                 onClick={() => openQuoteModal()}
@@ -612,9 +618,9 @@ export default function Sales() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
               <div className="xl:col-span-2">
-                <Label className="text-xs text-slate-500 mb-1">Search</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Search</Label>
                 <Input
                   placeholder="Quote ID or Customer Name..."
                   value={searchQuery}
@@ -623,7 +629,7 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Status</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Status</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Statuses" />
@@ -639,7 +645,9 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Salesperson</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  Salesperson
+                </Label>
                 <Select value={salespersonFilter} onValueChange={setSalespersonFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Salespeople" />
@@ -656,7 +664,7 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Customer</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Customer</Label>
                 <Select value={customerFilter} onValueChange={setCustomerFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Customers" />
@@ -673,12 +681,12 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Date From</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Date From</Label>
                 <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Date To</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Date To</Label>
                 <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
               </div>
             </div>
@@ -918,7 +926,7 @@ export default function Sales() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-full sm:w-1/2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                        className="w-full sm:w-1/2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
                         onClick={handleConvertClick}
                       >
                         Convert to WO
@@ -946,7 +954,7 @@ export default function Sales() {
               </DialogHeader>
               <div className="flex-1 overflow-y-auto mt-4 border rounded-md">
                 <Table>
-                  <TableHeader className="bg-slate-50 sticky top-0">
+                  <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0">
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>City</TableHead>
@@ -973,7 +981,10 @@ export default function Sales() {
                     ))}
                     {customersList.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-slate-500 py-8">
+                        <TableCell
+                          colSpan={4}
+                          className="text-center text-slate-500 dark:text-slate-400 py-8"
+                        >
                           No customers found.
                         </TableCell>
                       </TableRow>
@@ -991,7 +1002,7 @@ export default function Sales() {
               </DialogHeader>
               <div className="flex-1 overflow-y-auto mt-4 border rounded-md">
                 <Table>
-                  <TableHeader className="bg-slate-50 sticky top-0">
+                  <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0">
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Department</TableHead>
@@ -1016,7 +1027,10 @@ export default function Sales() {
                     ))}
                     {salespersonsList.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center text-slate-500 py-8">
+                        <TableCell
+                          colSpan={3}
+                          className="text-center text-slate-500 dark:text-slate-400 py-8"
+                        >
                           No salespersons found.
                         </TableCell>
                       </TableRow>
@@ -1058,7 +1072,7 @@ export default function Sales() {
               <DialogHeader>
                 <DialogTitle>Delete Quote</DialogTitle>
               </DialogHeader>
-              <p className="text-sm text-slate-500 my-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400 my-4">
                 Are you sure you want to delete this quote? This action cannot be undone.
               </p>
               <div className="flex justify-end gap-3 mt-4">
@@ -1072,36 +1086,36 @@ export default function Sales() {
             </DialogContent>
           </Dialog>
 
-          <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden flex flex-col">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50">
+                <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Quote ID
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Customer
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Salesperson
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Product Family
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Machine Model
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Price
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Status
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Date Created
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -1109,29 +1123,39 @@ export default function Sales() {
                 <TableBody>
                   {paginatedQuotes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center text-slate-500 h-24">
+                      <TableCell
+                        colSpan={9}
+                        className="text-center text-slate-500 dark:text-slate-400 h-24"
+                      >
                         No quotes found matching your filters.
                       </TableCell>
                     </TableRow>
                   ) : (
                     paginatedQuotes.map((quote) => (
-                      <TableRow key={quote.id} className="group hover:bg-slate-50/50">
-                        <TableCell className="font-medium text-slate-900">
+                      <TableRow
+                        key={quote.id}
+                        className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                      >
+                        <TableCell className="font-medium text-slate-900 dark:text-slate-100">
                           {quote.quote_number}
                         </TableCell>
-                        <TableCell className="text-slate-700">{quote.customer_name}</TableCell>
-                        <TableCell className="text-slate-600">{quote.salesperson || '-'}</TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-slate-700 dark:text-slate-300">
+                          {quote.customer_name}
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
+                          {quote.salesperson || '-'}
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
                           {quote.product_family || '-'}
                         </TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-slate-600 dark:text-slate-400">
                           {quote.machine_model || '-'}
                         </TableCell>
-                        <TableCell className="text-right font-medium text-slate-700">
+                        <TableCell className="text-right font-medium text-slate-700 dark:text-slate-300">
                           ${Number(quote.quote_value || 0).toLocaleString()}
                         </TableCell>
                         <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                        <TableCell className="text-slate-500 text-sm">
+                        <TableCell className="text-slate-500 dark:text-slate-400 text-sm">
                           {quote.created_at
                             ? format(new Date(quote.created_at), 'MM/dd/yyyy')
                             : '-'}
@@ -1162,7 +1186,7 @@ export default function Sales() {
                               )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
                                 onClick={() => setDeleteQuoteId(quote.id)}
                               >
                                 <Trash2 className="w-4 h-4 mr-2" /> Delete
@@ -1179,8 +1203,8 @@ export default function Sales() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
-                <div className="text-sm text-slate-500">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                <div className="text-sm text-slate-500 dark:text-slate-400">
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
                   {Math.min(currentPage * itemsPerPage, filteredQuotes.length)} of{' '}
                   {filteredQuotes.length} quotes
@@ -1194,7 +1218,7 @@ export default function Sales() {
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                   </Button>
-                  <div className="text-sm font-medium text-slate-700 px-2">
+                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300 px-2">
                     Page {currentPage} of {totalPages}
                   </div>
                   <Button
@@ -1214,12 +1238,14 @@ export default function Sales() {
         <TabsContent value="work-orders" className="mt-6">
           <div className="flex flex-col gap-4 mb-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-slate-800">Work Orders List</h2>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                Work Orders List
+              </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
               <div className="xl:col-span-2">
-                <Label className="text-xs text-slate-500 mb-1">Search</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Search</Label>
                 <Input
                   placeholder="WO Number or Customer Name..."
                   value={searchWoQuery}
@@ -1228,7 +1254,7 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Status</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Status</Label>
                 <Select value={statusWoFilter} onValueChange={setStatusWoFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Statuses" />
@@ -1245,7 +1271,7 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Customer</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Customer</Label>
                 <Select value={customerWoFilter} onValueChange={setCustomerWoFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Customers" />
@@ -1262,7 +1288,9 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Product Family</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  Product Family
+                </Label>
                 <Select value={productFamilyWoFilter} onValueChange={setProductFamilyWoFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Families" />
@@ -1279,7 +1307,9 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Date From (Created)</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  Date From (Created)
+                </Label>
                 <Input
                   type="date"
                   value={dateFromWo}
@@ -1288,42 +1318,44 @@ export default function Sales() {
               </div>
 
               <div>
-                <Label className="text-xs text-slate-500 mb-1">Date To (Created)</Label>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  Date To (Created)
+                </Label>
                 <Input type="date" value={dateToWo} onChange={(e) => setDateToWo(e.target.value)} />
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden flex flex-col">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50">
+                <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       WO Number
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Customer
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Product Family
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Machine Model
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Price
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Status
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Date Created
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Exp. Completion
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-slate-700 whitespace-nowrap">
+                    <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -1331,27 +1363,39 @@ export default function Sales() {
                 <TableBody>
                   {paginatedWorkOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center text-slate-500 h-24">
+                      <TableCell
+                        colSpan={9}
+                        className="text-center text-slate-500 dark:text-slate-400 h-24"
+                      >
                         No work orders found matching your filters.
                       </TableCell>
                     </TableRow>
                   ) : (
                     paginatedWorkOrders.map((wo) => (
-                      <TableRow key={wo.id} className="group hover:bg-slate-50/50">
-                        <TableCell className="font-medium text-slate-900">
+                      <TableRow
+                        key={wo.id}
+                        className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                      >
+                        <TableCell className="font-medium text-slate-900 dark:text-slate-100">
                           {wo.woNumber || wo.id}
                         </TableCell>
-                        <TableCell className="text-slate-700">{wo.customer}</TableCell>
-                        <TableCell className="text-slate-600">{wo.productType || '-'}</TableCell>
-                        <TableCell className="text-slate-600">{wo.machineModel || '-'}</TableCell>
-                        <TableCell className="text-right font-medium text-slate-700">
+                        <TableCell className="text-slate-700 dark:text-slate-300">
+                          {wo.customer}
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
+                          {wo.productType || '-'}
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
+                          {wo.machineModel || '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-slate-700 dark:text-slate-300">
                           ${Number(wo.price || 0).toLocaleString()}
                         </TableCell>
                         <TableCell>{getWoStatusBadge(wo.status)}</TableCell>
-                        <TableCell className="text-slate-500 text-sm">
+                        <TableCell className="text-slate-500 dark:text-slate-400 text-sm">
                           {wo.createdAt ? format(new Date(wo.createdAt), 'MM/dd/yyyy') : '-'}
                         </TableCell>
-                        <TableCell className="text-slate-500 text-sm">
+                        <TableCell className="text-slate-500 dark:text-slate-400 text-sm">
                           {wo.expectedCompletionDate
                             ? format(new Date(wo.expectedCompletionDate), 'MM/dd/yyyy')
                             : '-'}
@@ -1374,7 +1418,7 @@ export default function Sales() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
                                 onClick={() => setDeleteWoId(wo.id)}
                               >
                                 <Trash2 className="w-4 h-4 mr-2" /> Delete
@@ -1390,8 +1434,8 @@ export default function Sales() {
             </div>
 
             {totalWoPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
-                <div className="text-sm text-slate-500">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                <div className="text-sm text-slate-500 dark:text-slate-400">
                   Showing {(currentWoPage - 1) * itemsPerPage + 1} to{' '}
                   {Math.min(currentWoPage * itemsPerPage, filteredWorkOrders.length)} of{' '}
                   {filteredWorkOrders.length} work orders
@@ -1405,7 +1449,7 @@ export default function Sales() {
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                   </Button>
-                  <div className="text-sm font-medium text-slate-700 px-2">
+                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300 px-2">
                     Page {currentWoPage} of {totalWoPages}
                   </div>
                   <Button
@@ -1556,7 +1600,7 @@ export default function Sales() {
             <DialogHeader>
               <DialogTitle>Delete Work Order</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-slate-500 my-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400 my-4">
               Are you sure you want to delete this Work Order? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3 mt-4">

@@ -162,7 +162,7 @@ export function ProductionDashboard() {
       <div ref={dashboardRef} className="space-y-6">
         {loading ? (
           <div className="flex h-64 items-center justify-center bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-500 dark:text-indigo-400" />
           </div>
         ) : (
           <>
@@ -172,7 +172,7 @@ export function ProductionDashboard() {
                   <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Total Tasks
                   </CardTitle>
-                  <Settings className="h-4 w-4 text-indigo-500" />
+                  <Settings className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
@@ -189,7 +189,7 @@ export function ProductionDashboard() {
                   <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Completed Tasks
                   </CardTitle>
-                  <Zap className="h-4 w-4 text-emerald-500" />
+                  <Zap className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -206,7 +206,7 @@ export function ProductionDashboard() {
                   <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Delayed Tasks
                   </CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-rose-500" />
+                  <AlertTriangle className="h-4 w-4 text-rose-500 dark:text-rose-400" />
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="text-3xl font-bold text-rose-600 dark:text-rose-400">
@@ -223,7 +223,7 @@ export function ProductionDashboard() {
                   <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Parked Tasks
                   </CardTitle>
-                  <Hammer className="h-4 w-4 text-amber-500" />
+                  <Hammer className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
@@ -242,7 +242,9 @@ export function ProductionDashboard() {
                   <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
                     Task Status Distribution
                   </CardTitle>
-                  <CardDescription>Current status breakdown of production tasks</CardDescription>
+                  <CardDescription className="dark:text-slate-400">
+                    Current status breakdown of production tasks
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6 h-[340px] flex items-center justify-center">
                   {data?.statusData?.length > 0 ? (
@@ -276,7 +278,9 @@ export function ProductionDashboard() {
                       </PieChart>
                     </ChartContainer>
                   ) : (
-                    <div className="text-sm text-slate-400">No data available</div>
+                    <div className="text-sm text-slate-400 dark:text-slate-500">
+                      No data available
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -286,7 +290,7 @@ export function ProductionDashboard() {
                   <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
                     Task Creation Trend
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="dark:text-slate-400">
                     Volume of new production tasks created over time
                   </CardDescription>
                 </CardHeader>
@@ -331,7 +335,7 @@ export function ProductionDashboard() {
                       </LineChart>
                     </ChartContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                    <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
                       No data available
                     </div>
                   )}

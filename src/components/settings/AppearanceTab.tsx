@@ -16,10 +16,12 @@ export function AppearanceTab() {
           preferência do sistema.
         </p>
       </div>
-      <Card className="border-slate-200 dark:border-slate-800">
+      <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
         <CardHeader>
           <CardTitle className="text-slate-800 dark:text-slate-200">Tema</CardTitle>
-          <CardDescription>Selecione o tema de sua preferência para a interface.</CardDescription>
+          <CardDescription className="dark:text-slate-400">
+            Selecione o tema de sua preferência para a interface.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <RadioGroup
@@ -33,7 +35,7 @@ export function AppearanceTab() {
             >
               <RadioGroupItem value="light" id="light" className="sr-only" />
               <Sun className="mb-3 h-6 w-6 text-slate-600 dark:text-slate-400" />
-              <span className="font-medium">Claro</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">Claro</span>
             </Label>
             <Label
               htmlFor="dark"
@@ -41,7 +43,7 @@ export function AppearanceTab() {
             >
               <RadioGroupItem value="dark" id="dark" className="sr-only" />
               <Moon className="mb-3 h-6 w-6 text-slate-600 dark:text-slate-400" />
-              <span className="font-medium">Escuro</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">Escuro</span>
             </Label>
             <Label
               htmlFor="system"
@@ -49,7 +51,7 @@ export function AppearanceTab() {
             >
               <RadioGroupItem value="system" id="system" className="sr-only" />
               <Monitor className="mb-3 h-6 w-6 text-slate-600 dark:text-slate-400" />
-              <span className="font-medium">Sistema</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">Sistema</span>
             </Label>
           </RadioGroup>
         </CardContent>

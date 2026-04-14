@@ -154,7 +154,7 @@ export default function ExecutiveOverviewDashboard() {
     const newPreset = {
       name: presetName,
       from: dateRange.from.toISOString(),
-      to: dateRange.to.toISOString(),
+      to: dateRange.totoISOString(),
     }
     const updated = [...presets, newPreset]
     setPresets(updated)
@@ -197,42 +197,42 @@ export default function ExecutiveOverviewDashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 border-dashed font-medium text-slate-700 bg-white"
+                className="h-9 border-dashed font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
               >
-                <Bookmark className="w-4 h-4 mr-2 text-indigo-500" />
+                <Bookmark className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
                 Filter Presets
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64 p-2">
-              <DropdownMenuLabel className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <DropdownMenuContent align="start" className="w-64 p-2 dark:bg-slate-950">
+              <DropdownMenuLabel className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Quick Filters
               </DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={() => applyQuickFilter('this_week')}
-                className="cursor-pointer rounded-md"
+                className="cursor-pointer rounded-md dark:hover:bg-slate-800"
               >
                 This Week
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => applyQuickFilter('this_month')}
-                className="cursor-pointer rounded-md"
+                className="cursor-pointer rounded-md dark:hover:bg-slate-800"
               >
                 This Month
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => applyQuickFilter('last_30_days')}
-                className="cursor-pointer rounded-md"
+                className="cursor-pointer rounded-md dark:hover:bg-slate-800"
               >
                 Last 30 Days
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuSeparator className="my-2 dark:border-slate-800" />
 
-              <DropdownMenuLabel className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <DropdownMenuLabel className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Saved Presets
               </DropdownMenuLabel>
               {presets.length === 0 && (
-                <div className="px-2 py-1.5 text-xs text-slate-500 italic">
+                <div className="px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400 italic">
                   No presets saved yet
                 </div>
               )}
@@ -240,20 +240,20 @@ export default function ExecutiveOverviewDashboard() {
                 <DropdownMenuItem
                   key={i}
                   onClick={() => applyPreset(p)}
-                  className="cursor-pointer rounded-md"
+                  className="cursor-pointer rounded-md dark:hover:bg-slate-800"
                 >
                   {p.name}
                 </DropdownMenuItem>
               ))}
 
-              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuSeparator className="my-2 dark:border-slate-800" />
 
               <div className="flex gap-2 items-center px-2 py-1">
                 <Input
                   placeholder="Name this preset..."
                   value={presetName}
                   onChange={(e) => setPresetName(e.target.value)}
-                  className="h-8 text-xs focus-visible:ring-1 focus-visible:ring-indigo-500"
+                  className="h-8 text-xs focus-visible:ring-1 focus-visible:ring-indigo-500 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                 />
                 <Button
                   size="sm"
@@ -271,73 +271,85 @@ export default function ExecutiveOverviewDashboard() {
 
       <div ref={dashboardRef} className="space-y-6">
         {loading ? (
-          <div className="flex h-64 items-center justify-center bg-white rounded-xl border border-slate-200">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          <div className="flex h-64 items-center justify-center bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-500 dark:text-indigo-400" />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="shadow-sm border-slate-200 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
-                  <CardTitle className="text-sm font-semibold text-slate-600">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Total Sales Volume
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
                     $
                     {data?.totalSales.toLocaleString('en-US', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </div>
-                  <p className="text-sm font-medium text-indigo-600 mt-1">
+                  <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mt-1">
                     {data?.totalWos} Work Orders
                   </p>
                 </CardContent>
               </Card>
-              <Card className="shadow-sm border-slate-200 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
-                  <CardTitle className="text-sm font-semibold text-slate-600">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Engineering Tasks
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900">{data?.totalEngTasks}</div>
-                  <p className="text-sm font-medium text-emerald-600 mt-1">Created in period</p>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {data?.totalEngTasks}
+                  </div>
+                  <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-1">
+                    Created in period
+                  </p>
                 </CardContent>
               </Card>
-              <Card className="shadow-sm border-slate-200 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
-                  <CardTitle className="text-sm font-semibold text-slate-600">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Production Tasks
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900">{data?.totalProdTasks}</div>
-                  <p className="text-sm font-medium text-amber-600 mt-1">Created in period</p>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {data?.totalProdTasks}
+                  </div>
+                  <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mt-1">
+                    Created in period
+                  </p>
                 </CardContent>
               </Card>
-              <Card className="shadow-sm border-slate-200 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
-                  <CardTitle className="text-sm font-semibold text-slate-600">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                  <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                     Purchasing Tasks
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="text-3xl font-bold text-slate-900">{data?.totalPurchTasks}</div>
-                  <p className="text-sm font-medium text-rose-600 mt-1">Created in period</p>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {data?.totalPurchTasks}
+                  </div>
+                  <p className="text-sm font-medium text-rose-600 dark:text-rose-400 mt-1">
+                    Created in period
+                  </p>
                 </CardContent>
               </Card>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-slate-200">
-                <CardHeader className="border-b border-slate-100 bg-slate-50/50">
-                  <CardTitle className="text-lg text-slate-800">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
                     Sales Volume vs Engineering Demand
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="dark:text-slate-400">
                     Correlation between revenue ($) and volume of engineering tasks
                   </CardDescription>
                 </CardHeader>
@@ -354,7 +366,12 @@ export default function ExecutiveOverviewDashboard() {
                         data={data.chartData}
                         margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#f1f5f9"
+                          className="dark:stroke-slate-800"
+                        />
                         <XAxis
                           dataKey="date"
                           tick={{ fill: '#64748b', fontSize: 12 }}
@@ -402,19 +419,21 @@ export default function ExecutiveOverviewDashboard() {
                       </ComposedChart>
                     </ChartContainer>
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400">
+                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
                       No data available for this period
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border-slate-200">
-                <CardHeader className="border-b border-slate-100 bg-slate-50/50">
-                  <CardTitle className="text-lg text-slate-800">
+              <Card className="shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <CardTitle className="text-lg text-slate-800 dark:text-slate-200">
                     Production vs Purchasing Demand
                   </CardTitle>
-                  <CardDescription>Comparison of tasks created over time</CardDescription>
+                  <CardDescription className="dark:text-slate-400">
+                    Comparison of tasks created over time
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6 h-[340px]">
                   {data?.chartData?.length > 0 ? (
@@ -429,7 +448,12 @@ export default function ExecutiveOverviewDashboard() {
                         data={data.chartData}
                         margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#f1f5f9"
+                          className="dark:stroke-slate-800"
+                        />
                         <XAxis
                           dataKey="date"
                           tick={{ fill: '#64748b', fontSize: 12 }}
@@ -465,7 +489,7 @@ export default function ExecutiveOverviewDashboard() {
                       </LineChart>
                     </ChartContainer>
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400">
+                    <div className="h-full w-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
                       No data available for this period
                     </div>
                   )}

@@ -280,7 +280,7 @@ export default function Layout() {
         </Sidebar>
 
         <SidebarInset className="flex flex-col flex-1 w-full min-w-0">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur px-4 sm:h-16 sm:px-6">
+          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b border-slate-200 dark:border-slate-800 bg-background/95 backdrop-blur px-4 sm:h-16 sm:px-6">
             <SidebarTrigger className="-ml-2" />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex items-center gap-2 font-semibold text-lg text-slate-800 dark:text-slate-200 capitalize">

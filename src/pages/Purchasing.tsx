@@ -16,24 +16,26 @@ export default function Purchasing() {
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Purchasing</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            Purchasing
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             Manage purchasing tasks, components, expedites, and performance.
           </p>
         </div>
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-400" />
           <Input
             placeholder="Filter by WO Number..."
             value={woFilter}
             onChange={(e) => setWoFilter(e.target.value)}
-            className="pl-9"
+            className="pl-9 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100"
           />
         </div>
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:w-[850px] mb-4 h-auto lg:h-10">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:w-[850px] mb-4 h-auto lg:h-10 bg-slate-100 dark:bg-slate-800">
           <TabsTrigger value="dashboard" className="py-2">
             Dashboard
           </TabsTrigger>

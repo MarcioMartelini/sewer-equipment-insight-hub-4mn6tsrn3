@@ -48,37 +48,37 @@ export default function Settings() {
         </TabsList>
 
         <TabsContent value="dashboard">
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
             <AdminDashboardTab />
           </div>
         </TabsContent>
 
         <TabsContent value="users">
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
             <UsersTab />
           </div>
         </TabsContent>
 
         <TabsContent value="permissions">
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
             <PermissionsTab />
           </div>
         </TabsContent>
 
         <TabsContent value="integrations">
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
             <IntegrationsTab />
           </div>
         </TabsContent>
 
         <TabsContent value="backup">
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
             <BackupTab />
           </div>
         </TabsContent>
 
         <TabsContent value="appearance">
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
             <AppearanceTab />
           </div>
         </TabsContent>

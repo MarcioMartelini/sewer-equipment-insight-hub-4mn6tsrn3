@@ -21,11 +21,13 @@ export default function Production() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Production</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          Production
+        </h1>
       </div>
 
       <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="mb-4 flex flex-wrap h-auto">
+        <TabsList className="mb-4 flex flex-wrap h-auto bg-slate-100 dark:bg-slate-800">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="tasks">Task Lists</TabsTrigger>
           <TabsTrigger value="kanban">Kanban Board</TabsTrigger>

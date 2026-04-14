@@ -114,7 +114,7 @@ export default function PurchasingDashboard() {
         onExport={handleExportPDF}
         isExporting={isExporting}
       >
-        <TabsList className="w-fit h-9 mt-2">
+        <TabsList className="w-fit h-9 mt-2 bg-slate-100 dark:bg-slate-800">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tasks">Task Schedule</TabsTrigger>
         </TabsList>
@@ -122,12 +122,12 @@ export default function PurchasingDashboard() {
 
       <AdvancedFilters isOpen={isFiltersOpen} setIsOpen={setIsFiltersOpen} onReset={resetFilters}>
         <div>
-          <Label className="text-xs text-slate-500 mb-1">Status</Label>
+          <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Status</Label>
           <Select
             value={filters.status}
             onValueChange={(v) => setFilters((f) => ({ ...f, status: v }))}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white dark:bg-slate-950">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
@@ -139,12 +139,12 @@ export default function PurchasingDashboard() {
           </Select>
         </div>
         <div>
-          <Label className="text-xs text-slate-500 mb-1">Component Type</Label>
+          <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Component Type</Label>
           <Select
             value={filters.componentType}
             onValueChange={(v) => setFilters((f) => ({ ...f, componentType: v }))}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white dark:bg-slate-950">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
@@ -159,11 +159,12 @@ export default function PurchasingDashboard() {
           </Select>
         </div>
         <div>
-          <Label className="text-xs text-slate-500 mb-1">WO Number</Label>
+          <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">WO Number</Label>
           <Input
             value={filters.woNumber}
             onChange={(e) => setFilters((f) => ({ ...f, woNumber: e.target.value }))}
             placeholder="Search WO..."
+            className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100"
           />
         </div>
       </AdvancedFilters>

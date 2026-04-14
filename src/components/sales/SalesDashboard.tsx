@@ -469,7 +469,7 @@ export default function SalesDashboard() {
       doc.text('Executive Summary', 14, 50)
 
       const formatMoney = (val: number) =>
-        `$${(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        `${(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
       const kpiData = [
         ['Gross Revenue', formatMoney(grossRevenue), 'Total Quotes', totalQuotes.toString()],
@@ -591,7 +591,7 @@ export default function SalesDashboard() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
       </div>
     )
   }
@@ -599,17 +599,21 @@ export default function SalesDashboard() {
   return (
     <div className="flex flex-col gap-6 animate-fade-in pb-8">
       {/* Header & Global Period Filter */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h2 className="text-xl font-semibold text-slate-800">Sales Dashboard</h2>
-          <p className="text-sm text-slate-500">Real-time commercial performance and insights</p>
+          <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
+            Sales Dashboard
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Real-time commercial performance and insights
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
             onClick={handleExportPDF}
             disabled={isExporting}
-            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+            className="text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 bg-white dark:bg-slate-950"
           >
             {isExporting ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -623,7 +627,7 @@ export default function SalesDashboard() {
               <Button
                 variant="outline"
                 className={cn(
-                  'w-[260px] justify-start text-left font-normal bg-white border-slate-200',
+                  'w-[260px] justify-start text-left font-normal bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800',
                   !dateRange.from && 'text-muted-foreground',
                 )}
               >
@@ -666,12 +670,14 @@ export default function SalesDashboard() {
       <Collapsible
         open={isFiltersOpen}
         onOpenChange={setIsFiltersOpen}
-        className="w-full bg-white p-4 rounded-lg border border-slate-200 shadow-sm"
+        className="w-full bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-indigo-600" />
-            <h3 className="text-base font-semibold text-slate-800">Advanced Filters</h3>
+            <Filter className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
+              Advanced Filters
+            </h3>
           </div>
           <div className="flex items-center gap-4">
             {isFiltersOpen && (
@@ -679,13 +685,17 @@ export default function SalesDashboard() {
                 variant="ghost"
                 size="sm"
                 onClick={resetFilters}
-                className="text-slate-500 hover:text-slate-700"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               >
                 Reset Filters
               </Button>
             )}
             <CollapsibleTrigger asChild>
-              <Button variant="outline" size="sm" className="w-9 p-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-9 p-0 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
+              >
                 {isFiltersOpen ? (
                   <ChevronUp className="h-4 w-4" />
                 ) : (
@@ -697,10 +707,10 @@ export default function SalesDashboard() {
           </div>
         </div>
 
-        <CollapsibleContent className="mt-4 border-t border-slate-100 pt-4">
+        <CollapsibleContent className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Salesperson</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Salesperson</Label>
               <Select
                 value={filters.salesperson}
                 onValueChange={(v) => setFilters((f) => ({ ...f, salesperson: v }))}
@@ -719,7 +729,7 @@ export default function SalesDashboard() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Division</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Division</Label>
               <Select
                 value={filters.division}
                 onValueChange={(v) => setFilters((f) => ({ ...f, division: v }))}
@@ -738,7 +748,7 @@ export default function SalesDashboard() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Area/Region</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Area/Region</Label>
               <Select
                 value={filters.area}
                 onValueChange={(v) => setFilters((f) => ({ ...f, area: v }))}
@@ -757,7 +767,7 @@ export default function SalesDashboard() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Customer</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Customer</Label>
               <Select
                 value={filters.customer}
                 onValueChange={(v) => setFilters((f) => ({ ...f, customer: v }))}
@@ -776,7 +786,9 @@ export default function SalesDashboard() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Machine Family</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                Machine Family
+              </Label>
               <Select
                 value={filters.machineFamily}
                 onValueChange={(v) => setFilters((f) => ({ ...f, machineFamily: v }))}
@@ -795,7 +807,9 @@ export default function SalesDashboard() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Machine Model</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                Machine Model
+              </Label>
               <Select
                 value={filters.machineModel}
                 onValueChange={(v) => setFilters((f) => ({ ...f, machineModel: v }))}
@@ -814,7 +828,9 @@ export default function SalesDashboard() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Quote Number</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                Quote Number
+              </Label>
               <Input
                 placeholder="Search Quote..."
                 value={filters.quoteNumber}
@@ -822,7 +838,7 @@ export default function SalesDashboard() {
               />
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">WO Number</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">WO Number</Label>
               <Input
                 placeholder="Search WO..."
                 value={filters.woNumber}
@@ -830,7 +846,9 @@ export default function SalesDashboard() {
               />
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1">Métrica (Metric)</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                Métrica (Metric)
+              </Label>
               <Select
                 value={filters.metric}
                 onValueChange={(v) => setFilters((f) => ({ ...f, metric: v }))}
@@ -859,13 +877,15 @@ export default function SalesDashboard() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {(filters.metric === 'all' || filters.metric === 'gross_revenue') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Gross Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-emerald-600" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Gross Revenue
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 $
                 {grossRevenue.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -877,78 +897,96 @@ export default function SalesDashboard() {
         )}
 
         {(filters.metric === 'all' || filters.metric === 'total_quotes') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Total Quotes</CardTitle>
-              <FileText className="h-4 w-4 text-indigo-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Total Quotes
+              </CardTitle>
+              <FileText className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{totalQuotes}</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {totalQuotes}
+              </div>
             </CardContent>
           </Card>
         )}
 
         {(filters.metric === 'all' || filters.metric === 'total_wos') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Total WOs</CardTitle>
-              <ClipboardList className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Total WOs
+              </CardTitle>
+              <ClipboardList className="h-4 w-4 text-blue-500 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{totalWOs}</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {totalWOs}
+              </div>
             </CardContent>
           </Card>
         )}
 
         {(filters.metric === 'all' || filters.metric === 'conversion_rate') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Conversion Rate</CardTitle>
-              <Percent className="h-4 w-4 text-amber-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Conversion Rate
+              </CardTitle>
+              <Percent className="h-4 w-4 text-amber-500 dark:text-amber-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{conversionRate.toFixed(1)}%</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {conversionRate.toFixed(1)}%
+              </div>
             </CardContent>
           </Card>
         )}
 
         {(filters.metric === 'all' || filters.metric === 'avg_profit_margin') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                 Avg Profit Margin
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-purple-500" />
+              <TrendingUp className="h-4 w-4 text-purple-500 dark:text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{avgProfitMargin.toFixed(1)}%</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {avgProfitMargin.toFixed(1)}%
+              </div>
             </CardContent>
           </Card>
         )}
 
         {(filters.metric === 'all' || filters.metric === 'avg_sales_cycle') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Avg Sales Cycle</CardTitle>
-              <Clock className="h-4 w-4 text-cyan-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Avg Sales Cycle
+              </CardTitle>
+              <Clock className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {avgSalesCycle.toFixed(1)}{' '}
-                <span className="text-sm font-normal text-slate-500">days</span>
+                <span className="text-sm font-normal text-slate-500 dark:text-slate-400">days</span>
               </div>
             </CardContent>
           </Card>
         )}
 
         {(filters.metric === 'all' || filters.metric === 'customer_ltv') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Customer LTV</CardTitle>
-              <Users className="h-4 w-4 text-rose-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Customer LTV
+              </CardTitle>
+              <Users className="h-4 w-4 text-rose-500 dark:text-rose-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 $
                 {clv.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -960,15 +998,15 @@ export default function SalesDashboard() {
         )}
 
         {(filters.metric === 'all' || filters.metric === 'avg_purchase_value') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                 Avg Purchase Value
               </CardTitle>
-              <ShoppingCart className="h-4 w-4 text-teal-500" />
+              <ShoppingCart className="h-4 w-4 text-teal-500 dark:text-teal-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 $
                 {avgPurchaseValue.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -980,13 +1018,17 @@ export default function SalesDashboard() {
         )}
 
         {(filters.metric === 'all' || filters.metric === 'total_purchases') && (
-          <Card className="bg-white shadow-sm border-slate-200">
+          <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Total Purchases</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Total Purchases
+              </CardTitle>
+              <ShoppingBag className="h-4 w-4 text-orange-500 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{numberOfPurchases}</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {numberOfPurchases}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -994,16 +1036,23 @@ export default function SalesDashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="bg-white shadow-sm border-slate-200">
+        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
           <CardHeader>
-            <CardTitle className="text-slate-800 text-lg">Revenue Over Time</CardTitle>
+            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+              Revenue Over Time
+            </CardTitle>
             <CardDescription>Gross revenue generated across the selected period</CardDescription>
           </CardHeader>
           <CardContent id="chart-revenue">
             {revenueTrend.length > 0 ? (
               <ChartContainer config={lineConfig} className="h-[300px] w-full">
                 <LineChart data={revenueTrend} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                    className="dark:stroke-slate-800"
+                  />
                   <XAxis
                     dataKey="date"
                     tickLine={false}
@@ -1013,7 +1062,7 @@ export default function SalesDashboard() {
                   />
                   <YAxis
                     tickFormatter={(value) =>
-                      `$${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
+                      `${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
                     }
                     axisLine={false}
                     tickLine={false}
@@ -1032,23 +1081,30 @@ export default function SalesDashboard() {
                 </LineChart>
               </ChartContainer>
             ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500">
+              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
                 No data available
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm border-slate-200">
+        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
           <CardHeader>
-            <CardTitle className="text-slate-800 text-lg">Work Orders by Salesperson</CardTitle>
+            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+              Work Orders by Salesperson
+            </CardTitle>
             <CardDescription>Number of WOs generated per salesperson</CardDescription>
           </CardHeader>
           <CardContent id="chart-wos">
             {wosBySpData.length > 0 ? (
               <ChartContainer config={barConfig} className="h-[300px] w-full">
                 <BarChart data={wosBySpData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                    className="dark:stroke-slate-800"
+                  />
                   <XAxis
                     dataKey="name"
                     tickLine={false}
@@ -1066,16 +1122,18 @@ export default function SalesDashboard() {
                 </BarChart>
               </ChartContainer>
             ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500">
+              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
                 No data available
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm border-slate-200">
+        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
           <CardHeader>
-            <CardTitle className="text-slate-800 text-lg">Machine Family Distribution</CardTitle>
+            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+              Machine Family Distribution
+            </CardTitle>
             <CardDescription>Share of work orders by product family</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center" id="chart-family">
@@ -1100,23 +1158,30 @@ export default function SalesDashboard() {
                 </PieChart>
               </ChartContainer>
             ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500">
+              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
                 No data available
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow-sm border-slate-200">
+        <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
           <CardHeader>
-            <CardTitle className="text-slate-800 text-lg">Profit Margin Trend</CardTitle>
+            <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+              Profit Margin Trend
+            </CardTitle>
             <CardDescription>Average profit margin over time</CardDescription>
           </CardHeader>
           <CardContent id="chart-margin">
             {marginTrend.length > 0 ? (
               <ChartContainer config={areaConfig} className="h-[300px] w-full">
                 <AreaChart data={marginTrend} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                    className="dark:stroke-slate-800"
+                  />
                   <XAxis
                     dataKey="date"
                     tickLine={false}
@@ -1141,7 +1206,7 @@ export default function SalesDashboard() {
                 </AreaChart>
               </ChartContainer>
             ) : (
-              <div className="flex h-[300px] items-center justify-center text-slate-500">
+              <div className="flex h-[300px] items-center justify-center text-slate-500 dark:text-slate-400">
                 No data available
               </div>
             )}
@@ -1150,49 +1215,70 @@ export default function SalesDashboard() {
       </div>
 
       {/* Summary Table */}
-      <Card className="bg-white shadow-sm border-slate-200">
+      <Card className="bg-white dark:bg-slate-950 shadow-sm border-slate-200 dark:border-slate-800">
         <CardHeader>
-          <CardTitle className="text-slate-800 text-lg">Top 10 Salespersons</CardTitle>
+          <CardTitle className="text-slate-800 dark:text-slate-200 text-lg">
+            Top 10 Salespersons
+          </CardTitle>
           <CardDescription>Highest generating sales professionals by revenue</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
               <TableRow>
-                <TableHead className="w-[80px] font-semibold text-slate-700">Rank</TableHead>
-                <TableHead className="font-semibold text-slate-700">Salesperson</TableHead>
-                <TableHead className="font-semibold text-slate-700">Division</TableHead>
-                <TableHead className="font-semibold text-slate-700">Area</TableHead>
-                <TableHead className="text-right font-semibold text-slate-700">Revenue</TableHead>
-                <TableHead className="text-right font-semibold text-slate-700">WOs</TableHead>
+                <TableHead className="w-[80px] font-semibold text-slate-700 dark:text-slate-300">
+                  Rank
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                  Salesperson
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                  Division
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">
+                  Area
+                </TableHead>
+                <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">
+                  Revenue
+                </TableHead>
+                <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-300">
+                  WOs
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {topSalespersons.map((sp, index) => (
-                <TableRow key={sp.name} className="hover:bg-slate-50/50">
-                  <TableCell className="font-medium text-slate-500">#{index + 1}</TableCell>
-                  <TableCell className="font-medium text-slate-900">{sp.name}</TableCell>
-                  <TableCell className="text-slate-600">
+                <TableRow key={sp.name} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                  <TableCell className="font-medium text-slate-500 dark:text-slate-400">
+                    #{index + 1}
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                    {sp.name}
+                  </TableCell>
+                  <TableCell className="text-slate-600 dark:text-slate-400">
                     {salespersons.find((s) => s.name === sp.name)?.department || '-'}
                   </TableCell>
-                  <TableCell className="text-slate-600">
+                  <TableCell className="text-slate-600 dark:text-slate-400">
                     {salespersons.find((s) => s.name === sp.name)?.region || '-'}
                   </TableCell>
-                  <TableCell className="text-right text-emerald-600 font-medium">
+                  <TableCell className="text-right text-emerald-600 dark:text-emerald-400 font-medium">
                     $
                     {sp.revenue.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </TableCell>
-                  <TableCell className="text-right text-slate-700 font-medium">
+                  <TableCell className="text-right text-slate-700 dark:text-slate-300 font-medium">
                     {wosBySp[sp.name] || 0}
                   </TableCell>
                 </TableRow>
               ))}
               {topSalespersons.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center text-slate-500 dark:text-slate-400 py-8"
+                  >
                     No sales data available for the selected filters.
                   </TableCell>
                 </TableRow>
