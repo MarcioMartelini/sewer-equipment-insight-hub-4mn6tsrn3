@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { DollarSign, Clock, Target, UserCheck } from 'lucide-react'
+import { DollarSign, Clock, Target, UserCheck, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Input } from '@/components/ui/input'
@@ -13,12 +13,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns'
 
 export default function ProductivityTab() {
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState('current_month')
   const [customDates, setCustomDates] = useState({ start: '', end: '' })
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [users, setUsers] = useState<any[]>([])
 
   const [settings, setSettings] = useState({
     monthly_contracted_hours: 160,
@@ -58,9 +67,12 @@ export default function ProductivityTab() {
       endDateStr = format(now, 'yyyy-MM-dd')
     }
 
+    const { data: uData } = await supabase.from('users').select('id, full_name').order('full_name')
+    if (uData) setUsers(uData)
+
     // 1. Fetch settings
     const { data: setts } = await supabase
-      .from('hr_settings' as any)
+      .from('hr_settings')
       .select('*')
       .eq('department', 'HR')
       .single()
@@ -81,7 +93,9 @@ export default function ProductivityTab() {
             wo.progress === 100 ||
             (wo.status && wo.status.toLowerCase().includes('conclu')) ||
             (wo.status && wo.status.toLowerCase().includes('finaliza')) ||
-            (wo.status && wo.status.toLowerCase().includes('complet')),
+            (wo.status && wo.status.toLowerCase().includes('complet')) ||
+            (wo.status && wo.status.toLowerCase().includes('finish')) ||
+            (wo.status && wo.status.toLowerCase().includes('done')),
         )
         .reduce((sum, wo) => sum + (Number(wo.price) || 0), 0) || 0
 
@@ -125,17 +139,49 @@ export default function ProductivityTab() {
 
     if (settings.id) {
       await supabase
-        .from('hr_settings' as any)
+        .from('hr_settings')
         .update({ monthly_contracted_hours: monthly, hours_per_day: daily })
         .eq('id', settings.id)
     } else {
       await supabase
-        .from('hr_settings' as any)
+        .from('hr_settings')
         .insert({ department: 'HR', monthly_contracted_hours: monthly, hours_per_day: daily })
     }
 
     toast({ title: 'Success', description: 'Settings updated successfully.' })
     fetchDashboardData()
+  }
+
+  const handleLogProductivity = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const employeeId = formData.get('employee_id') as string
+    const employee = users.find((u) => u.id === employeeId)
+
+    if (!employeeId || !employee) {
+      return toast({ title: 'Error', description: 'Select an employee.', variant: 'destructive' })
+    }
+
+    const labourHours = Number(formData.get('labour_hours'))
+    const productionValue = Number(formData.get('production_value'))
+    const ratio = labourHours > 0 ? productionValue / labourHours : 0
+
+    const payload = {
+      employee_id: employeeId,
+      employee_name: employee.full_name,
+      recorded_date: formData.get('recorded_date') as string,
+      labour_hours: labourHours,
+      production_value: productionValue,
+      productivity_ratio: ratio,
+    }
+
+    const { error } = await supabase.from('hr_productivity').insert(payload)
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' })
+    else {
+      toast({ title: 'Success', description: 'Productivity logged successfully.' })
+      setIsAddOpen(false)
+      fetchDashboardData()
+    }
   }
 
   return (
@@ -148,6 +194,70 @@ export default function ProductivityTab() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto print:hidden">
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="mr-2">
+                <Plus className="mr-2 h-4 w-4" /> Log Productivity
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Log Productivity</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleLogProductivity} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="employee_id">Employee</Label>
+                  <Select name="employee_id" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select employee..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="recorded_date">Date</Label>
+                  <Input
+                    id="recorded_date"
+                    name="recorded_date"
+                    type="date"
+                    required
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="labour_hours">Labour Hours</Label>
+                    <Input
+                      id="labour_hours"
+                      name="labour_hours"
+                      type="number"
+                      step="0.1"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="production_value">Production Value ($)</Label>
+                    <Input
+                      id="production_value"
+                      name="production_value"
+                      type="number"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-4">
+                  <Button type="submit">Save Record</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
           {dateRange === 'custom' && (
             <div className="flex items-center gap-2">
               <Input
