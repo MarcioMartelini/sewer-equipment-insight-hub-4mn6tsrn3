@@ -22,9 +22,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 
 export default function Settings() {
-  const { user } = useAuth()
+  const { user, resetPassword } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -76,6 +77,24 @@ export default function Settings() {
       setIsAdminUnlocked(true)
       setActiveTab('dashboard')
       setUnlockPassword('')
+    }
+    setIsUnlocking(false)
+  }
+
+  const handleForgotPassword = async () => {
+    if (!user?.email) return
+    setIsUnlocking(true)
+
+    const { error } = await resetPassword(user.email)
+
+    if (error) {
+      toast.error('Erro ao solicitar redefinição de senha.', {
+        description: error.message,
+      })
+    } else {
+      toast.success('E-mail enviado!', {
+        description: 'As instruções de recuperação foram enviadas para sua caixa de entrada.',
+      })
     }
     setIsUnlocking(false)
   }
@@ -151,7 +170,17 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-3 text-left">
-                  <Label htmlFor="password">Senha de Administrador</Label>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="password">Senha de Administrador</Label>
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={isUnlocking}
+                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium disabled:opacity-50"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
                   <Input
                     id="password"
                     type="password"
