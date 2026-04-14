@@ -21,6 +21,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -36,13 +37,15 @@ export function UsersTab() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [formData, setFormData] = useState<{ full_name: string; department: string; role: string }>(
-    {
-      full_name: '',
-      department: '',
-      role: 'user',
-    },
-  )
+  const [formData, setFormData] = useState<{
+    full_name: string
+    departments: string[]
+    role: string
+  }>({
+    full_name: '',
+    departments: [],
+    role: 'user',
+  })
 
   useEffect(() => {
     fetchUsers()
@@ -75,7 +78,12 @@ export function UsersTab() {
     setEditingUser(user)
     setFormData({
       full_name: user.full_name || '',
-      department: user.department || '',
+      departments: user.department
+        ? user.department
+            .split(',')
+            .map((d) => d.trim())
+            .filter(Boolean)
+        : [],
       role: user.role || 'user',
     })
   }
@@ -86,7 +94,7 @@ export function UsersTab() {
       .from('users')
       .update({
         full_name: formData.full_name,
-        department: formData.department,
+        department: formData.departments.join(', '),
         role: formData.role,
       })
       .eq('id', editingUser.id)
@@ -192,25 +200,39 @@ export function UsersTab() {
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Departamento</Label>
-              <Select
-                value={formData.department}
-                onValueChange={(v) => setFormData({ ...formData, department: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o departamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Sales">Sales</SelectItem>
-                  <SelectItem value="Engineering">Engineering</SelectItem>
-                  <SelectItem value="Production">Production</SelectItem>
-                  <SelectItem value="Purchasing">Purchasing</SelectItem>
-                  <SelectItem value="Quality">Quality</SelectItem>
-                  <SelectItem value="HR">HR</SelectItem>
-                  <SelectItem value="Management">Management</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              <Label>Departamentos</Label>
+              <div className="grid grid-cols-2 gap-3 border rounded-md p-4">
+                {[
+                  'Sales',
+                  'Engineering',
+                  'Production',
+                  'Purchasing',
+                  'Quality',
+                  'HR',
+                  'Management',
+                ].map((dept) => (
+                  <div key={dept} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`dept-${dept}`}
+                      checked={formData.departments.includes(dept)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData({ ...formData, departments: [...formData.departments, dept] })
+                        } else {
+                          setFormData({
+                            ...formData,
+                            departments: formData.departments.filter((d) => d !== dept),
+                          })
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`dept-${dept}`} className="font-normal cursor-pointer">
+                      {dept}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Nível de Acesso (Role)</Label>
