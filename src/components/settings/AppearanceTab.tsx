@@ -10,17 +10,16 @@ export function AppearanceTab() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">Aparência</h3>
+        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">Appearance</h3>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Personalize a aparência do sistema. Escolha entre o tema claro, escuro ou siga a
-          preferência do sistema.
+          Customize the system appearance. Choose between light, dark, or system preference.
         </p>
       </div>
       <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-slate-800 dark:text-slate-200">Tema</CardTitle>
+          <CardTitle className="text-slate-800 dark:text-slate-200">Theme</CardTitle>
           <CardDescription className="dark:text-slate-400">
-            Selecione o tema de sua preferência para a interface.
+            Select your preferred interface theme.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -35,7 +34,7 @@ export function AppearanceTab() {
             >
               <RadioGroupItem value="light" id="light" className="sr-only" />
               <Sun className="mb-3 h-6 w-6 text-slate-600 dark:text-slate-400" />
-              <span className="font-medium text-slate-700 dark:text-slate-300">Claro</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">Light</span>
             </Label>
             <Label
               htmlFor="dark"
@@ -43,7 +42,7 @@ export function AppearanceTab() {
             >
               <RadioGroupItem value="dark" id="dark" className="sr-only" />
               <Moon className="mb-3 h-6 w-6 text-slate-600 dark:text-slate-400" />
-              <span className="font-medium text-slate-700 dark:text-slate-300">Escuro</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">Dark</span>
             </Label>
             <Label
               htmlFor="system"
@@ -51,7 +50,7 @@ export function AppearanceTab() {
             >
               <RadioGroupItem value="system" id="system" className="sr-only" />
               <Monitor className="mb-3 h-6 w-6 text-slate-600 dark:text-slate-400" />
-              <span className="font-medium text-slate-700 dark:text-slate-300">Sistema</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">System</span>
             </Label>
           </RadioGroup>
         </CardContent>

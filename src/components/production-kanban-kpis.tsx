@@ -44,9 +44,9 @@ export function ProductionKanbanKPIs({ tasks }: ProductionKanbanKPIsProps) {
           </div>
           <div className="overflow-hidden">
             <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-              Tempo Médio Ciclo
+              Avg Cycle Time
             </p>
-            <p className="text-2xl font-bold text-slate-800 truncate">{avgCycleTime} dias</p>
+            <p className="text-2xl font-bold text-slate-800 truncate">{avgCycleTime} days</p>
           </div>
         </CardContent>
       </Card>
@@ -58,7 +58,7 @@ export function ProductionKanbanKPIs({ tasks }: ProductionKanbanKPIsProps) {
           </div>
           <div className="overflow-hidden">
             <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-              Gargalo Atual
+              Current Bottleneck
             </p>
             <div className="flex items-baseline gap-2 truncate">
               <p className="text-lg font-bold text-slate-800 truncate" title={bottleneckDept}>
@@ -67,7 +67,7 @@ export function ProductionKanbanKPIs({ tasks }: ProductionKanbanKPIsProps) {
             </div>
             {bottleneckCount > 0 && (
               <p className="text-xs font-semibold text-orange-600 truncate mt-0.5">
-                {bottleneckCount} tarefas pendentes
+                {bottleneckCount} pending tasks
               </p>
             )}
           </div>
@@ -81,7 +81,7 @@ export function ProductionKanbanKPIs({ tasks }: ProductionKanbanKPIsProps) {
           </div>
           <div className="overflow-hidden">
             <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-              Tarefas Ativas
+              Active Tasks
             </p>
             <p className="text-2xl font-bold text-slate-800 truncate">{activeTasks.length}</p>
           </div>
@@ -95,7 +95,7 @@ export function ProductionKanbanKPIs({ tasks }: ProductionKanbanKPIsProps) {
           </div>
           <div className="overflow-hidden">
             <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-              Concluídas
+              Completed
             </p>
             <p className="text-2xl font-bold text-slate-800 truncate">{completedTasks.length}</p>
           </div>

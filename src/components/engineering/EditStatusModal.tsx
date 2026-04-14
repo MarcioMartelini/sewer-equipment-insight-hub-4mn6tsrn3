@@ -107,7 +107,7 @@ export function EditStatusModal({ task, isOpen, onClose, onSave }: EditStatusMod
 
           <div>
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-              CRONOGRAMA
+              SCHEDULE
             </h4>
             <div className="flex gap-8">
               <div>
@@ -129,11 +129,11 @@ export function EditStatusModal({ task, isOpen, onClose, onSave }: EditStatusMod
 
           <div>
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-              COMENTÁRIOS
+              COMMENTS
             </h4>
             <div className="bg-white border-2 border-emerald-500 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
               <Textarea
-                placeholder="Digite seu comentário..."
+                placeholder="Type your comment..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="border-0 focus-visible:ring-0 resize-none min-h-[100px] p-4 text-sm"

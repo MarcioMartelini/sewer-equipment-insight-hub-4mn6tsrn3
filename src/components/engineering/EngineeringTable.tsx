@@ -528,30 +528,30 @@ export function EngineeringTable({ type, woFilter, onClearFilters }: Engineering
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Justificativa Obrigatória
+              Justification Required
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-slate-600">
-              A alteração para o status{' '}
+              Changing the status to{' '}
               <strong className="capitalize">
                 {pendingMove?.newStatus.replace('_', ' ')}
               </strong>{' '}
-              exige um comentário técnico obrigatório.
+              requires a mandatory technical comment.
             </p>
             <Textarea
               value={moveComment}
               onChange={(e) => setMoveComment(e.target.value)}
-              placeholder="Descreva o motivo desta alteração..."
+              placeholder="Describe the reason for this change..."
               className="min-h-[100px]"
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingMove(null)}>
-              Cancelar
+              Cancel
             </Button>
             <Button disabled={!moveComment.trim()} onClick={confirmMove}>
-              Confirmar Alteração
+              Confirm Change
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -34,7 +34,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { format, subMonths, isAfter, startOfMonth, parseISO } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
 type DateRange = {
@@ -146,7 +146,7 @@ export function QualityDashboard() {
 
     while (currentMonth <= endMonth) {
       const monthKey = format(currentMonth, 'yyyy-MM')
-      const formattedMonth = capitalize(format(currentMonth, 'MMM yy', { locale: ptBR }))
+      const formattedMonth = capitalize(format(currentMonth, 'MMM yy', { locale: enUS }))
       dataMap.set(monthKey, {
         month: formattedMonth,
         claims: 0,
@@ -207,7 +207,7 @@ export function QualityDashboard() {
     <div className="flex flex-col gap-6 animate-fade-in pb-8">
       <DashboardHeader
         title="Quality Dashboard"
-        description="Acompanhe os principais indicadores de qualidade"
+        description="Track key quality indicators"
         dateRange={date}
         setDateRange={setDate}
         onExport={handleExportPDF}
@@ -225,10 +225,10 @@ export function QualityDashboard() {
           </Label>
           <Select value={selectedSupervisor} onValueChange={setSelectedSupervisor}>
             <SelectTrigger className="bg-white dark:bg-slate-950">
-              <SelectValue placeholder="Todos os Supervisores" />
+              <SelectValue placeholder="All Supervisors" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Supervisores</SelectItem>
+              <SelectItem value="all">All Supervisors</SelectItem>
               {supervisors.map((sup) => (
                 <SelectItem key={sup} value={sup}>
                   {sup}
@@ -286,7 +286,7 @@ export function QualityDashboard() {
                     {showWarranty ? totalClaims : '-'}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Registros no período
+                    Records in period
                   </p>
                 </CardContent>
               </Card>
@@ -310,7 +310,7 @@ export function QualityDashboard() {
                     {showLateCard ? totalPulls : '-'}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Ocorrências no período
+                    Occurrences in period
                   </p>
                 </CardContent>
               </Card>
@@ -318,7 +318,7 @@ export function QualityDashboard() {
               <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Taxa Mensal
+                    Monthly Rate
                   </CardTitle>
                   <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                     <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -329,7 +329,7 @@ export function QualityDashboard() {
                     {avgOccurrences}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Ocorrências em média por mês
+                    Average occurrences per month
                   </p>
                 </CardContent>
               </Card>
@@ -338,10 +338,10 @@ export function QualityDashboard() {
             <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-slate-800 dark:text-slate-200">
-                  Tendência de Ocorrências
+                  Occurrences Trend
                 </CardTitle>
                 <CardDescription>
-                  Evolução de Warranty Claims e Late Card Pulls ao longo do tempo
+                  Evolution of Warranty Claims and Late Card Pulls over time
                 </CardDescription>
               </CardHeader>
               <CardContent>

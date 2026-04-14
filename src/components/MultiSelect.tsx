@@ -38,7 +38,7 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
               ? placeholder
               : selected.length === 1
                 ? selected[0]
-                : `${selected.length} selecionados`}
+                : `${selected.length} selected`}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>

@@ -16,13 +16,13 @@ export function QualityTopCustomers({
   return (
     <Card className="mt-4">
       <CardHeader>
-        <CardTitle>Top 10 Clientes com Maior Número de Warranty Claims</CardTitle>
+        <CardTitle>Top 10 Customers by Warranty Claims</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cliente</TableHead>
+              <TableHead>Customer</TableHead>
               <TableHead className="text-right">Warranty Claims</TableHead>
             </TableRow>
           </TableHeader>
@@ -36,7 +36,7 @@ export function QualityTopCustomers({
             {customers.length === 0 && (
               <TableRow>
                 <TableCell colSpan={2} className="text-center text-muted-foreground py-6">
-                  Nenhum dado encontrado para o período.
+                  No data found for the period.
                 </TableCell>
               </TableRow>
             )}

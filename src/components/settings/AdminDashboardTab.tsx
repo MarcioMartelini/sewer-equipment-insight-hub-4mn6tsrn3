@@ -55,42 +55,42 @@ export function AdminDashboardTab() {
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-            Visão Geral do Sistema
+            System Overview
           </h3>
           <p className="text-sm text-slate-500">
-            Acompanhamento central de acessos e configurações da plataforma.
+            Central monitoring of accesses and platform settings.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Usuários Registrados</CardTitle>
+              <CardTitle className="text-sm font-medium">Registered Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.users}</div>
-              <p className="text-xs text-muted-foreground mt-1">Contas ativas na plataforma</p>
+              <p className="text-xs text-muted-foreground mt-1">Active accounts on the platform</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+              <CardTitle className="text-sm font-medium">Administrators</CardTitle>
               <ShieldCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.admins}</div>
-              <p className="text-xs text-muted-foreground mt-1">Com acesso total ao sistema</p>
+              <p className="text-xs text-muted-foreground mt-1">With full access to the system</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Departamentos Ativos</CardTitle>
+              <CardTitle className="text-sm font-medium">Active Departments</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.departments}</div>
-              <p className="text-xs text-muted-foreground mt-1">Áreas em operação</p>
+              <p className="text-xs text-muted-foreground mt-1">Operating areas</p>
             </CardContent>
           </Card>
         </div>
@@ -101,13 +101,12 @@ export function AdminDashboardTab() {
           </div>
           <div>
             <h4 className="font-medium text-slate-900 dark:text-slate-100">
-              Controle Baseado em Funções (RBAC)
+              Role-Based Access Control (RBAC)
             </h4>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-              As políticas de segurança de dados (RLS) são aplicadas diretamente no banco de dados.
-              Ao alterar a função de um usuário na aba "Usuários", o acesso dele aos dados de outros
-              departamentos ou ações administrativas é atualizado instantaneamente em todo o
-              sistema.
+              Data security policies (RLS) are applied directly in the database. By changing a
+              user's role in the "Users" tab, their access to other departments' data or
+              administrative actions is instantly updated throughout the system.
             </p>
           </div>
         </div>
@@ -116,17 +115,17 @@ export function AdminDashboardTab() {
       <div className="pt-2 border-t dark:border-slate-800 space-y-6">
         <div>
           <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-            Health Check (Monitoramento)
+            Health Check (Monitoring)
           </h3>
           <p className="text-sm text-slate-500">
-            Status em tempo real das integrações e infraestrutura.
+            Real-time status of integrations and infrastructure.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Banco de Dados</CardTitle>
+              <CardTitle className="text-sm font-medium">Database</CardTitle>
               <Database className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -143,10 +142,10 @@ export function AdminDashboardTab() {
                 />
                 <span className="font-semibold text-lg text-slate-900 dark:text-slate-100">
                   {health.dbStatus === 'online'
-                    ? 'Conectado'
+                    ? 'Connected'
                     : health.dbStatus === 'checking'
-                      ? 'Verificando...'
-                      : 'Desconectado'}
+                      ? 'Checking...'
+                      : 'Disconnected'}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">Supabase PostgreSQL</p>
@@ -155,20 +154,20 @@ export function AdminDashboardTab() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Latência da API</CardTitle>
+              <CardTitle className="text-sm font-medium">API Latency</CardTitle>
               <Wifi className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {health.latency > 0 ? `${health.latency}ms` : '--'}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Tempo de resposta do servidor</p>
+              <p className="text-xs text-muted-foreground mt-1">Server response time</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Último Backup</CardTitle>
+              <CardTitle className="text-sm font-medium">Last Backup</CardTitle>
               <HardDrive className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -178,7 +177,7 @@ export function AdminDashboardTab() {
                   {health.lastBackup}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Status: Íntegro e protegido</p>
+              <p className="text-xs text-muted-foreground mt-1">Status: Healthy and protected</p>
             </CardContent>
           </Card>
         </div>

@@ -378,13 +378,13 @@ export function WarrantyClaimsTable() {
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    Carregando...
+                    Loading...
                   </TableCell>
                 </TableRow>
               ) : claims.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-slate-500">
-                    Nenhum registro encontrado.
+                    No records found.
                   </TableCell>
                 </TableRow>
               ) : (

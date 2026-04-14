@@ -387,10 +387,10 @@ export default function WorkOrderDetail() {
       user_id: user.id,
       department: uData?.department || 'System',
       action: 'Deleted',
-      notes: 'Work Order deletado',
+      notes: 'Work Order deleted',
     } as any)
 
-    toast.success('Work Order deletado com sucesso')
+    toast.success('Work Order deleted successfully')
     setDeleteOpen(false)
     navigate('/sales')
   }
@@ -983,19 +983,19 @@ export default function WorkOrderDetail() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Deletar Work Order</DialogTitle>
+            <DialogTitle>Delete Work Order</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-muted-foreground">
-              Tem certeza que deseja deletar este Work Order? Esta ação não pode ser desfeita.
+              Are you sure you want to delete this Work Order? This action cannot be undone.
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>
-              Cancelar
+              Cancel
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Confirmar Deletar
+              Confirm Delete
             </Button>
           </DialogFooter>
         </DialogContent>

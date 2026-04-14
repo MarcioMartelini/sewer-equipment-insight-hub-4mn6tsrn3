@@ -183,13 +183,13 @@ export default function AbsencesTab() {
                 <Input id="absence_date" name="absence_date" type="date" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reason">Reason / Motivo</Label>
+                <Label htmlFor="reason">Reason</Label>
                 <Input id="reason" name="reason" required />
               </div>
               <div className="flex items-center space-x-2 pt-2 pb-4">
                 <Checkbox id="is_excused" name="is_excused" defaultChecked={false} />
                 <Label htmlFor="is_excused" className="font-normal cursor-pointer">
-                  Justifiable / Excused Absence
+                  Excused Absence
                 </Label>
               </div>
               <div className="flex justify-end pt-4">
@@ -317,7 +317,7 @@ export default function AbsencesTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reason">Reason / Motivo</Label>
+              <Label htmlFor="reason">Reason</Label>
               <Input id="reason" name="reason" defaultValue={editingItem?.reason} required />
             </div>
             <div className="flex items-center space-x-2 pt-2 pb-4">
@@ -328,7 +328,7 @@ export default function AbsencesTab() {
                 defaultChecked={editingItem?.absence_type === 'excused'}
               />
               <Label htmlFor="edit_is_excused" className="font-normal cursor-pointer">
-                Justifiable / Excused Absence
+                Excused Absence
               </Label>
             </div>
             <div className="flex justify-end pt-4">

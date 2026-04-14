@@ -20,7 +20,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
   const totalInjuries = inj.length
 
   const injByDept = inj.reduce((acc: any, curr: any) => {
-    const dept = curr.department || 'Não informado'
+    const dept = curr.department || 'Not informed'
     acc[dept] = (acc[dept] || 0) + 1
     return acc
   }, {})
@@ -30,7 +30,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 print:grid-cols-5">
         <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Horas Trabalhadas</CardTitle>
+            <CardTitle className="text-sm font-medium">Worked Hours</CardTitle>
             <Clock className="w-4 h-4 text-muted-foreground print:hidden" />
           </CardHeader>
           <CardContent>
@@ -39,7 +39,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
         </Card>
         <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Produtividade Média</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg Productivity</CardTitle>
             <Activity className="w-4 h-4 text-muted-foreground print:hidden" />
           </CardHeader>
           <CardContent>
@@ -48,7 +48,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
         </Card>
         <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Taxa de Absenteísmo</CardTitle>
+            <CardTitle className="text-sm font-medium">Absenteeism Rate</CardTitle>
             <Users className="w-4 h-4 text-muted-foreground print:hidden" />
           </CardHeader>
           <CardContent>
@@ -57,7 +57,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
         </Card>
         <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Faltas Não Justificadas</CardTitle>
+            <CardTitle className="text-sm font-medium">Unexcused Absences</CardTitle>
             <XOctagon className="w-4 h-4 text-destructive print:hidden" />
           </CardHeader>
           <CardContent>
@@ -66,7 +66,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
         </Card>
         <Card className="print:shadow-none print:border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Lesões Registradas</CardTitle>
+            <CardTitle className="text-sm font-medium">Registered Injuries</CardTitle>
             <AlertTriangle className="w-4 h-4 text-orange-500 print:hidden" />
           </CardHeader>
           <CardContent>
@@ -80,7 +80,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
           <CardHeader>
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-orange-500" />
-              Lesões por Departamento
+              Injuries by Department
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -95,7 +95,7 @@ export default function HRDashboardKPIs({ data }: { data: any }) {
                 </div>
               ))}
               {Object.keys(injByDept).length === 0 && (
-                <span className="text-sm text-muted-foreground">Nenhuma lesão no período.</span>
+                <span className="text-sm text-muted-foreground">No injuries in the period.</span>
               )}
             </div>
           </CardContent>

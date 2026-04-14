@@ -72,7 +72,7 @@ export default function Settings() {
     })
 
     if (error) {
-      setUnlockError('Senha incorreta. Tente novamente.')
+      setUnlockError('Incorrect password. Please try again.')
     } else {
       setIsAdminUnlocked(true)
       setActiveTab('dashboard')
@@ -88,12 +88,12 @@ export default function Settings() {
     const { error } = await resetPassword(user.email)
 
     if (error) {
-      toast.error('Erro ao solicitar redefinição de senha.', {
+      toast.error('Error requesting password reset.', {
         description: error.message,
       })
     } else {
-      toast.success('E-mail enviado!', {
-        description: 'As instruções de recuperação foram enviadas para sua caixa de entrada.',
+      toast.success('Email sent!', {
+        description: 'Recovery instructions have been sent to your inbox.',
       })
     }
     setIsUnlocking(false)
@@ -103,12 +103,12 @@ export default function Settings() {
     <div className="space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {isAdmin ? 'Admin & Configurações' : 'Configurações'}
+          {isAdmin ? 'Admin & Settings' : 'Settings'}
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
           {isAdmin
-            ? 'Centro de comando do sistema: gerencie acessos, permissões e configurações globais.'
-            : 'Gerencie suas preferências de uso do sistema.'}
+            ? 'System command center: manage access, permissions and global settings.'
+            : 'Manage your system usage preferences.'}
         </p>
       </div>
 
@@ -120,7 +120,7 @@ export default function Settings() {
               className="flex items-center gap-2 text-amber-600 dark:text-amber-500 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-400"
             >
               <Lock className="w-4 h-4" />
-              Admin (Bloqueado)
+              Admin (Locked)
             </TabsTrigger>
           )}
           {isAdmin && isAdminUnlocked && (
@@ -131,15 +131,15 @@ export default function Settings() {
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Usuários
+                Users
               </TabsTrigger>
               <TabsTrigger value="permissions" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
-                Permissões
+                Permissions
               </TabsTrigger>
               <TabsTrigger value="integrations" className="flex items-center gap-2">
                 <Plug className="w-4 h-4" />
-                Integrações
+                Integrations
               </TabsTrigger>
               <TabsTrigger value="backup" className="flex items-center gap-2">
                 <HardDrive className="w-4 h-4" />
@@ -149,7 +149,7 @@ export default function Settings() {
           )}
           <TabsTrigger value="appearance" className="flex items-center gap-2">
             <Palette className="w-4 h-4" />
-            Aparência
+            Appearance
           </TabsTrigger>
         </TabsList>
 
@@ -162,23 +162,23 @@ export default function Settings() {
                     <Lock className="w-8 h-8 text-amber-600 dark:text-amber-500" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                    Acesso Restrito
+                    Restricted Access
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Confirme sua senha para acessar e gerenciar as configurações administrativas.
+                    Confirm your password to access and manage administrative settings.
                   </p>
                 </div>
 
                 <div className="space-y-3 text-left">
                   <div className="flex justify-between items-center">
-                    <Label htmlFor="password">Senha de Administrador</Label>
+                    <Label htmlFor="password">Administrator Password</Label>
                     <button
                       type="button"
                       onClick={handleForgotPassword}
                       disabled={isUnlocking}
                       className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium disabled:opacity-50"
                     >
-                      Esqueci minha senha
+                      Forgot my password
                     </button>
                   </div>
                   <Input
@@ -186,7 +186,7 @@ export default function Settings() {
                     type="password"
                     value={unlockPassword}
                     onChange={(e) => setUnlockPassword(e.target.value)}
-                    placeholder="Sua senha de acesso"
+                    placeholder="Your access password"
                     required
                   />
                   {unlockError && <p className="text-sm font-medium text-red-500">{unlockError}</p>}
@@ -199,11 +199,11 @@ export default function Settings() {
                 >
                   {isUnlocking ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verificando...
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking...
                     </>
                   ) : (
                     <>
-                      <Unlock className="w-4 h-4 mr-2" /> Desbloquear Acesso
+                      <Unlock className="w-4 h-4 mr-2" /> Unlock Access
                     </>
                   )}
                 </Button>

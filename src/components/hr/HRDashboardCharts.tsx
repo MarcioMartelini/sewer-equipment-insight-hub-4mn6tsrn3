@@ -32,20 +32,20 @@ export default function HRDashboardCharts({ data }: { data: any }) {
   const excused = abs.filter((a: any) => a.absence_type === 'excused').length
   const unexcused = abs.filter((a: any) => a.absence_type === 'unexcused').length
   const absDist = [
-    { name: 'Justificada', value: excused, fill: 'hsl(var(--primary))' },
-    { name: 'Não Justificada', value: unexcused, fill: 'hsl(var(--destructive))' },
+    { name: 'Excused', value: excused, fill: 'hsl(var(--primary))' },
+    { name: 'Unexcused', value: unexcused, fill: 'hsl(var(--destructive))' },
   ].filter((d) => d.value > 0)
 
   const recordable = inj.filter((i: any) => i.injury_type === 'recordable').length
   const nonRecordable = inj.filter((i: any) => i.injury_type === 'non-recordable').length
   const injDist = [
-    { name: 'Registrável', value: recordable, fill: 'hsl(var(--destructive))' },
-    { name: 'Não Registrável', value: nonRecordable, fill: 'hsl(var(--muted-foreground))' },
+    { name: 'Recordable', value: recordable, fill: 'hsl(var(--destructive))' },
+    { name: 'Non-recordable', value: nonRecordable, fill: 'hsl(var(--muted-foreground))' },
   ].filter((d) => d.value > 0)
 
   const chartConfig = {
     value: {
-      label: 'Produtividade',
+      label: 'Productivity',
       color: 'hsl(var(--primary))',
     },
   }
@@ -54,7 +54,7 @@ export default function HRDashboardCharts({ data }: { data: any }) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Tendência de Produtividade</CardTitle>
+          <CardTitle>Productivity Trend</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
@@ -83,7 +83,7 @@ export default function HRDashboardCharts({ data }: { data: any }) {
               </ChartContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">
-                Sem dados para o período selecionado.
+                No data for the selected period.
               </div>
             )}
           </div>
@@ -93,7 +93,7 @@ export default function HRDashboardCharts({ data }: { data: any }) {
       <div className="space-y-4 flex flex-col">
         <Card className="flex-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Distribuição de Ausências</CardTitle>
+            <CardTitle className="text-sm">Absence Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[120px]">
@@ -118,7 +118,7 @@ export default function HRDashboardCharts({ data }: { data: any }) {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                  Sem dados
+                  No data
                 </div>
               )}
             </div>
@@ -127,7 +127,7 @@ export default function HRDashboardCharts({ data }: { data: any }) {
 
         <Card className="flex-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Severidade de Lesões</CardTitle>
+            <CardTitle className="text-sm">Injury Severity</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[120px]">
@@ -152,7 +152,7 @@ export default function HRDashboardCharts({ data }: { data: any }) {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                  Sem dados
+                  No data
                 </div>
               )}
             </div>

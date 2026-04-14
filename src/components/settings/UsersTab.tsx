@@ -55,7 +55,7 @@ export function UsersTab() {
     setLoading(true)
     const { data, error } = await supabase.from('users').select('*').order('full_name')
     if (error) {
-      toast.error('Erro ao carregar usuários')
+      toast.error('Error loading users')
     } else {
       setUsers(data || [])
     }
@@ -63,13 +63,13 @@ export function UsersTab() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover o acesso deste usuário?')) return
+    if (!confirm('Are you sure you want to remove access for this user?')) return
 
     const { error } = await supabase.from('users').delete().eq('id', id)
     if (error) {
-      toast.error('Erro ao remover usuário. Ele pode ter registros dependentes.')
+      toast.error('Error removing user. They may have dependent records.')
     } else {
-      toast.success('Usuário removido com sucesso')
+      toast.success('User removed successfully')
       fetchUsers()
     }
   }
@@ -100,9 +100,9 @@ export function UsersTab() {
       .eq('id', editingUser.id)
 
     if (error) {
-      toast.error('Erro ao atualizar usuário')
+      toast.error('Error updating user')
     } else {
-      toast.success('Usuário atualizado com sucesso')
+      toast.success('User updated successfully')
       setEditingUser(null)
       fetchUsers()
     }
@@ -111,38 +111,34 @@ export function UsersTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Gerenciamento de Usuários
-        </h3>
-        <Button
-          onClick={() => toast.info('Acesse a página de Cadastro para adicionar novos usuários.')}
-        >
-          <UserPlus className="w-4 h-4 mr-2" /> Novo Usuário
+        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">User Management</h3>
+        <Button onClick={() => toast.info('Access the Registration page to add new users.')}>
+          <UserPlus className="w-4 h-4 mr-2" /> New User
         </Button>
       </div>
       <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
+              <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Departamento</TableHead>
-              <TableHead>Nível de Acesso</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Access Level</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                  Carregando usuários...
+                  Loading users...
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                  Nenhum usuário encontrado.
+                  No users found.
                 </TableCell>
               </TableRow>
             ) : (
@@ -164,7 +160,7 @@ export function UsersTab() {
                       variant="outline"
                       className="bg-green-50 text-green-700 border-green-200"
                     >
-                      Ativo
+                      Active
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
@@ -190,18 +186,18 @@ export function UsersTab() {
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome Completo</Label>
+              <Label>Full Name</Label>
               <Input
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               />
             </div>
             <div className="space-y-3">
-              <Label>Departamentos</Label>
+              <Label>Departments</Label>
               <div className="grid grid-cols-2 gap-3 border rounded-md p-4">
                 {[
                   'Sales',
@@ -235,28 +231,28 @@ export function UsersTab() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Nível de Acesso (Role)</Label>
+              <Label>Access Level (Role)</Label>
               <Select
                 value={formData.role}
                 onValueChange={(v) => setFormData({ ...formData, role: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a função" />
+                  <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Administrador (Total)</SelectItem>
-                  <SelectItem value="manager">Gerente</SelectItem>
+                  <SelectItem value="admin">Administrator (Full)</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="supervisor">Supervisor</SelectItem>
-                  <SelectItem value="user">Usuário Padrão</SelectItem>
+                  <SelectItem value="user">Standard User</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingUser(null)}>
-              Cancelar
+              Cancel
             </Button>
-            <Button onClick={handleSave}>Salvar Alterações</Button>
+            <Button onClick={handleSave}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

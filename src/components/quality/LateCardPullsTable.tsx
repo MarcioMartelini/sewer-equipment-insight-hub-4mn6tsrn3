@@ -54,11 +54,11 @@ export function LateCardPullsTable() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este registro?')) return
+    if (!window.confirm('Are you sure you want to delete this record?')) return
     const { error } = await supabase.from('late_card_pulls').delete().eq('id', id)
-    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' })
     else {
-      toast({ title: 'Excluído com sucesso' })
+      toast({ title: 'Deleted successfully' })
       fetchData()
     }
   }
@@ -175,7 +175,7 @@ export function LateCardPullsTable() {
         <div className="bg-slate-50 border rounded-lg p-4 mb-6 flex flex-col xl:flex-row gap-4 items-end">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 w-full">
             <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500">Data Inicial</Label>
+              <Label className="text-xs text-slate-500">Start Date</Label>
               <Input
                 type="date"
                 value={filters.dateFrom}
@@ -183,7 +183,7 @@ export function LateCardPullsTable() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500">Data Final</Label>
+              <Label className="text-xs text-slate-500">End Date</Label>
               <Input
                 type="date"
                 value={filters.dateTo}
@@ -193,7 +193,7 @@ export function LateCardPullsTable() {
             <div className="space-y-1.5">
               <Label className="text-xs text-slate-500">PN</Label>
               <Input
-                placeholder="Buscar PN..."
+                placeholder="Search PN..."
                 value={filters.pn}
                 onChange={(e) => setFilters({ ...filters, pn: e.target.value })}
               />
@@ -201,7 +201,7 @@ export function LateCardPullsTable() {
             <div className="space-y-1.5">
               <Label className="text-xs text-slate-500">Supervisor</Label>
               <Input
-                placeholder="Buscar Supervisor..."
+                placeholder="Search Supervisor..."
                 value={filters.supervisor}
                 onChange={(e) => setFilters({ ...filters, supervisor: e.target.value })}
               />
@@ -213,7 +213,7 @@ export function LateCardPullsTable() {
               onClick={() => setFilters({ dateFrom: '', dateTo: '', pn: '', supervisor: '' })}
               className="w-full xl:w-auto"
             >
-              <X className="w-4 h-4 mr-2" /> Limpar Filtros
+              <X className="w-4 h-4 mr-2" /> Clear Filters
             </Button>
           </div>
         </div>
@@ -222,25 +222,25 @@ export function LateCardPullsTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead>PN</TableHead>
                 <TableHead>Supervisor</TableHead>
-                <TableHead>Ocorrência</TableHead>
+                <TableHead>Occurrence</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[140px] text-right">Ações</TableHead>
+                <TableHead className="w-[140px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                    Carregando...
+                    Loading...
                   </TableCell>
                 </TableRow>
               ) : pulls.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                    Nenhum registro encontrado.
+                    No records found.
                   </TableCell>
                 </TableRow>
               ) : (

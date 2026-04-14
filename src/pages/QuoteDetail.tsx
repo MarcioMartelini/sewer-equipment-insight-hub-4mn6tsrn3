@@ -712,17 +712,17 @@ export default function QuoteDetail() {
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Deletar Cotação</DialogTitle>
+            <DialogTitle>Delete Quote</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja deletar esta cotação? Esta ação não pode ser desfeita.
+              Are you sure you want to delete this quote? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
-              Cancelar
+              Cancel
             </Button>
             <Button variant="destructive" onClick={onDeleteConfirm}>
-              Confirmar Deletar
+              Confirm Delete
             </Button>
           </DialogFooter>
         </DialogContent>

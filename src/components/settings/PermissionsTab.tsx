@@ -66,19 +66,19 @@ export function PermissionsTab() {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Níveis de Acesso e Permissões (RBAC)
+          Access Levels and Permissions (RBAC)
         </h3>
         <p className="text-sm text-slate-500">
-          Controle as regras e limites de acesso de cada função no sistema.
+          Control the rules and access limits for each role in the system.
         </p>
       </div>
 
       <Alert>
         <Info className="h-4 w-4" />
-        <AlertTitle>Segurança Integrada</AlertTitle>
+        <AlertTitle>Integrated Security</AlertTitle>
         <AlertDescription>
-          As permissões são controladas nativamente pelo banco de dados (Row Level Security). Para
-          conceder um novo acesso, altere o "Nível de Acesso" do usuário na aba Usuários.
+          Permissions are controlled natively by the database (Row Level Security). To grant new
+          access, change the user's "Access Level" in the Users tab.
         </AlertDescription>
       </Alert>
 
@@ -86,10 +86,10 @@ export function PermissionsTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Função (Role)</TableHead>
-              <TableHead>Nível de Acesso Permitido</TableHead>
-              <TableHead className="text-center">Usuários Ativos</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Allowed Access Level</TableHead>
+              <TableHead className="text-center">Active Users</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -98,7 +98,7 @@ export function PermissionsTab() {
                 <TableCell className="font-medium capitalize">{r.role}</TableCell>
                 <TableCell>{r.access}</TableCell>
                 <TableCell className="text-center">
-                  <Badge variant="secondary">{roleCounts[r.role] || 0} Usuários</Badge>
+                  <Badge variant="secondary">{roleCounts[r.role] || 0} Users</Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => setEditingRole(r)}>
@@ -114,30 +114,30 @@ export function PermissionsTab() {
       <Dialog open={!!editingRole} onOpenChange={(open) => !open && setEditingRole(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="capitalize">Editar Permissões: {editingRole?.role}</DialogTitle>
+            <DialogTitle className="capitalize">Edit Permissions: {editingRole?.role}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Descrição de Acesso e Permissões</Label>
+              <Label>Access and Permissions Description</Label>
               <Textarea
                 value={editingRole?.access || ''}
                 onChange={(e) =>
                   setEditingRole((prev) => (prev ? { ...prev, access: e.target.value } : null))
                 }
                 rows={4}
-                placeholder="Descreva as permissões deste nível de acesso..."
+                placeholder="Describe the permissions for this access level..."
               />
               <p className="text-xs text-slate-500">
-                Nota: Esta alteração atualizará a descrição visual do papel. O controle real de
-                acesso (RLS) permanece configurado de forma segura no banco de dados.
+                Note: This change will update the visual description of the role. Actual access
+                control (RLS) remains securely configured in the database.
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingRole(null)}>
-              Cancelar
+              Cancel
             </Button>
-            <Button onClick={handleSaveRole}>Salvar Alterações</Button>
+            <Button onClick={handleSaveRole}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

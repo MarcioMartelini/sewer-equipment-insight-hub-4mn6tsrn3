@@ -32,10 +32,10 @@ import {
 import { Button } from '@/components/ui/button'
 
 const formSchema = z.object({
-  date: z.string().min(1, 'A data é obrigatória'),
-  part_number: z.string().min(1, 'O PN é obrigatório'),
-  area_supervisor: z.string().min(1, 'O supervisor é obrigatório'),
-  occurrence_description: z.string().min(1, 'A descrição é obrigatória'),
+  date: z.string().min(1, 'Date is required'),
+  part_number: z.string().min(1, 'PN is required'),
+  area_supervisor: z.string().min(1, 'Supervisor is required'),
+  occurrence_description: z.string().min(1, 'Description is required'),
   status: z.string().optional().default('pending'),
 })
 
@@ -102,9 +102,9 @@ export function LateCardPullDialog({
     setIsSubmitting(false)
 
     if (error) {
-      toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' })
+      toast({ title: 'Error saving', description: error.message, variant: 'destructive' })
     } else {
-      toast({ title: 'Salvo com sucesso' })
+      toast({ title: 'Saved successfully' })
       setDialogState(null)
       onSaved()
     }
@@ -116,10 +116,10 @@ export function LateCardPullDialog({
         <DialogHeader>
           <DialogTitle>
             {dialogState === 'create'
-              ? 'Novo Late Card Pull'
+              ? 'New Late Card Pull'
               : dialogState === 'edit'
-                ? 'Editar Late Card Pull'
-                : 'Detalhes do Late Card Pull'}
+                ? 'Edit Late Card Pull'
+                : 'Late Card Pull Details'}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -130,7 +130,7 @@ export function LateCardPullDialog({
                 name="date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data</FormLabel>
+                    <FormLabel>Date</FormLabel>
                     <FormControl>
                       <Input type="date" disabled={dialogState === 'view'} {...field} />
                     </FormControl>
@@ -147,7 +147,7 @@ export function LateCardPullDialog({
                     <FormLabel>PN (Part Number)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Digite o PN..."
+                        placeholder="Type the PN..."
                         disabled={dialogState === 'view'}
                         {...field}
                       />
@@ -170,7 +170,7 @@ export function LateCardPullDialog({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione um supervisor" />
+                          <SelectValue placeholder="Select a supervisor" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -191,7 +191,7 @@ export function LateCardPullDialog({
                 name="occurrence_description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ocorrência</FormLabel>
+                    <FormLabel>Occurrence</FormLabel>
                     <FormControl>
                       <Textarea disabled={dialogState === 'view'} {...field} />
                     </FormControl>
@@ -214,7 +214,7 @@ export function LateCardPullDialog({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
+                            <SelectValue placeholder="Select the status" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -232,11 +232,11 @@ export function LateCardPullDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" type="button" onClick={() => setDialogState(null)}>
-                Fechar
+                Close
               </Button>
               {dialogState !== 'view' && (
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Salvando...' : 'Salvar'}
+                  {isSubmitting ? 'Saving...' : 'Save'}
                 </Button>
               )}
             </DialogFooter>

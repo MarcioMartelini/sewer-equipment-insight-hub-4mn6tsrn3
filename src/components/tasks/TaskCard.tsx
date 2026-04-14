@@ -124,19 +124,19 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
       })
       if (error) throw error
 
-      toast({ title: 'Comentário adicionado com sucesso' })
+      toast({ title: 'Comment added successfully' })
       setNewComment('')
       loadComments()
     } catch (e: any) {
       console.error(e)
-      toast({ title: 'Erro ao adicionar comentário', variant: 'destructive' })
+      toast({ title: 'Error adding comment', variant: 'destructive' })
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleDeleteComment = async (id: string) => {
-    if (!confirm('Tem certeza que deseja deletar este comentário?')) return
+    if (!confirm('Are you sure you want to delete this comment?')) return
     setIsSaving(true)
     try {
       const { error } = await supabase
@@ -145,11 +145,11 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
         .eq('id', id)
 
       if (error) throw error
-      toast({ title: 'Comentário deletado' })
+      toast({ title: 'Comment deleted' })
       loadComments()
     } catch (e: any) {
       console.error(e)
-      toast({ title: 'Erro ao deletar comentário', variant: 'destructive' })
+      toast({ title: 'Error deleting comment', variant: 'destructive' })
     } finally {
       setIsSaving(false)
     }
@@ -168,12 +168,12 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
         .eq('id', id)
 
       if (error) throw error
-      toast({ title: 'Comentário atualizado' })
+      toast({ title: 'Comment updated' })
       setEditingCommentId(null)
       loadComments()
     } catch (e: any) {
       console.error(e)
-      toast({ title: 'Erro ao atualizar comentário', variant: 'destructive' })
+      toast({ title: 'Error updating comment', variant: 'destructive' })
     } finally {
       setIsSaving(false)
     }
@@ -257,12 +257,12 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
         created_at: new Date().toISOString(),
       })
 
-      toast({ title: `Status atualizado para ${newStatusFormatted}` })
+      toast({ title: `Status updated to ${newStatusFormatted}` })
       if (onUpdate) onUpdate()
       loadComments()
     } catch (e: any) {
       console.error(e)
-      toast({ title: 'Erro ao atualizar status', variant: 'destructive' })
+      toast({ title: 'Error updating status', variant: 'destructive' })
     } finally {
       setIsSaving(false)
     }
@@ -290,7 +290,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
           </div>
           {task.is_completed && (
             <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 shrink-0">
-              Concluída
+              Completed
             </Badge>
           )}
         </div>
@@ -319,9 +319,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
 
         {/* 3. Scheduled Dates */}
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-            Cronograma
-          </Label>
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Schedule</Label>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground">Start Date</span>
@@ -347,12 +345,10 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
 
         {/* 4. Comments Field */}
         <div className="space-y-3">
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-            Comentários
-          </Label>
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Comments</Label>
           <div className="space-y-2">
             <Textarea
-              placeholder="Digite seu comentário..."
+              placeholder="Type your comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               className="min-h-[80px] resize-none text-sm"
@@ -417,7 +413,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                       ) : (
                         <div className="text-sm">
                           <span className="font-medium text-xs text-muted-foreground mr-1">
-                            {comment.author?.full_name || 'Sistema'} -{' '}
+                            {comment.author?.full_name || 'System'} -{' '}
                             {comment.created_at
                               ? format(new Date(comment.created_at), 'dd/MM/yyyy HH:mm')
                               : ''}
@@ -435,9 +431,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                             {comment.comment}
                           </span>
                           {comment.updated_at && (
-                            <span className="text-[10px] text-muted-foreground ml-1">
-                              (Editado)
-                            </span>
+                            <span className="text-[10px] text-muted-foreground ml-1">(Edited)</span>
                           )}
                         </div>
                       )}
@@ -455,7 +449,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                               setEditContent(comment.comment)
                             }}
                             className="text-muted-foreground hover:text-foreground transition-colors"
-                            title="Editar comentário"
+                            title="Edit comment"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -467,7 +461,7 @@ export function TaskCard({ task, onUpdate }: { task: TaskWithWO; onUpdate?: () =
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
                             className="text-muted-foreground hover:text-destructive transition-colors"
-                            title="Excluir comentário"
+                            title="Delete comment"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
