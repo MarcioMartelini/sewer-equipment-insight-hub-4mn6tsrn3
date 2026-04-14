@@ -8,12 +8,31 @@ import { IntegrationsTab } from '@/components/settings/IntegrationsTab'
 import { BackupTab } from '@/components/settings/BackupTab'
 import { AdminDashboardTab } from '@/components/settings/AdminDashboardTab'
 import { AppearanceTab } from '@/components/settings/AppearanceTab'
-import { Users, Shield, Plug, HardDrive, ShieldAlert, Palette, Loader2 } from 'lucide-react'
+import {
+  Users,
+  Shield,
+  Plug,
+  HardDrive,
+  ShieldAlert,
+  Palette,
+  Loader2,
+  Lock,
+  Unlock,
+} from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 
 export default function Settings() {
   const { user } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false)
+  const [unlockPassword, setUnlockPassword] = useState('')
+  const [unlockError, setUnlockError] = useState('')
+  const [isUnlocking, setIsUnlocking] = useState(false)
+  const [activeTab, setActiveTab] = useState('appearance')
 
   useEffect(() => {
     async function checkAdmin() {
@@ -40,6 +59,27 @@ export default function Settings() {
     )
   }
 
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user?.email) return
+    setIsUnlocking(true)
+    setUnlockError('')
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: unlockPassword,
+    })
+
+    if (error) {
+      setUnlockError('Senha incorreta. Tente novamente.')
+    } else {
+      setIsAdminUnlocked(true)
+      setActiveTab('dashboard')
+      setUnlockPassword('')
+    }
+    setIsUnlocking(false)
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
@@ -53,9 +93,18 @@ export default function Settings() {
         </p>
       </div>
 
-      <Tabs defaultValue={isAdmin ? 'dashboard' : 'appearance'} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4 bg-slate-100 dark:bg-slate-800 p-1 flex flex-wrap h-auto gap-1">
-          {isAdmin && (
+          {isAdmin && !isAdminUnlocked && (
+            <TabsTrigger
+              value="admin_locked"
+              className="flex items-center gap-2 text-amber-600 dark:text-amber-500 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-400"
+            >
+              <Lock className="w-4 h-4" />
+              Admin (Bloqueado)
+            </TabsTrigger>
+          )}
+          {isAdmin && isAdminUnlocked && (
             <>
               <TabsTrigger value="dashboard" className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4" />
@@ -85,7 +134,56 @@ export default function Settings() {
           </TabsTrigger>
         </TabsList>
 
-        {isAdmin && (
+        {isAdmin && !isAdminUnlocked && (
+          <TabsContent value="admin_locked">
+            <div className="bg-white dark:bg-slate-950 p-8 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-md mx-auto mt-10">
+              <form onSubmit={handleUnlock} className="space-y-6">
+                <div className="text-center space-y-3 mb-6">
+                  <div className="bg-amber-100 dark:bg-amber-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                    <Lock className="w-8 h-8 text-amber-600 dark:text-amber-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                    Acesso Restrito
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Confirme sua senha para acessar e gerenciar as configurações administrativas.
+                  </p>
+                </div>
+
+                <div className="space-y-3 text-left">
+                  <Label htmlFor="password">Senha de Administrador</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={unlockPassword}
+                    onChange={(e) => setUnlockPassword(e.target.value)}
+                    placeholder="Sua senha de acesso"
+                    required
+                  />
+                  {unlockError && <p className="text-sm font-medium text-red-500">{unlockError}</p>}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900"
+                  disabled={isUnlocking || !unlockPassword}
+                >
+                  {isUnlocking ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verificando...
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-4 h-4 mr-2" /> Desbloquear Acesso
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+          </TabsContent>
+        )}
+
+        {isAdmin && isAdminUnlocked && (
           <>
             <TabsContent value="dashboard">
               <div className="bg-white dark:bg-slate-950 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
