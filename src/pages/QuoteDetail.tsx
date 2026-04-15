@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import {
@@ -13,6 +13,7 @@ import {
   Truck,
   ClipboardList,
   Trash2,
+  FileText,
 } from 'lucide-react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -57,6 +58,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
+import { useDashboardExport } from '@/hooks/use-dashboard-export'
 
 import {
   fetchQuoteById,
@@ -97,6 +99,12 @@ export default function QuoteDetail() {
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false)
   const [convertWoNumber, setConvertWoNumber] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+
+  const exportRef = useRef<HTMLDivElement>(null)
+  const { isExporting, handleExportPDF } = useDashboardExport(
+    exportRef,
+    quote ? `Quote_${quote.quote_number}` : 'Quote Detail',
+  )
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
@@ -243,10 +251,15 @@ export default function QuoteDetail() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6" ref={exportRef}>
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => navigate('/sales')}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate('/sales')}
+            data-html2canvas-ignore
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -259,7 +272,11 @@ export default function QuoteDetail() {
             <p className="text-muted-foreground">{quote.customer_name}</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2" data-html2canvas-ignore>
+          <Button variant="outline" onClick={handleExportPDF} disabled={isExporting}>
+            <FileText className="mr-2 h-4 w-4" />
+            {isExporting ? 'Exporting...' : 'Export PDF'}
+          </Button>
           <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit Quote
