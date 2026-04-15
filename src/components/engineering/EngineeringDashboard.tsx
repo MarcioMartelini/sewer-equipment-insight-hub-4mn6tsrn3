@@ -50,7 +50,7 @@ const ALL_METRICS = [
   'Completion by Task Type',
   'Completion Trend',
   'Task Status by Category',
-  'Top 10 Delayed',
+  'Top 10 Delayed Tasks',
 ]
 
 export function EngineeringDashboard() {
@@ -448,10 +448,10 @@ export function EngineeringDashboard() {
             </Card>
           )}
 
-          {selectedMetrics.includes('Top 10 Delayed') && (
+          {selectedMetrics.includes('Top 10 Delayed Tasks') && (
             <Card>
               <CardHeader>
-                <CardTitle>Top 10 Delayed Work Orders</CardTitle>
+                <CardTitle>Top 10 Engineering Delayed Tasks</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -459,28 +459,32 @@ export function EngineeringDashboard() {
                     <TableRow>
                       <TableHead>WO Number</TableHead>
                       <TableHead>Customer</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Delay</TableHead>
-                      <TableHead className="text-right">Pending Tasks</TableHead>
+                      <TableHead>Task Due Date</TableHead>
+                      <TableHead>Delay (number of Days)</TableHead>
+                      <TableHead className="text-right">Assigned to</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {data.topDelayed.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                          No delayed work orders found.
+                          No delayed tasks found.
                         </TableCell>
                       </TableRow>
                     )}
-                    {data.topDelayed.map((wo) => (
-                      <TableRow key={wo.wo_id}>
-                        <TableCell className="font-medium">{wo.wo_number}</TableCell>
-                        <TableCell>{wo.customer_name}</TableCell>
-                        <TableCell>{format(new Date(wo.due_date), 'MMM dd, yyyy')}</TableCell>
+                    {data.topDelayed.map((task) => (
+                      <TableRow key={task.task_id}>
+                        <TableCell className="font-medium">{task.wo_number}</TableCell>
+                        <TableCell>{task.customer_name}</TableCell>
                         <TableCell>
-                          <Badge variant="destructive">{wo.delayDays} days</Badge>
+                          {task.task_due_date
+                            ? format(new Date(task.task_due_date), 'MMM dd, yyyy')
+                            : '-'}
                         </TableCell>
-                        <TableCell className="text-right">{wo.pendingTasks}</TableCell>
+                        <TableCell>
+                          <Badge variant="destructive">{task.delayDays}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{task.assigned_to}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

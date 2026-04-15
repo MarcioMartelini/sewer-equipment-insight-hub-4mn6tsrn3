@@ -39,12 +39,12 @@ export interface DashboardData {
   progressByType: { type: string; completionRate: number }[]
   trend: { date: string; completed: number }[]
   topDelayed: {
-    wo_id: string
+    task_id: string
     wo_number: string
     customer_name: string
-    due_date: string
+    task_due_date: string
     delayDays: number
-    pendingTasks: number
+    assigned_to: string
   }[]
   layoutsStatus: TaskStatusCounts
   bomsStatus: TaskStatusCounts
@@ -177,42 +177,6 @@ export async function getEngineeringDashboardData(
     }
   })
 
-  const delayedTaskWOIds = [
-    ...new Set(
-      filteredTasks
-        .filter((t) => t.was_delayed || t.status === 'delayed')
-        .map((t) => t.work_orders?.wo_number),
-    ),
-  ]
-
-  let wosToConsider: any[] = []
-
-  const { data: delayedWos } = await supabase
-    .from('work_orders')
-    .select('id, wo_number, customer_name, due_date, status, wo_tasks(id, status, is_completed)')
-    .in('status', ['Delayed', 'Atrasado', 'delayed'])
-
-  if (delayedWos) {
-    wosToConsider = [...delayedWos]
-  }
-
-  if (delayedTaskWOIds.length > 0) {
-    const { data: moreWos } = await supabase
-      .from('work_orders')
-      .select('id, wo_number, customer_name, due_date, status, wo_tasks(id, status, is_completed)')
-      .in('wo_number', delayedTaskWOIds)
-
-    if (moreWos) {
-      const existingIds = new Set(wosToConsider.map((w) => w.id))
-      moreWos.forEach((w) => {
-        if (!existingIds.has(w.id)) {
-          wosToConsider.push(w)
-          existingIds.add(w.id)
-        }
-      })
-    }
-  }
-
   const getCounts = (type: string) => {
     const tasks = filteredTasks.filter((t) =>
       t.task_name?.toLowerCase().includes(type.toLowerCase()),
@@ -232,11 +196,19 @@ export async function getEngineeringDashboardData(
   const travelersStatus = getCounts('traveler')
   const accessoriesStatus = getCounts('accessori')
 
-  const topDelayed = wosToConsider
-    .map((wo: any) => {
+  const topDelayed = filteredTasks
+    .filter((t) => {
+      if (t.is_completed || t.status === 'complete') return false
+      let isPast = false
+      if (t.finish_date) {
+        isPast = new Date() > new Date(t.finish_date)
+      }
+      return t.status === 'delayed' || t.was_delayed || isPast
+    })
+    .map((t: any) => {
       let delayDays = 0
-      if (wo.due_date) {
-        const due = new Date(wo.due_date)
+      if (t.finish_date) {
+        const due = new Date(t.finish_date)
         const now = new Date()
         const diffTime = now.getTime() - due.getTime()
         if (now > due) {
@@ -244,20 +216,16 @@ export async function getEngineeringDashboardData(
         }
       }
 
-      const pendingTasks = (wo.wo_tasks || []).filter(
-        (t: any) => !t.is_completed && t.status !== 'complete',
-      ).length
-
       return {
-        wo_id: wo.id,
-        wo_number: wo.wo_number,
-        customer_name: wo.customer_name || 'N/A',
-        due_date: wo.due_date || new Date().toISOString(),
+        task_id: t.id,
+        wo_number: t.wo_number,
+        customer_name: t.customer_name || 'N/A',
+        task_due_date: t.finish_date || '',
         delayDays,
-        pendingTasks,
+        assigned_to: t.assignee_name || 'Unassigned',
       }
     })
-    .filter((wo) => wo.delayDays > 0 || wo.pendingTasks > 0)
+    .filter((t) => t.delayDays > 0)
     .sort((a, b) => b.delayDays - a.delayDays)
     .slice(0, 10)
 
