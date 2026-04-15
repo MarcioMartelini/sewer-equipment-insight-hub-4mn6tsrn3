@@ -136,6 +136,7 @@ export default function Sales() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [salespersonFilter, setSalespersonFilter] = useState('all')
   const [customerFilter, setCustomerFilter] = useState('all')
+  const [productFamilyFilter, setProductFamilyFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -406,6 +407,10 @@ export default function Sales() {
     return Array.from(new Set(quotes.map((q) => q.customer_name).filter(Boolean))) as string[]
   }, [quotes])
 
+  const uniqueProductFamilies = useMemo(() => {
+    return Array.from(new Set(quotes.map((q) => q.product_family).filter(Boolean))) as string[]
+  }, [quotes])
+
   const filteredQuotes = useMemo(() => {
     return quotes.filter((q) => {
       const matchesSearch =
@@ -415,6 +420,8 @@ export default function Sales() {
       const matchesStatus = statusFilter === 'all' || q.status === statusFilter
       const matchesSalesperson = salespersonFilter === 'all' || q.salesperson === salespersonFilter
       const matchesCustomer = customerFilter === 'all' || q.customer_name === customerFilter
+      const matchesProductFamily =
+        productFamilyFilter === 'all' || q.product_family === productFamilyFilter
 
       let matchesDate = true
       if (dateFrom || dateTo) {
@@ -423,9 +430,25 @@ export default function Sales() {
         if (dateTo && new Date(dateTo) < qDate) matchesDate = false
       }
 
-      return matchesSearch && matchesStatus && matchesSalesperson && matchesCustomer && matchesDate
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesSalesperson &&
+        matchesCustomer &&
+        matchesProductFamily &&
+        matchesDate
+      )
     })
-  }, [quotes, searchQuery, statusFilter, salespersonFilter, customerFilter, dateFrom, dateTo])
+  }, [
+    quotes,
+    searchQuery,
+    statusFilter,
+    salespersonFilter,
+    customerFilter,
+    productFamilyFilter,
+    dateFrom,
+    dateTo,
+  ])
 
   const totalPages = Math.ceil(filteredQuotes.length / itemsPerPage) || 1
   const paginatedQuotes = filteredQuotes.slice(
@@ -483,7 +506,15 @@ export default function Sales() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, statusFilter, salespersonFilter, customerFilter, dateFrom, dateTo])
+  }, [
+    searchQuery,
+    statusFilter,
+    salespersonFilter,
+    customerFilter,
+    productFamilyFilter,
+    dateFrom,
+    dateTo,
+  ])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -612,7 +643,7 @@ export default function Sales() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
               <div className="xl:col-span-2">
                 <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">Search</Label>
                 <Input
@@ -668,6 +699,25 @@ export default function Sales() {
                     {uniqueCustomers.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  Product Family
+                </Label>
+                <Select value={productFamilyFilter} onValueChange={setProductFamilyFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Families" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Families</SelectItem>
+                    {uniqueProductFamilies.map((pf) => (
+                      <SelectItem key={pf} value={pf}>
+                        {pf}
                       </SelectItem>
                     ))}
                   </SelectContent>
