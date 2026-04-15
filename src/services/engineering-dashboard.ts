@@ -28,10 +28,13 @@ export interface TaskStatusCounts {
 export interface DashboardData {
   kpis: {
     totalTasks: number
+    notStartedTasks: number
+    onTrackTasks: number
+    parkedTasks: number
+    atRiskTasks: number
+    delayedTasks: number
     completedTasks: number
     completionRate: number
-    delayedTasks: number
-    atRiskTasks: number
   }
   progressByType: { type: string; completionRate: number }[]
   trend: { date: string; completed: number }[]
@@ -121,11 +124,14 @@ export async function getEngineeringDashboardData(
   }
 
   const totalTasks = filteredTasks.length
+  const notStartedTasks = filteredTasks.filter((t) => t.status === 'not_started').length
+  const onTrackTasks = filteredTasks.filter((t) => t.status === 'on_track').length
+  const parkedTasks = filteredTasks.filter((t) => t.status === 'parked').length
+  const atRiskTasks = filteredTasks.filter((t) => t.status === 'at_risk').length
+  const delayedTasks = filteredTasks.filter((t) => t.was_delayed || t.status === 'delayed').length
   const completedTasks = filteredTasks.filter(
     (t) => t.is_completed || t.status === 'complete',
   ).length
-  const delayedTasks = filteredTasks.filter((t) => t.was_delayed || t.status === 'delayed').length
-  const atRiskTasks = filteredTasks.filter((t) => t.status === 'at_risk').length
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
   const taskTypes = ['Layout', 'BOM', 'Traveler', 'Accessori']
@@ -258,10 +264,13 @@ export async function getEngineeringDashboardData(
   return {
     kpis: {
       totalTasks,
+      notStartedTasks,
+      onTrackTasks,
+      parkedTasks,
+      atRiskTasks,
+      delayedTasks,
       completedTasks,
       completionRate,
-      delayedTasks,
-      atRiskTasks,
     },
     progressByType,
     trend,

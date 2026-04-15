@@ -33,14 +33,20 @@ import {
   AlertTriangle,
   TrendingUp,
   FileDown,
+  CircleDashed,
+  PlayCircle,
+  PauseCircle,
 } from 'lucide-react'
 
 const ALL_METRICS = [
   'Total Tasks',
+  'Not Started',
+  'On Track',
+  'Parked',
+  'At Risk',
+  'Delayed',
   'Completed',
   'Completion Rate',
-  'Delayed Tasks',
-  'At Risk Tasks',
   'Completion by Task Type',
   'Completion Trend',
   'Task Status by Category',
@@ -237,11 +243,11 @@ export function EngineeringDashboard() {
 
       <div ref={dashboardRef} className="space-y-6 bg-transparent">
         <div className="space-y-6">
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
             {selectedMetrics.includes('Total Tasks') && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+                  <CardTitle className="text-xs font-medium">Total Tasks</CardTitle>
                   <ListTodo className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -249,32 +255,56 @@ export function EngineeringDashboard() {
                 </CardContent>
               </Card>
             )}
-            {selectedMetrics.includes('Completed') && (
+            {selectedMetrics.includes('Not Started') && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <CardTitle className="text-xs font-medium">Not Started</CardTitle>
+                  <CircleDashed className="h-4 w-4 text-slate-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.kpis.completedTasks}</div>
+                  <div className="text-2xl font-bold text-slate-600">
+                    {data.kpis.notStartedTasks}
+                  </div>
                 </CardContent>
               </Card>
             )}
-            {selectedMetrics.includes('Completion Rate') && (
+            {selectedMetrics.includes('On Track') && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-blue-500" />
+                  <CardTitle className="text-xs font-medium">On Track</CardTitle>
+                  <PlayCircle className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.kpis.completionRate.toFixed(1)}%</div>
+                  <div className="text-2xl font-bold text-blue-600">{data.kpis.onTrackTasks}</div>
                 </CardContent>
               </Card>
             )}
-            {selectedMetrics.includes('Delayed Tasks') && (
+            {selectedMetrics.includes('Parked') && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Delayed Tasks</CardTitle>
+                  <CardTitle className="text-xs font-medium">Parked</CardTitle>
+                  <PauseCircle className="h-4 w-4 text-slate-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-slate-600">{data.kpis.parkedTasks}</div>
+                </CardContent>
+              </Card>
+            )}
+            {selectedMetrics.includes('At Risk') && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xs font-medium">At Risk</CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-amber-600">{data.kpis.atRiskTasks}</div>
+                </CardContent>
+              </Card>
+            )}
+            {selectedMetrics.includes('Delayed') && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xs font-medium">Delayed</CardTitle>
                   <Clock className="h-4 w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
@@ -282,14 +312,27 @@ export function EngineeringDashboard() {
                 </CardContent>
               </Card>
             )}
-            {selectedMetrics.includes('At Risk Tasks') && (
+            {selectedMetrics.includes('Completed') && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">At Risk Tasks</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <CardTitle className="text-xs font-medium">Completed</CardTitle>
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-amber-600">{data.kpis.atRiskTasks}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {data.kpis.completedTasks}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {selectedMetrics.includes('Completion Rate') && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xs font-medium">Compl. Rate</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data.kpis.completionRate.toFixed(1)}%</div>
                 </CardContent>
               </Card>
             )}
