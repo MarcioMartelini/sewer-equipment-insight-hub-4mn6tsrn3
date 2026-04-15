@@ -358,7 +358,7 @@ export default function SalespersonFormModal({
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button className="bg-[#0030fd]" type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {salesperson ? 'Save Changes' : 'Create Salesperson'}
               </Button>
