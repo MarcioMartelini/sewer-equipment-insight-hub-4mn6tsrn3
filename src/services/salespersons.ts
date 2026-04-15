@@ -7,6 +7,7 @@ export interface Salesperson {
   email: string | null
   phone: string | null
   department: string | null
+  division: string | null
   region: string | null
   total_wos: number
   total_revenue: number
@@ -41,7 +42,16 @@ export async function fetchSalespersonById(id: string) {
 }
 
 export async function createSalesperson(sp: Partial<Salesperson>) {
-  const { data, error } = await supabase.from('salespersons').insert([sp]).select().single()
+  const dataToInsert = { ...sp }
+  if (!dataToInsert.salesperson_id) {
+    delete dataToInsert.salesperson_id
+  }
+
+  const { data, error } = await supabase
+    .from('salespersons')
+    .insert([dataToInsert])
+    .select()
+    .single()
 
   if (error) throw error
   return data as Salesperson

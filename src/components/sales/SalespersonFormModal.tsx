@@ -17,19 +17,95 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Loader2 } from 'lucide-react'
 import type { Salesperson } from '@/services/salespersons'
 
+const US_STATES = [
+  'Alabama',
+  'Alaska',
+  'Arizona',
+  'Arkansas',
+  'California',
+  'Colorado',
+  'Connecticut',
+  'Delaware',
+  'Florida',
+  'Georgia',
+  'Hawaii',
+  'Idaho',
+  'Illinois',
+  'Indiana',
+  'Iowa',
+  'Kansas',
+  'Kentucky',
+  'Louisiana',
+  'Maine',
+  'Maryland',
+  'Massachusetts',
+  'Michigan',
+  'Minnesota',
+  'Mississippi',
+  'Missouri',
+  'Montana',
+  'Nebraska',
+  'Nevada',
+  'New Hampshire',
+  'New Jersey',
+  'New Mexico',
+  'New York',
+  'North Carolina',
+  'North Dakota',
+  'Ohio',
+  'Oklahoma',
+  'Oregon',
+  'Pennsylvania',
+  'Rhode Island',
+  'South Carolina',
+  'South Dakota',
+  'Tennessee',
+  'Texas',
+  'Utah',
+  'Vermont',
+  'Virginia',
+  'Washington',
+  'West Virginia',
+  'Wisconsin',
+  'Wyoming',
+]
+
+const CA_PROVINCES = [
+  'Alberta',
+  'British Columbia',
+  'Manitoba',
+  'New Brunswick',
+  'Newfoundland and Labrador',
+  'Nova Scotia',
+  'Northwest Territories',
+  'Nunavut',
+  'Ontario',
+  'Prince Edward Island',
+  'Quebec',
+  'Saskatchewan',
+  'Yukon',
+]
+
+const REGIONS = [
+  { label: 'United States', options: US_STATES },
+  { label: 'Canada', options: CA_PROVINCES },
+]
+
 const schema = z.object({
-  salesperson_id: z.string().min(1, 'Required'),
+  salesperson_id: z.string().optional(),
   name: z.string().min(1, 'Required'),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
-  department: z.string().optional().or(z.literal('')),
-  region: z.string().optional().or(z.literal('')),
+  division: z.enum(['Municipal', 'Industrial', 'Plumbing']).optional().or(z.literal('')),
+  region: z.array(z.string()).default([]),
   commission_rate: z.coerce.number().min(0, 'Must be positive').max(100, 'Max 100%'),
   status: z.enum(['Active', 'Inactive']),
 })
@@ -40,7 +116,7 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   salesperson: Salesperson | null
-  onSave: (data: FormValues) => Promise<void>
+  onSave: (data: Partial<Salesperson>) => Promise<void>
   isSaving: boolean
 }
 
@@ -58,8 +134,8 @@ export default function SalespersonFormModal({
       name: '',
       email: '',
       phone: '',
-      department: '',
-      region: '',
+      division: '',
+      region: [],
       commission_rate: 0,
       status: 'Active',
     },
@@ -73,21 +149,19 @@ export default function SalespersonFormModal({
           name: salesperson.name || '',
           email: salesperson.email || '',
           phone: salesperson.phone || '',
-          department: salesperson.department || '',
-          region: salesperson.region || '',
+          division: (salesperson.division as any) || '',
+          region: salesperson.region ? salesperson.region.split(', ').filter(Boolean) : [],
           commission_rate: Number(salesperson.commission_rate || 0),
           status: (salesperson.status as 'Active' | 'Inactive') || 'Active',
         })
       } else {
         form.reset({
-          salesperson_id: `SP-${Math.floor(Math.random() * 10000)
-            .toString()
-            .padStart(4, '0')}`,
+          salesperson_id: '',
           name: '',
           email: '',
           phone: '',
-          department: '',
-          region: '',
+          division: '',
+          region: [],
           commission_rate: 0,
           status: 'Active',
         })
@@ -95,14 +169,27 @@ export default function SalespersonFormModal({
     }
   }, [isOpen, salesperson, form])
 
+  const handleFormSubmit = async (values: FormValues) => {
+    const dataToSave: Partial<Salesperson> = {
+      name: values.name,
+      email: values.email || null,
+      phone: values.phone || null,
+      division: values.division || null,
+      region: values.region.length > 0 ? values.region.join(', ') : null,
+      commission_rate: values.commission_rate,
+      status: values.status,
+    }
+    await onSave(dataToSave)
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{salesperson ? 'Edit Salesperson' : 'New Salesperson'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSave)} className="space-y-4 pt-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -111,7 +198,11 @@ export default function SalespersonFormModal({
                   <FormItem>
                     <FormLabel>Salesperson ID</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input
+                        {...field}
+                        disabled
+                        placeholder={salesperson ? '' : 'Auto-generated'}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,26 +249,22 @@ export default function SalespersonFormModal({
               />
               <FormField
                 control={form.control}
-                name="department"
+                name="division"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Department</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="region"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Region</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Division</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select division" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Municipal">Municipal</SelectItem>
+                        <SelectItem value="Industrial">Industrial</SelectItem>
+                        <SelectItem value="Plumbing">Plumbing</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -212,6 +299,56 @@ export default function SalespersonFormModal({
                         <SelectItem value="Inactive">Inactive</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="region"
+                render={() => (
+                  <FormItem className="col-span-1 md:col-span-2 mt-2">
+                    <FormLabel>Region</FormLabel>
+                    <ScrollArea className="h-56 rounded-md border border-input p-4 bg-background">
+                      <div className="space-y-6">
+                        {REGIONS.map((group) => (
+                          <div key={group.label}>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                              {group.label}
+                            </h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                              {group.options.map((option) => (
+                                <FormField
+                                  key={option}
+                                  control={form.control}
+                                  name="region"
+                                  render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(option)}
+                                          onCheckedChange={(checked) => {
+                                            return checked
+                                              ? field.onChange([...(field.value || []), option])
+                                              : field.onChange(
+                                                  field.value?.filter((val) => val !== option),
+                                                )
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="font-normal text-xs cursor-pointer leading-tight pt-0.5">
+                                        {option}
+                                      </FormLabel>
+                                    </FormItem>
+                                  )}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
                     <FormMessage />
                   </FormItem>
                 )}
