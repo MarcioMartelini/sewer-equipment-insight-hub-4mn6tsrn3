@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Form,
@@ -21,11 +21,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { createCustomer, updateCustomer, type Customer } from '@/services/customers'
+import { fetchSalespersons, type Salesperson } from '@/services/salespersons'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 
 const schema = z.object({
-  customer_id: z.string().min(1, 'Required'),
+  customer_id: z.string().optional(),
   customer_name: z.string().min(1, 'Required'),
   contact_person: z.string().optional(),
   email: z.string().email('Invalid email').or(z.literal('')),
@@ -35,6 +36,7 @@ const schema = z.object({
   state: z.string().optional(),
   country: z.string().optional(),
   status: z.string().min(1, 'Required'),
+  salesperson_id: z.string().optional().nullable(),
 })
 
 interface Props {
@@ -44,9 +46,79 @@ interface Props {
   onSuccess: () => void
 }
 
+const US_STATES = [
+  'Alabama',
+  'Alaska',
+  'Arizona',
+  'Arkansas',
+  'California',
+  'Colorado',
+  'Connecticut',
+  'Delaware',
+  'Florida',
+  'Georgia',
+  'Hawaii',
+  'Idaho',
+  'Illinois',
+  'Indiana',
+  'Iowa',
+  'Kansas',
+  'Kentucky',
+  'Louisiana',
+  'Maine',
+  'Maryland',
+  'Massachusetts',
+  'Michigan',
+  'Minnesota',
+  'Mississippi',
+  'Missouri',
+  'Montana',
+  'Nebraska',
+  'Nevada',
+  'New Hampshire',
+  'New Jersey',
+  'New Mexico',
+  'New York',
+  'North Carolina',
+  'North Dakota',
+  'Ohio',
+  'Oklahoma',
+  'Oregon',
+  'Pennsylvania',
+  'Rhode Island',
+  'South Carolina',
+  'South Dakota',
+  'Tennessee',
+  'Texas',
+  'Utah',
+  'Vermont',
+  'Virginia',
+  'Washington',
+  'West Virginia',
+  'Wisconsin',
+  'Wyoming',
+]
+
+const CA_PROVINCES = [
+  'Alberta',
+  'British Columbia',
+  'Manitoba',
+  'New Brunswick',
+  'Newfoundland and Labrador',
+  'Nova Scotia',
+  'Ontario',
+  'Prince Edward Island',
+  'Quebec',
+  'Saskatchewan',
+  'Northwest Territories',
+  'Nunavut',
+  'Yukon',
+]
+
 export default function CustomerFormDialog({ open, onOpenChange, customer, onSuccess }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [salespersons, setSalespersons] = useState<Salesperson[]>([])
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -61,11 +133,14 @@ export default function CustomerFormDialog({ open, onOpenChange, customer, onSuc
       state: '',
       country: '',
       status: 'Active',
+      salesperson_id: 'none',
     },
   })
 
   useEffect(() => {
     if (open) {
+      fetchSalespersons().then(setSalespersons).catch(console.error)
+
       if (customer) {
         form.reset({
           customer_id: customer.customer_id,
@@ -78,10 +153,11 @@ export default function CustomerFormDialog({ open, onOpenChange, customer, onSuc
           state: customer.state || '',
           country: customer.country || '',
           status: customer.status,
+          salesperson_id: customer.salesperson_id || 'none',
         })
       } else {
         form.reset({
-          customer_id: `CUST-${Math.floor(Math.random() * 10000)}`,
+          customer_id: '',
           customer_name: '',
           contact_person: '',
           email: '',
@@ -91,19 +167,34 @@ export default function CustomerFormDialog({ open, onOpenChange, customer, onSuc
           state: '',
           country: '',
           status: 'Active',
+          salesperson_id: 'none',
         })
       }
     }
   }, [open, customer, form])
 
+  const activeSalespersons = useMemo(() => {
+    return salespersons.filter((sp) => sp.status === 'Active' || sp.id === customer?.salesperson_id)
+  }, [salespersons, customer])
+
+  const selectedCountry = form.watch('country')
+  const stateOptions =
+    selectedCountry === 'USA' ? US_STATES : selectedCountry === 'Canada' ? CA_PROVINCES : []
+
   const onSubmit = async (data: z.infer<typeof schema>) => {
     setLoading(true)
     try {
+      const payload = {
+        ...data,
+        salesperson_id:
+          data.salesperson_id === 'none' || !data.salesperson_id ? null : data.salesperson_id,
+      }
+
       if (customer) {
-        await updateCustomer(customer.id, data)
+        await updateCustomer(customer.id, payload)
         toast({ title: 'Customer updated successfully' })
       } else {
-        await createCustomer(data)
+        await createCustomer(payload)
         toast({ title: 'Customer created successfully' })
       }
       onSuccess()
@@ -131,7 +222,11 @@ export default function CustomerFormDialog({ open, onOpenChange, customer, onSuc
                   <FormItem>
                     <FormLabel>Customer ID</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input
+                        {...field}
+                        disabled
+                        placeholder={customer ? field.value : 'Auto-generated'}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,6 +281,31 @@ export default function CustomerFormDialog({ open, onOpenChange, customer, onSuc
               />
               <FormField
                 control={form.control}
+                name="salesperson_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Salesperson</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a salesperson" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {activeSalespersons.map((sp) => (
+                          <SelectItem key={sp.id} value={sp.id}>
+                            {sp.name} {sp.status !== 'Active' ? '(Inactive)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -225,13 +345,27 @@ export default function CustomerFormDialog({ open, onOpenChange, customer, onSuc
               />
               <FormField
                 control={form.control}
-                name="city"
+                name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Country</FormLabel>
+                    <Select
+                      onValueChange={(val) => {
+                        field.onChange(val)
+                        form.setValue('state', '')
+                      }}
+                      value={field.value || ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="USA">USA</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -241,20 +375,37 @@ export default function CustomerFormDialog({ open, onOpenChange, customer, onSuc
                 name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>State</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>State/Province</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ''}
+                      disabled={!selectedCountry}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={selectedCountry ? 'Select State' : 'Select Country first'}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {stateOptions.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="country"
+                name="city"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>Country</FormLabel>
+                    <FormLabel>City</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

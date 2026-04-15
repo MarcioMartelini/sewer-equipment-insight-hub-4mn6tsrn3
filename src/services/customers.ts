@@ -12,6 +12,7 @@ export interface Customer {
   state: string | null
   country: string | null
   status: string
+  salesperson_id: string | null
   total_wos: number
   last_wo_date: string | null
   created_at: string
@@ -43,7 +44,11 @@ export const fetchCustomers = async (): Promise<Customer[]> => {
 }
 
 export const createCustomer = async (customer: Partial<Customer>) => {
-  const { data, error } = await supabase.from('customers').insert([customer]).select().single()
+  const dataToInsert = { ...customer }
+  if (!dataToInsert.customer_id) {
+    delete dataToInsert.customer_id
+  }
+  const { data, error } = await supabase.from('customers').insert([dataToInsert]).select().single()
 
   if (error) throw error
   return data as Customer
