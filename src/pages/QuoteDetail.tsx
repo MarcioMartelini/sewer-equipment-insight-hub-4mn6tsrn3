@@ -14,6 +14,7 @@ import {
   ClipboardList,
   Trash2,
   FileText,
+  RotateCcw,
 } from 'lucide-react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -63,7 +64,9 @@ import { useDashboardExport } from '@/hooks/use-dashboard-export'
 import {
   fetchQuoteById,
   fetchQuoteHistory,
+  fetchQuoteVersions,
   updateQuote,
+  restoreQuoteVersion,
   convertToWorkOrder,
   softDeleteQuote,
   Quote,
@@ -94,11 +97,14 @@ export default function QuoteDetail() {
 
   const [quote, setQuote] = useState<Quote | null>(null)
   const [history, setHistory] = useState<any[]>([])
+  const [versions, setVersions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false)
   const [convertWoNumber, setConvertWoNumber] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false)
+  const [selectedVersion, setSelectedVersion] = useState<any>(null)
 
   const exportRef = useRef<HTMLDivElement>(null)
   const { isExporting, handleExportPDF } = useDashboardExport(
@@ -129,12 +135,14 @@ export default function QuoteDetail() {
     if (!id) return
     setLoading(true)
     try {
-      const [quoteData, historyData] = await Promise.all([
+      const [quoteData, historyData, versionsData] = await Promise.all([
         fetchQuoteById(id),
         fetchQuoteHistory(id),
+        fetchQuoteVersions(id),
       ])
       setQuote(quoteData)
       setHistory(historyData)
+      setVersions(versionsData)
       form.reset({
         customer_name: quoteData.customer_name || '',
         salesperson: quoteData.salesperson || '',
@@ -206,6 +214,21 @@ export default function QuoteDetail() {
       loadData()
     } catch (error: any) {
       toast({ title: 'Error converting to WO', description: error.message, variant: 'destructive' })
+    }
+  }
+
+  const onRestoreConfirm = async () => {
+    if (!id || !selectedVersion) return
+    try {
+      await restoreQuoteVersion(id, selectedVersion.quote_data)
+      toast({
+        title: 'Success',
+        description: `Quote restored to version ${selectedVersion.version_number}`,
+      })
+      setIsRestoreModalOpen(false)
+      loadData()
+    } catch (error: any) {
+      toast({ title: 'Error restoring quote', description: error.message, variant: 'destructive' })
     }
   }
 
@@ -299,6 +322,7 @@ export default function QuoteDetail() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="versions">Versions</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -486,6 +510,71 @@ export default function QuoteDetail() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
                   No history records found for this quote.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="versions">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" /> Version History
+              </CardTitle>
+              <CardDescription>View and restore previous versions of this quote.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {versions.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Version</TableHead>
+                      <TableHead>Date / Time</TableHead>
+                      <TableHead>Saved By</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {versions.map((v, index) => (
+                      <TableRow key={v.id}>
+                        <TableCell>
+                          <Badge variant={index === 0 ? 'default' : 'secondary'}>
+                            v{v.version_number} {index === 0 && '(Current)'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {v.created_at ? format(new Date(v.created_at), 'PPP p') : '-'}
+                        </TableCell>
+                        <TableCell>{v.user?.full_name || 'System'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={getStatusColor(v.quote_data.status)}>
+                            {v.quote_data.status?.toUpperCase() || '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatCurrency(v.quote_data.quote_value)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={index === 0}
+                            onClick={() => {
+                              setSelectedVersion(v)
+                              setIsRestoreModalOpen(true)
+                            }}
+                          >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Restore
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
+                  No versions found for this quote.
                 </div>
               )}
             </CardContent>
@@ -741,6 +830,29 @@ export default function QuoteDetail() {
             <Button variant="destructive" onClick={onDeleteConfirm}>
               Confirm Delete
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRestoreModalOpen} onOpenChange={setIsRestoreModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Restore Version</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to restore this quote to version{' '}
+              {selectedVersion?.version_number}? This will overwrite the current data with the data
+              from{' '}
+              {selectedVersion?.created_at
+                ? format(new Date(selectedVersion.created_at), 'PPP p')
+                : ''}
+              . A new version will be created to preserve the current state.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsRestoreModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={onRestoreConfirm}>Confirm Restore</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

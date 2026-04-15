@@ -113,6 +113,31 @@ export async function fetchQuoteHistory(quoteId: string) {
   return data
 }
 
+export async function fetchQuoteVersions(quoteId: string) {
+  const { data, error } = await supabase
+    .from('quote_versions' as any)
+    .select('*, user:users(full_name)')
+    .eq('quote_id', quoteId)
+    .order('version_number', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+
+export async function restoreQuoteVersion(quoteId: string, versionData: any) {
+  const { id, created_at, updated_at, deleted_at, quote_number, created_by, ...rest } = versionData
+
+  const { data, error } = await supabase
+    .from('quotes')
+    .update(rest)
+    .eq('id', quoteId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export async function convertToWorkOrder(quoteId: string, woNumber: string) {
   const {
     data: { session },
