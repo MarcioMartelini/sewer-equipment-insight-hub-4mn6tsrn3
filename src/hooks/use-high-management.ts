@@ -31,31 +31,6 @@ export function getQuoteData(quotes: any) {
   }
 }
 
-function generateMockWOs(start: Date, end: Date): WOData[] {
-  const depts = ['Sales', 'Engineering', 'Purchasing', 'Production', 'Quality', 'HR']
-  const mock: WOData[] = []
-  const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000))
-  const count = Math.min(days * 2, 100)
-
-  for (let i = 0; i < count; i++) {
-    const d = subDays(end, Math.floor(Math.random() * days))
-    mock.push({
-      id: `mock-${i}`,
-      wo_number: `WO-${1000 + i}`,
-      customer_name: `Customer ${String.fromCharCode(65 + (i % 26))}`,
-      department: depts[i % depts.length],
-      progress: Math.floor(Math.random() * 100),
-      status: i % 4 === 0 ? 'Completed' : 'In Progress',
-      created_at: d.toISOString(),
-      quotes: {
-        quote_value: 5000 + Math.random() * 45000,
-        profit_margin_percentage: 15 + Math.random() * 20,
-      },
-    })
-  }
-  return mock
-}
-
 export function useHighManagement(startDate: Date, endDate: Date) {
   const [wos, setWos] = useState<WOData[]>([])
   const [csat, setCsat] = useState(0)
@@ -83,17 +58,13 @@ export function useHighManagement(startDate: Date, endDate: Date) {
           .lte('created_at', endStr),
       ])
 
-      if (woRes.data && woRes.data.length > 0) {
-        setWos(woRes.data as unknown as WOData[])
-      } else {
-        setWos(generateMockWOs(startDate, endDate))
-      }
+      setWos((woRes.data as unknown as WOData[]) || [])
 
       if (metricRes.data && metricRes.data.length > 0) {
         const sum = metricRes.data.reduce((acc, m) => acc + Number(m.metric_value || 0), 0)
         setCsat(sum / metricRes.data.length)
       } else {
-        setCsat(92 + Math.random() * 6)
+        setCsat(0)
       }
       setLoading(false)
     }
