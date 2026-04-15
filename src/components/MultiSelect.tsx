@@ -7,6 +7,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 
 interface MultiSelectProps {
@@ -17,21 +18,35 @@ interface MultiSelectProps {
 }
 
 export function MultiSelect({ options, selected, onChange, placeholder }: MultiSelectProps) {
+  const [open, setOpen] = React.useState(false)
+  const [localSelected, setLocalSelected] = React.useState<string[]>(selected)
+
+  React.useEffect(() => {
+    if (open) {
+      setLocalSelected(selected)
+    }
+  }, [open, selected])
+
   const handleSelect = (option: string) => {
-    if (selected.includes(option)) {
-      onChange(selected.filter((item) => item !== option))
+    if (localSelected.includes(option)) {
+      setLocalSelected(localSelected.filter((item) => item !== option))
     } else {
-      onChange([...selected, option])
+      setLocalSelected([...localSelected, option])
     }
   }
 
+  const handleApply = () => {
+    onChange(localSelected)
+    setOpen(false)
+  }
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
-          className="w-full justify-between bg-white text-sm font-normal text-slate-600 border-slate-200 hover:bg-slate-50"
+          className="w-full justify-between bg-white dark:bg-slate-950 text-sm font-normal text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900"
         >
           <span className="truncate">
             {selected.length === 0
@@ -43,17 +58,33 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-white" align="start">
-        {options.map((option) => (
-          <DropdownMenuCheckboxItem
-            key={option}
-            checked={selected.includes(option)}
-            onCheckedChange={() => handleSelect(option)}
-            className="cursor-pointer"
+      <DropdownMenuContent
+        className="w-56 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
+        align="start"
+      >
+        <div className="max-h-[300px] overflow-y-auto">
+          {options.map((option) => (
+            <DropdownMenuCheckboxItem
+              key={option}
+              checked={localSelected.includes(option)}
+              onCheckedChange={() => handleSelect(option)}
+              onSelect={(e) => e.preventDefault()}
+              className="cursor-pointer dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+            >
+              {option}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </div>
+        <DropdownMenuSeparator className="dark:border-slate-800" />
+        <div className="p-2 flex justify-end">
+          <Button
+            size="sm"
+            onClick={handleApply}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
           >
-            {option}
-          </DropdownMenuCheckboxItem>
-        ))}
+            Apply
+          </Button>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )
