@@ -47,10 +47,19 @@ import {
   PlayCircle,
   PauseCircle,
   TrendingUp,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useDashboardExport } from '@/hooks/use-dashboard-export'
+import { useRef } from 'react'
 
 interface EngineeringTableProps {
   type: EngineeringType
@@ -104,6 +113,33 @@ export function EngineeringTable({ type, woFilter, onClearFilters }: Engineering
   const [assigneeFilter, setAssigneeFilter] = useState('all')
   const [pendingMove, setPendingMove] = useState<{ taskId: string; newStatus: string } | null>(null)
   const [moveComment, setMoveComment] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const { isExporting, handleExportPDF } = useDashboardExport(
+    containerRef,
+    `Engineering ${type.charAt(0).toUpperCase() + type.slice(1)} Report`,
+  )
+
+  const exportToCSV = () => {
+    const headers = ['WO Number', 'Task Name', 'Start Date', 'Finish Date', 'Status', 'Assigned To']
+    const rows = filteredTasks.map((t) => [
+      t.wo_number,
+      `"${t.task_name.replace(/"/g, '""')}"`,
+      t.start_date ? format(new Date(t.start_date), 'yyyy-MM-dd') : '',
+      t.finish_date ? format(new Date(t.finish_date), 'yyyy-MM-dd') : '',
+      statusConfig[t.status]?.label || t.status,
+      `"${t.assignee_name || 'Unassigned'}"`,
+    ])
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `${type}_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -203,7 +239,10 @@ export function EngineeringTable({ type, woFilter, onClearFilters }: Engineering
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div
+      ref={containerRef}
+      className="space-y-6 animate-in fade-in duration-300 bg-white sm:bg-transparent pb-4"
+    >
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card className="shadow-sm border-slate-200">
           <CardContent className="p-4">
@@ -320,6 +359,23 @@ export function EngineeringTable({ type, woFilter, onClearFilters }: Engineering
           <Button variant="ghost" onClick={clearFilters} className="text-slate-500">
             <X className="w-4 h-4 mr-2" /> Clear
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 text-slate-700" disabled={isExporting}>
+                <Download className="w-4 h-4" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer">
+                Export to PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer">
+                Export to CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <ToggleGroup

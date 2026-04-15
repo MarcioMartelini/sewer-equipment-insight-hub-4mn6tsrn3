@@ -24,7 +24,7 @@ import SalespersonDetail from './pages/SalespersonDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 import { GlobalNotificationWatcher } from './components/GlobalNotificationWatcher'
 import { ThemeProvider } from './components/theme-provider'
-import logoUrl from './assets/design-sem-nome-1bffa.png'
+import logoUrl from './assets/design-sem-nome-7ff3b.png'
 
 const GlobalPrintStyles = () => (
   <style>

@@ -31,10 +31,19 @@ import {
   CircleDashed,
   PlayCircle,
   PauseCircle,
+  Download,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { EditStatusModal } from './EditStatusModal'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useDashboardExport } from '@/hooks/use-dashboard-export'
+import { useRef } from 'react'
 
 type Task = {
   id: string
@@ -216,8 +225,38 @@ export function EngineeringTaskList() {
 
   const uniqueAssignees = Array.from(new Set(tasks.map((t) => t.assigned_to).filter(Boolean)))
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { isExporting, handleExportPDF } = useDashboardExport(
+    containerRef,
+    'Engineering Tasks Report',
+  )
+
+  const exportToCSV = () => {
+    const headers = ['WO Number', 'Task Name', 'Start Date', 'Finish Date', 'Status', 'Assigned To']
+    const rows = filteredTasks.map((t) => [
+      t.wo_number,
+      `"${t.task_name.replace(/"/g, '""')}"`,
+      t.start_date ? format(new Date(t.start_date), 'yyyy-MM-dd') : '',
+      t.finish_date ? format(new Date(t.finish_date), 'yyyy-MM-dd') : '',
+      t.status,
+      `"${t.assignee_name || 'Unassigned'}"`,
+    ])
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `tasks_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div
+      ref={containerRef}
+      className="space-y-6 animate-in fade-in duration-300 bg-white sm:bg-transparent pb-4"
+    >
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card className="shadow-sm border-slate-200">
@@ -346,6 +385,22 @@ export function EngineeringTaskList() {
             <RotateCcw className="h-4 w-4" />
             Clear
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full md:w-auto gap-2" disabled={isExporting}>
+                <Download className="h-4 w-4" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer">
+                Export to PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer">
+                Export to CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardContent>
       </Card>
 

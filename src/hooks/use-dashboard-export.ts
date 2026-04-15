@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { format } from 'date-fns'
-import logoUrl from '@/assets/design-sem-nome-1bffa.png'
+import logoUrl from '@/assets/design-sem-nome-7ff3b.png'
 
 export function useDashboardExport(
   dashboardRef: React.RefObject<HTMLDivElement | null>,
