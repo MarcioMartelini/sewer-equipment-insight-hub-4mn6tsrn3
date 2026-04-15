@@ -3,6 +3,7 @@ import { Database } from '@/lib/supabase/types'
 
 export type Quote = Database['public']['Tables']['quotes']['Row'] & {
   salesperson?: string
+  division?: string
   product_family?: string
   machine_model?: string
   special_custom?: string
@@ -14,6 +15,11 @@ export type Quote = Database['public']['Tables']['quotes']['Row'] & {
   date_order?: string
   customer_city?: string
   customer_state?: string
+  customer_email?: string
+  customer_phone?: string
+  customer_contact?: string
+  customer_address?: string
+  customer_country?: string
   deleted_at?: string | null
 }
 

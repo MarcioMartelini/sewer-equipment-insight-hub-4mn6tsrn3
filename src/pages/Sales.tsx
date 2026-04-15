@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   fetchQuotes,
@@ -6,6 +6,7 @@ import {
   updateQuote,
   convertToWorkOrder,
   approveQuote,
+  deleteQuote,
   type Quote,
 } from '@/services/quotes'
 import { fetchWorkOrders, updateWorkOrder, deleteWorkOrder } from '@/services/work-orders'
@@ -41,6 +42,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -71,8 +73,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useMemo } from 'react'
-import { deleteQuote } from '@/services/quotes'
 
 const WO_STATUSES = [
   'Pending',
@@ -85,65 +85,18 @@ const WO_STATUSES = [
   'On Hold',
 ]
 
-const US_STATES = [
-  'AL',
-  'AK',
-  'AZ',
-  'AR',
-  'CA',
-  'CO',
-  'CT',
-  'DE',
-  'FL',
-  'GA',
-  'HI',
-  'ID',
-  'IL',
-  'IN',
-  'IA',
-  'KS',
-  'KY',
-  'LA',
-  'ME',
-  'MD',
-  'MA',
-  'MI',
-  'MN',
-  'MS',
-  'MO',
-  'MT',
-  'NE',
-  'NV',
-  'NH',
-  'NJ',
-  'NM',
-  'NY',
-  'NC',
-  'ND',
-  'OH',
-  'OK',
-  'OR',
-  'PA',
-  'RI',
-  'SC',
-  'SD',
-  'TN',
-  'TX',
-  'UT',
-  'VT',
-  'VA',
-  'WA',
-  'WV',
-  'WI',
-  'WY',
-]
-
 const quoteSchema = z.object({
   quote_number: z.string().min(1, 'Required'),
   customer_name: z.string().min(1, 'Required'),
   customer_city: z.string().min(1, 'Required'),
   customer_state: z.string().min(1, 'Required'),
+  customer_email: z.string().optional(),
+  customer_phone: z.string().optional(),
+  customer_contact: z.string().optional(),
+  customer_address: z.string().optional(),
+  customer_country: z.string().optional(),
   salesperson: z.string().min(1, 'Required'),
+  division: z.string().optional(),
   product_family: z.string().min(1, 'Required'),
   machine_model: z.string().min(1, 'Required'),
   quote_value: z.coerce.number().min(0, 'Must be positive'),
@@ -188,6 +141,10 @@ export default function Sales() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
+  // Modal searches
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [spSearch, setSpSearch] = useState('')
+
   // WO States
   const [searchWoQuery, setSearchWoQuery] = useState('')
   const [statusWoFilter, setStatusWoFilter] = useState('all')
@@ -220,7 +177,13 @@ export default function Sales() {
       customer_name: '',
       customer_city: '',
       customer_state: '',
+      customer_email: '',
+      customer_phone: '',
+      customer_contact: '',
+      customer_address: '',
+      customer_country: '',
       salesperson: '',
+      division: '',
       product_family: '',
       machine_model: '',
       quote_value: 0,
@@ -265,7 +228,13 @@ export default function Sales() {
         customer_name: quote.customer_name || '',
         customer_city: quote.customer_city || '',
         customer_state: quote.customer_state || '',
+        customer_email: quote.customer_email || '',
+        customer_phone: quote.customer_phone || '',
+        customer_contact: quote.customer_contact || '',
+        customer_address: quote.customer_address || '',
+        customer_country: quote.customer_country || '',
         salesperson: quote.salesperson || '',
+        division: quote.division || '',
         product_family: quote.product_family || '',
         machine_model: quote.machine_model || '',
         quote_value: Number(quote.quote_value || 0),
@@ -283,7 +252,13 @@ export default function Sales() {
         customer_name: '',
         customer_city: '',
         customer_state: '',
+        customer_email: '',
+        customer_phone: '',
+        customer_contact: '',
+        customer_address: '',
+        customer_country: '',
         salesperson: '',
+        division: '',
         product_family: '',
         machine_model: '',
         quote_value: 0,
@@ -506,7 +481,6 @@ export default function Sales() {
     setCurrentWoPage(1)
   }, [searchWoQuery, statusWoFilter, customerWoFilter, productFamilyWoFilter, dateFromWo, dateToWo])
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, statusFilter, salespersonFilter, customerFilter, dateFrom, dateTo])
@@ -538,11 +512,17 @@ export default function Sales() {
     form.setValue('customer_name', customer.customer_name)
     form.setValue('customer_city', customer.city || '')
     form.setValue('customer_state', customer.state || '')
+    form.setValue('customer_email', customer.email || '')
+    form.setValue('customer_phone', customer.phone || '')
+    form.setValue('customer_contact', customer.contact_person || '')
+    form.setValue('customer_address', customer.address || '')
+    form.setValue('customer_country', customer.country || '')
     setIsCustomerModalOpen(false)
   }
 
   const handleSelectSalesperson = (sp: Salesperson) => {
     form.setValue('salesperson', sp.name)
+    form.setValue('division', sp.division || '')
     setIsSalespersonModalOpen(false)
   }
 
@@ -562,6 +542,20 @@ export default function Sales() {
       </Badge>
     )
   }
+
+  const filteredCustomersModal = useMemo(() => {
+    return customersList.filter(
+      (c) =>
+        c.status === 'Active' &&
+        c.customer_name.toLowerCase().includes(customerSearch.toLowerCase()),
+    )
+  }, [customersList, customerSearch])
+
+  const filteredSpModal = useMemo(() => {
+    return salespersonsList.filter(
+      (sp) => sp.status === 'Active' && sp.name.toLowerCase().includes(spSearch.toLowerCase()),
+    )
+  }, [salespersonsList, spSearch])
 
   if (loading) {
     return (
@@ -698,230 +692,384 @@ export default function Sales() {
                 <DialogTitle>{editingQuote ? 'Edit Quote' : 'Create New Quote'}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="quote_number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quote Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Q-1234" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="customer_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer</FormLabel>
-                          <div className="flex gap-2">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-2">
+                  {/* General Info */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 mb-4">
+                      General Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="quote_number"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quote Number</FormLabel>
                             <FormControl>
-                              <Input placeholder="Acme Corp" {...field} />
+                              <Input placeholder="Q-1234" {...field} />
                             </FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setIsCustomerModalOpen(true)}
-                            >
-                              <Search className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="customer_city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer City</FormLabel>
-                          <FormControl>
-                            <Input placeholder="City" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="customer_state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer State</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="salesperson"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Salesperson</FormLabel>
+                            <div className="flex gap-2">
+                              <FormControl>
+                                <Input placeholder="Select salesperson..." readOnly {...field} />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsSalespersonModalOpen(true)}
+                              >
+                                <Search className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="division"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Division</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a state" />
-                              </SelectTrigger>
+                              <Input
+                                placeholder="Auto-filled"
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
                             </FormControl>
-                            <SelectContent>
-                              {US_STATES.map((state) => (
-                                <SelectItem key={state} value={state}>
-                                  {state}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="salesperson"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Salesperson</FormLabel>
-                          <div className="flex gap-2">
-                            <FormControl>
-                              <Input placeholder="John Doe" {...field} />
-                            </FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setIsSalespersonModalOpen(true)}
-                            >
-                              <Search className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="product_family"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Product Family</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select family" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Plumbing">Plumbing</SelectItem>
-                              <SelectItem value="Municipal">Municipal</SelectItem>
-                              <SelectItem value="Industrial">Industrial</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="machine_model"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Machine Model</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Model X" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="quote_value"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price ($)</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.01" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="profit_margin_percentage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Profit Margin (%)</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.1" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="special_custom"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Special Custom</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Details (Optional)" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="truck_information"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Truck Information</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Info" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="truck_supplier"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Truck Supplier</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Supplier" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="expected_completion_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date of Completion (Expected)</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="actual_completion_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date of Completion (Actual)</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3 mt-6">
+
+                  {/* Customer Info */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 mb-4">
+                      Customer Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="customer_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Customer Name</FormLabel>
+                            <div className="flex gap-2">
+                              <FormControl>
+                                <Input placeholder="Select a customer..." readOnly {...field} />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsCustomerModalOpen(true)}
+                              >
+                                <Search className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_contact"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contact Person</FormLabel>
+                            <FormControl>
+                              <Input
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone</FormLabel>
+                            <FormControl>
+                              <Input
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <Input
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customer_country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <FormControl>
+                              <Input
+                                readOnly
+                                className="bg-slate-50 dark:bg-slate-900/50"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Product & Pricing */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 mb-4">
+                      Product & Pricing
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="product_family"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Product Family</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select family" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="HX">HX</SelectItem>
+                                <SelectItem value="Krios">Krios</SelectItem>
+                                <SelectItem value="Combo">Combo</SelectItem>
+                                <SelectItem value="Truck Jetter">Truck Jetter</SelectItem>
+                                <SelectItem value="Trailer Jet">Trailer Jet</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="machine_model"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Machine Model</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Model X" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="quote_value"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Price (USD)</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">
+                                  $
+                                </span>
+                                <Input type="number" step="0.01" className="pl-7" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="profit_margin_percentage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Profit Margin (%)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.1" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="truck_supplier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Truck Supplier</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select supplier" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Sewer Equipment">Sewer Equipment</SelectItem>
+                                <SelectItem value="Customer">Customer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name="truck_information"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Truck Information</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Detailed info..."
+                                  rows={6}
+                                  className="resize-none"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name="special_custom"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Special Custom</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Details (Optional)..."
+                                  rows={6}
+                                  className="resize-none"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="expected_completion_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Completion (Expected)</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="actual_completion_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Completion (Actual)</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                     {editingQuote?.status !== 'converted' && (
                       <Button
                         type="button"
@@ -952,6 +1100,14 @@ export default function Sales() {
               <DialogHeader>
                 <DialogTitle>Select Customer</DialogTitle>
               </DialogHeader>
+              <div className="flex gap-2 items-center mt-2">
+                <Search className="w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="Search customer..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                />
+              </div>
               <div className="flex-1 overflow-y-auto mt-4 border rounded-md">
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0">
@@ -963,7 +1119,7 @@ export default function Sales() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {customersList.map((c) => (
+                    {filteredCustomersModal.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell className="font-medium">{c.customer_name}</TableCell>
                         <TableCell>{c.city || '-'}</TableCell>
@@ -979,13 +1135,13 @@ export default function Sales() {
                         </TableCell>
                       </TableRow>
                     ))}
-                    {customersList.length === 0 && (
+                    {filteredCustomersModal.length === 0 && (
                       <TableRow>
                         <TableCell
                           colSpan={4}
                           className="text-center text-slate-500 dark:text-slate-400 py-8"
                         >
-                          No customers found.
+                          No active customers found.
                         </TableCell>
                       </TableRow>
                     )}
@@ -1000,20 +1156,28 @@ export default function Sales() {
               <DialogHeader>
                 <DialogTitle>Select Salesperson</DialogTitle>
               </DialogHeader>
+              <div className="flex gap-2 items-center mt-2">
+                <Search className="w-4 h-4 text-slate-500" />
+                <Input
+                  placeholder="Search salesperson..."
+                  value={spSearch}
+                  onChange={(e) => setSpSearch(e.target.value)}
+                />
+              </div>
               <div className="flex-1 overflow-y-auto mt-4 border rounded-md">
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0">
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Department</TableHead>
+                      <TableHead>Division</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {salespersonsList.map((sp) => (
+                    {filteredSpModal.map((sp) => (
                       <TableRow key={sp.id}>
                         <TableCell className="font-medium">{sp.name}</TableCell>
-                        <TableCell>{sp.department || '-'}</TableCell>
+                        <TableCell>{sp.division || '-'}</TableCell>
                         <TableCell>
                           <Button
                             size="sm"
@@ -1025,13 +1189,13 @@ export default function Sales() {
                         </TableCell>
                       </TableRow>
                     ))}
-                    {salespersonsList.length === 0 && (
+                    {filteredSpModal.length === 0 && (
                       <TableRow>
                         <TableCell
                           colSpan={3}
                           className="text-center text-slate-500 dark:text-slate-400 py-8"
                         >
-                          No salespersons found.
+                          No active salespersons found.
                         </TableCell>
                       </TableRow>
                     )}
