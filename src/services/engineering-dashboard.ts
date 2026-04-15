@@ -38,7 +38,7 @@ export interface DashboardData {
   }
   progressByType: { type: string; completionRate: number }[]
   trend: { date: string; completed: number }[]
-  topDelayed: {
+  delayedTasksList: {
     task_id: string
     wo_number: string
     customer_name: string
@@ -196,7 +196,7 @@ export async function getEngineeringDashboardData(
   const travelersStatus = getCounts('traveler')
   const accessoriesStatus = getCounts('accessori')
 
-  const topDelayed = filteredTasks
+  const delayedTasksList = filteredTasks
     .filter((t) => {
       if (t.is_completed || t.status === 'complete') return false
       let isPast = false
@@ -227,7 +227,6 @@ export async function getEngineeringDashboardData(
     })
     .filter((t) => t.delayDays > 0)
     .sort((a, b) => b.delayDays - a.delayDays)
-    .slice(0, 10)
 
   return {
     kpis: {
@@ -242,7 +241,7 @@ export async function getEngineeringDashboardData(
     },
     progressByType,
     trend,
-    topDelayed,
+    delayedTasksList,
     layoutsStatus,
     bomsStatus,
     travelersStatus,

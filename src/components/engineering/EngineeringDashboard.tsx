@@ -12,6 +12,13 @@ import { MultiSelect } from '@/components/MultiSelect'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { subDays } from 'date-fns'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Bar, BarChart, Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts'
@@ -63,6 +70,7 @@ export function EngineeringDashboard() {
     to: new Date(),
   })
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [delayedAssigneeFilter, setDelayedAssigneeFilter] = useState<string>('All')
 
   const [filters, setFilters] = useState<EngineeringFilters>({
     period: 'custom',
@@ -450,8 +458,25 @@ export function EngineeringDashboard() {
 
           {selectedMetrics.includes('Top 10 Delayed Tasks') && (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle>Top 10 Engineering Delayed Tasks</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Select value={delayedAssigneeFilter} onValueChange={setDelayedAssigneeFilter}>
+                    <SelectTrigger className="w-[180px] h-8 text-xs">
+                      <SelectValue placeholder="Filter by Assignee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Assignees</SelectItem>
+                      {Array.from(new Set(data.delayedTasksList.map((t) => t.assigned_to)))
+                        .filter(Boolean)
+                        .map((assignee) => (
+                          <SelectItem key={assignee} value={assignee}>
+                            {assignee}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -465,28 +490,49 @@ export function EngineeringDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.topDelayed.length === 0 && (
+                    {data.delayedTasksList
+                      .filter(
+                        (t) =>
+                          delayedAssigneeFilter === 'All' ||
+                          t.assigned_to === delayedAssigneeFilter,
+                      )
+                      .slice(0, 10).length === 0 && (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                           No delayed tasks found.
                         </TableCell>
                       </TableRow>
                     )}
-                    {data.topDelayed.map((task) => (
-                      <TableRow key={task.task_id}>
-                        <TableCell className="font-medium">{task.wo_number}</TableCell>
-                        <TableCell>{task.customer_name}</TableCell>
-                        <TableCell>
-                          {task.task_due_date
-                            ? format(new Date(task.task_due_date), 'MMM dd, yyyy')
-                            : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="destructive">{task.delayDays}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">{task.assigned_to}</TableCell>
-                      </TableRow>
-                    ))}
+                    {data.delayedTasksList
+                      .filter(
+                        (t) =>
+                          delayedAssigneeFilter === 'All' ||
+                          t.assigned_to === delayedAssigneeFilter,
+                      )
+                      .slice(0, 10)
+                      .map((task) => (
+                        <TableRow key={task.task_id}>
+                          <TableCell className="font-medium">{task.wo_number}</TableCell>
+                          <TableCell>{task.customer_name}</TableCell>
+                          <TableCell>
+                            {task.task_due_date
+                              ? format(new Date(task.task_due_date), 'MMM dd, yyyy')
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                task.delayDays < 5
+                                  ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                                  : 'bg-red-500 hover:bg-red-600 text-white'
+                              }
+                            >
+                              {task.delayDays}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">{task.assigned_to}</TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </CardContent>
