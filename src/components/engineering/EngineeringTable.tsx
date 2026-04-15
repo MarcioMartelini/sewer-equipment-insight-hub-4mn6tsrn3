@@ -43,6 +43,10 @@ import {
   Calendar as CalendarIcon,
   User as UserIcon,
   MessageSquare,
+  CircleDashed,
+  PlayCircle,
+  PauseCircle,
+  TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
@@ -118,11 +122,25 @@ export function EngineeringTable({ type, woFilter, onClearFilters }: Engineering
 
   const kpis = useMemo(() => {
     const total = filteredTasks.length
-    const completed = filteredTasks.filter((t) => t.status === 'complete').length
-    const delayed = filteredTasks.filter((t) => t.status === 'delayed').length
+    const notStarted = filteredTasks.filter((t) => !t.status || t.status === 'not_started').length
+    const onTrack = filteredTasks.filter((t) => t.status === 'on_track').length
+    const parked = filteredTasks.filter((t) => t.status === 'parked').length
     const atRisk = filteredTasks.filter((t) => t.status === 'at_risk').length
-    const onTimePerc = total === 0 ? 100 : ((total - delayed - atRisk) / total) * 100
-    return { total, completed, delayed, atRisk, onTimePerc }
+    const delayed = filteredTasks.filter((t) => t.status === 'delayed').length
+    const completed = filteredTasks.filter((t) => t.status === 'complete').length
+
+    const complRate = total > 0 ? (completed / total) * 100 : 0
+
+    return {
+      total,
+      notStarted,
+      onTrack,
+      parked,
+      atRisk,
+      delayed,
+      completed,
+      complRate: complRate.toFixed(1),
+    }
   }, [filteredTasks])
 
   const clearFilters = () => {
@@ -186,50 +204,77 @@ export function EngineeringTable({ type, woFilter, onClearFilters }: Engineering
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Total Tasks</p>
-              <h3 className="text-2xl font-bold text-slate-800">{kpis.total}</h3>
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Total Tasks</p>
+              <ListTodo className="h-4 w-4 text-slate-400 shrink-0" />
             </div>
-            <ListTodo className="h-8 w-8 text-slate-300" />
+            <div className="text-2xl font-bold text-slate-900">{kpis.total}</div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Completed</p>
-              <h3 className="text-2xl font-bold text-emerald-600">{kpis.completed}</h3>
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Not Started</p>
+              <CircleDashed className="h-4 w-4 text-slate-400 shrink-0" />
             </div>
-            <CheckCircle2 className="h-8 w-8 text-emerald-200" />
+            <div className="text-2xl font-bold text-slate-600">{kpis.notStarted}</div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">On Time %</p>
-              <h3 className="text-2xl font-bold text-blue-600">{kpis.onTimePerc.toFixed(1)}%</h3>
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">On Track</p>
+              <PlayCircle className="h-4 w-4 text-blue-500 shrink-0" />
             </div>
-            <Clock className="h-8 w-8 text-blue-200" />
+            <div className="text-2xl font-bold text-blue-600">{kpis.onTrack}</div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Overdue</p>
-              <h3 className="text-2xl font-bold text-red-600">{kpis.delayed}</h3>
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Parked</p>
+              <PauseCircle className="h-4 w-4 text-slate-500 shrink-0" />
             </div>
-            <AlertTriangle className="h-8 w-8 text-red-200" />
+            <div className="text-2xl font-bold text-slate-600">{kpis.parked}</div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">At Risk</p>
-              <h3 className="text-2xl font-bold text-amber-600">{kpis.atRisk}</h3>
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">At Risk</p>
+              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
             </div>
-            <AlertTriangle className="h-8 w-8 text-amber-200" />
+            <div className="text-2xl font-bold text-amber-600">{kpis.atRisk}</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Delayed</p>
+              <Clock className="h-4 w-4 text-red-500 shrink-0" />
+            </div>
+            <div className="text-2xl font-bold text-red-600">{kpis.delayed}</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Completed</p>
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            </div>
+            <div className="text-2xl font-bold text-emerald-600">{kpis.completed}</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Compl. Rate</p>
+              <TrendingUp className="h-4 w-4 text-blue-500 shrink-0" />
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{kpis.complRate}%</div>
           </CardContent>
         </Card>
       </div>

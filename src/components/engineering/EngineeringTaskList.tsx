@@ -28,6 +28,9 @@ import {
   TrendingUp,
   MessageSquare,
   Edit2,
+  CircleDashed,
+  PlayCircle,
+  PauseCircle,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
@@ -116,18 +119,24 @@ export function EngineeringTaskList() {
 
   const kpis = useMemo(() => {
     const total = tasks.length
-    const completed = tasks.filter((t) => t.status === 'complete').length
-    const delayed = tasks.filter((t) => t.status === 'delayed').length
+    const notStarted = tasks.filter((t) => !t.status || t.status === 'not_started').length
+    const onTrack = tasks.filter((t) => t.status === 'on_track').length
+    const parked = tasks.filter((t) => t.status === 'parked').length
     const atRisk = tasks.filter((t) => t.status === 'at_risk').length
+    const delayed = tasks.filter((t) => t.status === 'delayed').length
+    const completed = tasks.filter((t) => t.status === 'complete').length
 
-    const onTimePercent = total > 0 ? ((total - delayed) / total) * 100 : 100
+    const complRate = total > 0 ? (completed / total) * 100 : 0
 
     return {
       total,
-      completed,
-      delayed,
+      notStarted,
+      onTrack,
+      parked,
       atRisk,
-      onTimePercent: onTimePercent.toFixed(1),
+      delayed,
+      completed,
+      complRate: complRate.toFixed(1),
     }
   }, [tasks])
 
@@ -210,50 +219,77 @@ export function EngineeringTaskList() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+        <Card className="shadow-sm border-slate-200">
           <CardContent className="p-4">
-            <div className="flex justify-between items-center space-y-0 pb-2">
-              <p className="text-sm font-medium text-muted-foreground">Total Tasks</p>
-              <ListTodo className="h-4 w-4 text-muted-foreground" />
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Total Tasks</p>
+              <ListTodo className="h-4 w-4 text-slate-400 shrink-0" />
             </div>
-            <div className="text-2xl font-bold">{kpis.total}</div>
+            <div className="text-2xl font-bold text-slate-900">{kpis.total}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-slate-200">
           <CardContent className="p-4">
-            <div className="flex justify-between items-center space-y-0 pb-2">
-              <p className="text-sm font-medium text-muted-foreground">Completed</p>
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Not Started</p>
+              <CircleDashed className="h-4 w-4 text-slate-400 shrink-0" />
             </div>
-            <div className="text-2xl font-bold">{kpis.completed}</div>
+            <div className="text-2xl font-bold text-slate-600">{kpis.notStarted}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-slate-200">
           <CardContent className="p-4">
-            <div className="flex justify-between items-center space-y-0 pb-2">
-              <p className="text-sm font-medium text-muted-foreground">On Time %</p>
-              <TrendingUp className="h-4 w-4 text-blue-500" />
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">On Track</p>
+              <PlayCircle className="h-4 w-4 text-blue-500 shrink-0" />
             </div>
-            <div className="text-2xl font-bold">{kpis.onTimePercent}%</div>
+            <div className="text-2xl font-bold text-blue-600">{kpis.onTrack}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-slate-200">
           <CardContent className="p-4">
-            <div className="flex justify-between items-center space-y-0 pb-2">
-              <p className="text-sm font-medium text-muted-foreground">Overdue</p>
-              <Clock className="h-4 w-4 text-red-500" />
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Parked</p>
+              <PauseCircle className="h-4 w-4 text-slate-500 shrink-0" />
+            </div>
+            <div className="text-2xl font-bold text-slate-600">{kpis.parked}</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">At Risk</p>
+              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+            </div>
+            <div className="text-2xl font-bold text-amber-600">{kpis.atRisk}</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Delayed</p>
+              <Clock className="h-4 w-4 text-red-500 shrink-0" />
             </div>
             <div className="text-2xl font-bold text-red-600">{kpis.delayed}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-slate-200">
           <CardContent className="p-4">
-            <div className="flex justify-between items-center space-y-0 pb-2">
-              <p className="text-sm font-medium text-muted-foreground">At Risk</p>
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Completed</p>
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
             </div>
-            <div className="text-2xl font-bold text-amber-600">{kpis.atRisk}</div>
+            <div className="text-2xl font-bold text-emerald-600">{kpis.completed}</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-sm font-medium text-slate-700 leading-tight w-16">Compl. Rate</p>
+              <TrendingUp className="h-4 w-4 text-blue-500 shrink-0" />
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{kpis.complRate}%</div>
           </CardContent>
         </Card>
       </div>
