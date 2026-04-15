@@ -45,7 +45,7 @@ export async function getEngineeringTasks(type: EngineeringType): Promise<Engine
       users!wo_tasks_assigned_to_fkey ( full_name )
     `)
     .eq('department', 'Engineering')
-    .or(`sub_department.ilike.%${term}%,task_name.ilike.%${term}%`)
+    .ilike('sub_department', `%${term}%`)
 
   if (error) throw error
 
