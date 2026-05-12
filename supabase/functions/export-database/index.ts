@@ -4,8 +4,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -30,39 +29,33 @@ Deno.serve(async (req: Request) => {
       auth: { persistSession: false },
     })
 
-    const { data: userData, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', ''),
-    )
+    const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     if (userError || !userData.user) {
       throw new Error('Unauthorized')
     }
 
     // Verify if user is admin
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userData.user.id)
-      .single()
+    const { data: profile } = await supabase.from('users').select('role').eq('id', userData.user.id).single()
     if (profile?.role !== 'admin') {
       throw new Error('Forbidden: Only administrators can export the database.')
     }
 
     // Tables to export
     const tables = [
-      'users',
-      'customers',
-      'departments',
-      'work_orders',
-      'quotes',
+      'users', 
+      'customers', 
+      'departments', 
+      'work_orders', 
+      'quotes', 
       'salespersons',
-      'wo_tasks',
-      'production_tasks',
-      'purchasing_tasks',
+      'wo_tasks', 
+      'production_tasks', 
+      'purchasing_tasks', 
       'engineering_tasks',
       'metrics',
-      'notifications',
+      'notifications'
     ]
-
+    
     const exportData: Record<string, any> = {}
 
     for (const table of tables) {
