@@ -24,6 +24,7 @@ import SalespersonDetail from './pages/SalespersonDetail'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 import { GlobalNotificationWatcher } from './components/GlobalNotificationWatcher'
 import { ThemeProvider } from './components/theme-provider'
+import { ThemeToggle } from './components/ThemeToggle'
 import logoUrl from './assets/design-sem-nome-7ff3b.png'
 
 const GlobalPrintStyles = () => (
@@ -84,7 +85,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 }
 
 const App = () => (
-  <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+  <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
     <AuthProvider>
       <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
         <GlobalPrintStyles />
@@ -92,6 +93,7 @@ const App = () => (
         <TooltipProvider delayDuration={300}>
           <Toaster />
           <Sonner />
+          <ThemeToggle />
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route
